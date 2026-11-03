@@ -36,7 +36,11 @@
 - [ ] R-1 request.ts merges pay.* (+ staff.*); add checkout.buy/bookAndPay/bookAndPayNote; buy links on packages board
 - [ ] R-4 checkout + order pages, SkipCash webhook route (orders.ts passes the webhook URL; check path)
 - [ ] R-5 Admin: staff.*.json, admin layout/pages, orders desk, integrations form, admin orders/integrations APIs
-- [ ] Security: bungee-fly.zip in the public repo contains .env.local (SkipCash sandbox keys + preview admin pw)
+- [x] GitHub backup: AmrDNAERP has write access; source pushed as real files (commit e0e4b7b on main)
+  - Push after EVERY batch: git add --ignore-removal . && git commit && git -c credential.helper='!gh auth git-credential' push origin main
+  - Restore after a wipe: git clone https://github.com/MohamedMagdy90/Bungee.git bungee-fly && cd bungee-fly && bun install,
+    then recreate .env.local (never committed). Archive.zip in the repo is the user's upload: leave it alone.
+- [ ] Security: bungee-fly.zip (deleted, still in history) had .env.local; repo still PUBLIC -> make private + rotate sandbox keys
 ## Phase 1 — Public website (after recovery)
 - [ ] Timetable page, Programmes, Packages, Studios (branch pages), Coaches, FAQ, Contact
 ## Client requirements (Nov 2) — ALL must be covered
