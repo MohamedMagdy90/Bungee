@@ -3,6 +3,8 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useBranch } from "@/components/site/branch-context";
+import { buttonVariants } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { fmtMoney, fmtNum } from "@/lib/format";
 import { compareAtFor, perClass, priceFor } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
@@ -13,6 +15,7 @@ const TABS: Tab[] = ["adults", "kids", "private"];
 
 export function PackagesBoard({ packages, classTypes }: { packages: HomeData["packages"]; classTypes: HomeData["classTypes"] }) {
   const t = useTranslations("packages");
+  const tc = useTranslations("checkout");
   const locale = useLocale();
   const { branch } = useBranch();
   const [tab, setTab] = useState<Tab>("adults");
@@ -109,6 +112,7 @@ export function PackagesBoard({ packages, classTypes }: { packages: HomeData["pa
                   ) : each !== null && (p.credits ?? 0) > 1 ? (
                     <span className="tabular text-meta text-steel md:hidden">{t("perClassShort", { price: fmtMoney(each, locale) })}</span>
                   ) : null}
+                  <BuyLink slug={p.slug} branchSlug={branch?.slug ?? null} label={tc("buy")} aria={tc("buyLabel", { name: p.name })} />
                 </span>
               </li>
             );
@@ -126,7 +130,10 @@ export function PackagesBoard({ packages, classTypes }: { packages: HomeData["pa
                   <p className="text-body font-semibold">{p.name}</p>
                   <p className="mt-0.5 text-meta text-steel">{p.description}</p>
                 </div>
-                <p className="tabular text-body font-semibold">{fmtMoney(priceFor(p, branchId), locale)}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="tabular text-body font-semibold">{fmtMoney(priceFor(p, branchId), locale)}</p>
+                  <BuyLink slug={p.slug} branchSlug={branch?.slug ?? null} label={tc("buy")} aria={tc("buyLabel", { name: p.name })} flush />
+                </div>
               </li>
             ))}
           </ul>
@@ -135,5 +142,41 @@ export function PackagesBoard({ packages, classTypes }: { packages: HomeData["pa
 
       <p className="mt-8 text-meta text-steel">{t("checkout")}</p>
     </div>
+  );
+}
+
+/** Straight to checkout for this pack at the chosen studio (prices are per studio). */
+function BuyLink({
+  slug,
+  branchSlug,
+  label,
+  aria,
+  flush,
+}: {
+  slug: string;
+  branchSlug: string | null;
+  label: string;
+  aria: string;
+  flush?: boolean;
+}) {
+  const href = `/checkout?product=${encodeURIComponent(slug)}${branchSlug ? `&branch=${encodeURIComponent(branchSlug)}` : ""}`;
+  return (
+    <Link
+      href={href}
+      aria-label={aria}
+      className={cn(
+        buttonVariants({ variant: "navy", size: "sm" }),
+        "group h-8 gap-1.5 px-3.5 hover:bg-orange hover:text-navy",
+        !flush && "mt-2",
+      )}
+    >
+      {label}
+      <span
+        aria-hidden="true"
+        className="transition-transform duration-200 group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
+      >
+        →
+      </span>
+    </Link>
   );
 }

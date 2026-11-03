@@ -8,10 +8,11 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     timeZone: "Asia/Qatar",
-    // Website copy + customer-app copy (accounts, booking, tickets), kept in separate files.
+    // Website copy, customer-app copy (accounts, booking, tickets) and checkout/order copy, kept in separate files.
     messages: {
       ...(await import(`../../messages/${locale}.json`)).default,
       ...(await import(`../../messages/app.${locale}.json`)).default,
+      ...(await import(`../../messages/pay.${locale}.json`)).default,
     },
   };
 });
