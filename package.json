@@ -1,0 +1,53 @@
+{
+  "name": "bungee-fly",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 --turbopack",
+    "build": "next build && bun run build:scripts",
+    "build:scripts": "bun build scripts/migrate.ts --target=node --format=esm --outfile=dist/migrate.mjs --external pg-native",
+    "start": "next start",
+    "lint": "bunx tsc --noEmit && next lint",
+    "format": "bunx biome format --write",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun scripts/migrate.ts",
+    "db:studio": "drizzle-kit studio",
+    "db:reset-local": "rm -rf .data/pglite"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.14",
+    "better-auth": "1.7.15",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.4",
+    "lucide-react": "^0.475.0",
+    "motion": "^14.9.0",
+    "next": "15.3.7",
+    "next-intl": "^4.14.9",
+    "pg": "^8.23.1",
+    "qrcode": "1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-grab": "latest",
+    "same-runtime": "^0.0.1",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^3.3.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^20.17.50",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18.3.22",
+    "@types/react-dom": "^18.3.7",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "15.1.7",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3"
+  }
+}

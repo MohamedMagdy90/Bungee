@@ -1,0 +1,140 @@
+{
+  "checkout": {
+    "kicker": "Checkout",
+    "title": "Almost airborne.",
+    "summary": "Your order",
+    "studio": "Studio",
+    "class": "Class",
+    "forWho": "Flying",
+    "you": "You",
+    "sessions": "Sessions",
+    "valid": "Valid for",
+    "days": "{n} days",
+    "total": "Total",
+    "dropIn": "Single class, paid now",
+    "payWith": "How would you like to pay?",
+    "online": {
+      "title": "Pay online now",
+      "body": "Card, Apple Pay or Google Pay through SkipCash. Sessions land in your account the moment payment clears."
+    },
+    "atStudio": {
+      "title": "Pay at the studio",
+      "body": "Reserve now, pay at the front desk by cash, card or SkipCash QR. Sessions are added once paid.",
+      "bodyClass": "Your spot is held until class starts. Pay at the front desk when you arrive."
+    },
+    "phone": "Mobile number",
+    "phoneHint": "SkipCash needs a mobile number for every payment. Qatari numbers can skip +974.",
+    "submitOnline": "Pay {amount}",
+    "submitStudio": "Reserve, pay at the studio",
+    "working": "One moment…",
+    "redirecting": "Taking you to SkipCash…",
+    "holdNote": "We hold your spot for {minutes} minutes while you pay.",
+    "secure": "Payments are processed by SkipCash. We never see or store your card details.",
+    "back": "Back to packages",
+    "backClass": "Back to the timetable",
+    "unavailable": "This item isn't available to buy right now.",
+    "signIn": "Sign in to check out",
+    "signInNote": "You need a verified account so we can send your invoice and add the sessions to your account.",
+    "errors": {
+      "phone_required": "Please add a mobile number for SkipCash.",
+      "method_unavailable": "That payment option isn't available right now.",
+      "payments_unavailable": "Online payment isn't available right now. Please choose pay at the studio.",
+      "payment_provider": "SkipCash couldn't start the payment. Please try again in a moment.",
+      "sold_out": "Sold out at this studio.",
+      "limit_reached": "This offer is limited per customer, and you've already used it.",
+      "branch_required": "Choose a studio first.",
+      "not_found": "We couldn't find that item.",
+      "unavailable": "This item isn't available to buy right now.",
+      "full": "This class just filled up. Join the waitlist with a class pack instead.",
+      "already_booked": "Already booked for this class.",
+      "need_child": "Kids classes are booked for a child.",
+      "adults_only": "This class is for adults.",
+      "age": "Outside the age range for this class.",
+      "closed": "Booking has closed for this class.",
+      "too_far": "This class isn't open for booking yet.",
+      "limit": "You've reached the maximum number of upcoming bookings.",
+      "class_cancelled": "This class has been cancelled.",
+      "child_not_found": "We couldn't find that child on your account.",
+      "auth": "Please sign in again.",
+      "verify_email": "Verify your email first.",
+      "bad_request": "Something was missing. Please try again.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "order": {
+    "kicker": "Order {number}",
+    "notFound": "We couldn't find this order.",
+    "paid": {
+      "title": "Payment received.",
+      "body": "Thank you. Your invoice is on its way to {email}.",
+      "sessions": "Your sessions are in your account.",
+      "booked": "Your class is booked.",
+      "lateHold": "The spot hold ended before your payment arrived, so the session is in your account. Book again from the timetable."
+    },
+    "pending": {
+      "title": "Confirming your payment…",
+      "body": "This usually takes a few seconds. Keep this page open.",
+      "check": "Check again",
+      "open": "Return to SkipCash"
+    },
+    "failed": {
+      "title": "Payment didn't go through.",
+      "body": "No money was taken. Try again, or pay at the studio instead.",
+      "retry": "Try again",
+      "studio": "Pay at the studio instead",
+      "held": "Your spot is held until {time}."
+    },
+    "atStudio": {
+      "title": "Reserved. Pay at the studio.",
+      "body": "Show this page at the front desk. Staff take cash, card, or SkipCash on your phone.",
+      "held": "Your spot is held until class starts.",
+      "payOnline": "Pay online now instead",
+      "qrHint": "Front desk scans this to find your order"
+    },
+    "cancelled": {
+      "title": "Order cancelled.",
+      "body": "This order is closed and nothing is owed."
+    },
+    "cancel": "Cancel order",
+    "cancelConfirm": "Yes, cancel it",
+    "keep": "Keep it",
+    "items": "Items",
+    "total": "Total",
+    "studio": "Studio",
+    "class": "Class",
+    "invoice": {
+      "title": "Invoice",
+      "number": "Invoice no.",
+      "order": "Order no.",
+      "date": "Issued",
+      "billTo": "Billed to",
+      "item": "Item",
+      "amount": "Amount",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "total": "Total paid",
+      "method": "Paid by",
+      "print": "Print or save as PDF",
+      "seller": "Bungee Fly · Doha, Qatar"
+    },
+    "methods": {
+      "skipcash": "SkipCash",
+      "cash": "Cash",
+      "card": "Card machine",
+      "other": "Paid at the studio"
+    },
+    "ticket": "View ticket",
+    "account": "My account",
+    "timetable": "Back to timetable",
+    "errors": {
+      "phone_required": "Add a mobile number on your account for SkipCash, or pay at the studio.",
+      "payments_unavailable": "Online payment isn't available right now.",
+      "payment_provider": "SkipCash couldn't start the payment. Please try again in a moment.",
+      "method_unavailable": "That option isn't available right now.",
+      "already_paid": "This order is already paid.",
+      "not_payable": "This order can no longer be paid.",
+      "not_cancellable": "This order can't be cancelled.",
+      "generic": "Something went wrong. Please try again."
+    }
+  }
+}

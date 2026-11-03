@@ -1,0 +1,14 @@
+[images]
+  remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*"]
+
+[build]
+  command = "test -f next.config.mjs && bun run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_TELEMETRY_DISABLED = "1"
+  NODE_VERSION = "22"
+  BUN_VERSION = "1.2.17"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

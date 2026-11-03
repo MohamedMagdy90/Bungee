@@ -1,0 +1,263 @@
+{
+  "member": {
+    "backToSite": "Timetable",
+    "signIn": "Sign in",
+    "account": "My account",
+    "signOut": "Sign out",
+    "home": "Bungee Fly home"
+  },
+  "auth": {
+    "side": {
+      "kicker": "Members",
+      "statement": "Defy gravity.",
+      "points": {
+        "book": "Book a class in two taps",
+        "ticket": "A QR ticket for the front desk",
+        "balance": "Sessions left, always in view"
+      }
+    },
+    "signIn": {
+      "title": "Welcome back.",
+      "lede": "Sign in to book classes, track your sessions and show your ticket at the desk.",
+      "submit": "Sign in",
+      "noAccount": "New to Bungee Fly?",
+      "create": "Create an account",
+      "forgot": "Forgot password?"
+    },
+    "signUp": {
+      "title": "Your first flight starts here.",
+      "lede": "One account books classes for you and your kids, at every studio.",
+      "submit": "Create account",
+      "haveAccount": "Already a member?",
+      "signIn": "Sign in",
+      "terms": "You'll sign the studio waiver at your first visit."
+    },
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Mobile (optional)",
+      "phoneHint": "Used only for class changes.",
+      "password": "Password",
+      "passwordHint": "At least 8 characters.",
+      "newPassword": "New password",
+      "confirm": "Confirm password",
+      "show": "Show",
+      "hide": "Hide"
+    },
+    "checkEmail": {
+      "title": "Check your inbox.",
+      "body": "We sent a verification link to {email}. Open it to activate your account; it works for 24 hours.",
+      "resend": "Send the link again",
+      "resent": "Sent. Check your inbox and spam folder.",
+      "restart": "Use a different email",
+      "preview": "Preview build: emails aren't delivered yet. Your link is in the preview mailbox.",
+      "openMailbox": "Open preview mailbox"
+    },
+    "unverified": "Verify your email first. We've just sent you a fresh link.",
+    "verifyExpired": "That verification link has expired. Sign in and we'll send a new one.",
+    "forgot": {
+      "title": "Reset your password.",
+      "lede": "Enter the email you signed up with and we'll send you a reset link.",
+      "submit": "Send reset link",
+      "sent": "If an account exists for {email}, a reset link is on its way. It works for 1 hour.",
+      "back": "Back to sign in"
+    },
+    "reset": {
+      "title": "Choose a new password.",
+      "lede": "You'll be signed out on your other devices.",
+      "submit": "Save new password",
+      "done": "Password changed. Sign in with your new password.",
+      "invalid": "This reset link has expired or was already used.",
+      "requestNew": "Request a new link"
+    },
+    "errors": {
+      "INVALID_EMAIL_OR_PASSWORD": "That email and password don't match.",
+      "PASSWORD_TOO_SHORT": "Use at least 8 characters.",
+      "PASSWORD_TOO_LONG": "That password is too long.",
+      "INVALID_EMAIL": "Enter a valid email address.",
+      "INVALID_TOKEN": "This link has expired or was already used.",
+      "mismatch": "The passwords don't match.",
+      "rate": "Too many attempts. Wait a minute and try again.",
+      "network": "You seem to be offline. Check your connection.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "account": {
+    "title": "Hi, {name}.",
+    "welcome": "Email verified. Welcome to Bungee Fly.",
+    "sections": {
+      "upcoming": "Upcoming",
+      "balance": "Sessions left",
+      "history": "Session history",
+      "children": "Kids",
+      "past": "Past classes",
+      "profile": "Profile"
+    },
+    "upcomingEmpty": "No classes booked yet.",
+    "findClass": "Find a class",
+    "status": {
+      "booked": "Booked",
+      "waitlisted": "Waitlist #{n}",
+      "pending_payment": "Awaiting payment",
+      "attended": "Attended",
+      "no_show": "No-show",
+      "cancelled": "Cancelled",
+      "late_cancelled": "Late cancel"
+    },
+    "you": "You",
+    "for": "For {name}",
+    "showTicket": "Show ticket",
+    "hideTicket": "Hide ticket",
+    "ticketHint": "Show this code at the front desk.",
+    "reference": "Ref. {code}",
+    "cancel": "Cancel",
+    "leaveWaitlist": "Leave waitlist",
+    "cancelRefund": "Cancel this class? The session goes back to your pack.",
+    "cancelLate": "It's under {hours} hours to class, so this session won't be refunded. Cancel anyway?",
+    "cancelLateRefunded": "It's under {hours} hours to class. Cancel anyway?",
+    "leaveConfirm": "Leave the waitlist for this class?",
+    "keep": "Keep it",
+    "confirmCancel": "Yes, cancel",
+    "cancelled": "Cancelled. The session is back in your pack.",
+    "cancelledLate": "Cancelled. Late cancellations aren't refunded.",
+    "leftWaitlist": "You've left the waitlist.",
+    "policy": "Cancel up to {hours} hours before class and the session goes back to your pack.",
+    "packs": {
+      "left": "{n} of {total} left",
+      "expires": "Use by {date}",
+      "expired": "Expired {date}",
+      "exhausted": "All used",
+      "anyStudio": "Valid at every studio",
+      "empty": "No class packs yet.",
+      "buy": "See packages",
+      "audience": {
+        "adults": "Adults",
+        "kids": "Kids",
+        "all": "Any class"
+      },
+      "previewTitle": "Preview: sample sessions",
+      "previewBody": "Online payment arrives in a later release. Add free sample packs to try booking now.",
+      "previewButton": "Add sample sessions",
+      "previewDone": "Sample packs added.",
+      "previewHad": "You already have the sample packs."
+    },
+    "ledger": {
+      "empty": "No session activity yet.",
+      "reasons": {
+        "purchase": "Pack added",
+        "booking": "Class booked",
+        "cancel_refund": "Session refunded",
+        "late_cancel": "Late cancel",
+        "no_show": "No-show",
+        "admin_adjust": "Added by studio",
+        "extension": "Pack extended",
+        "expiry": "Expired",
+        "refund": "Refunded"
+      }
+    },
+    "children": {
+      "empty": "Add your kids once to book Mini Fly and Kids classes for them.",
+      "add": "Add a child",
+      "firstName": "First name",
+      "lastName": "Last name (optional)",
+      "dob": "Date of birth",
+      "medical": "Anything the coach should know? (optional)",
+      "save": "Save",
+      "cancel": "Cancel",
+      "age": "Age {n}",
+      "added": "{name} added."
+    },
+    "pastEmpty": "Your finished classes will show here.",
+    "profile": {
+      "email": "Email",
+      "phone": "Mobile",
+      "verified": "Verified",
+      "none": "Not added"
+    }
+  },
+  "booking": {
+    "signInToBook": "Sign in to book",
+    "signInNote": "You'll come straight back to this class.",
+    "createAccount": "Create an account",
+    "loading": "Checking your account",
+    "retry": "Try again",
+    "who": "Who's flying?",
+    "you": "You",
+    "needChild": "Kids classes are booked for a child. Add them once, then book in two taps.",
+    "addChild": "Add a child",
+    "blocks": {
+      "age": "Outside the age range",
+      "adults_only": "Adults only",
+      "need_child": "Book for a child"
+    },
+    "paysWith": "Uses 1 session from {pack}",
+    "sessionsLeft": "{n, plural, one {# left} other {# left}}",
+    "noPack": "You need a class pack for this class.",
+    "seePackages": "See packages",
+    "book": "Book this class",
+    "joinWaitlist": "Join the waitlist",
+    "waitlistNote": "No session is used unless a spot opens. We'll email you if you're in.",
+    "working": "Booking",
+    "closed": "Booking for this class has closed.",
+    "policy": "Free cancellation up to {hours} hours before class.",
+    "private": "Private session, one-to-one with your coach.",
+    "confirmed": {
+      "title": "You're booked.",
+      "left": "{n} sessions left on {pack}",
+      "reference": "Reference",
+      "ticket": "Show this QR code at the front desk.",
+      "emailed": "We've emailed your confirmation.",
+      "account": "My bookings",
+      "done": "Done"
+    },
+    "waitlisted": {
+      "title": "You're on the waitlist.",
+      "body": "You're number {n}. If a spot opens before class, we'll book you in and email you."
+    },
+    "already": {
+      "booked": "{name} is booked",
+      "waitlisted": "{name} is #{n} on the waitlist",
+      "pending_payment": "{name}: awaiting payment",
+      "attended": "{name} attended",
+      "manage": "Manage"
+    },
+    "errors": {
+      "closed": "Booking for this class has closed.",
+      "too_far": "This class isn't open for booking yet.",
+      "already_booked": "Already booked for this class.",
+      "no_credits": "You've no sessions left that cover this class.",
+      "limit": "You've reached the maximum number of upcoming bookings.",
+      "need_child": "Choose which child is flying.",
+      "adults_only": "This class is for adults.",
+      "age": "This class is outside your child's age range.",
+      "class_cancelled": "This class was cancelled.",
+      "not_found": "This class is no longer available.",
+      "child_not_found": "That child isn't on your account.",
+      "not_cancellable": "This booking can't be cancelled now.",
+      "auth": "Please sign in again.",
+      "verify_email": "Verify your email to start booking.",
+      "bad_origin": "Please reload the page and try again.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "ticket": {
+    "kicker": "Reservation",
+    "invalid": "This ticket link isn't valid.",
+    "class": "Class",
+    "when": "When",
+    "studio": "Studio",
+    "guest": "Guest",
+    "reference": "Reference",
+    "show": "Show this at the front desk.",
+    "account": "My bookings"
+  },
+  "mailbox": {
+    "title": "Preview mailbox",
+    "note": "Preview builds don't send real email. Messages addressed to you appear here.",
+    "address": "Email address",
+    "show": "Show messages",
+    "empty": "No messages for {email} yet.",
+    "open": "Open link",
+    "prodOff": "Disabled on the live site."
+  }
+}

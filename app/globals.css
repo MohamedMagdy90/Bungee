@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* IBM Plex Sans Arabic — self-hosted, subset, only fetched when Arabic glyphs render. */
+@font-face {
+  font-family: "Plex Arabic";
+  src: url("/fonts/plex-arabic-400.v1.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F;
+}
+@font-face {
+  font-family: "Plex Arabic";
+  src: url("/fonts/plex-arabic-500.v1.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F;
+}
+@font-face {
+  font-family: "Plex Arabic";
+  src: url("/fonts/plex-arabic-600.v1.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F;
+}
+@font-face {
+  font-family: "Plex Arabic";
+  src: url("/fonts/plex-arabic-700.v1.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F;
+}
+
+@layer base {
+  :root {
+    /* Brand semantic tokens (HSL for shadcn compatibility) */
+    --background: 200 14% 97%; /* Mist */
+    --foreground: 210 65% 12%; /* Deep Navy */
+    --card: 0 0% 100%;
+    --card-foreground: 210 65% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 65% 12%;
+    --primary: 15 100% 59%; /* Electric Orange */
+    --primary-foreground: 210 65% 12%; /* Navy on orange: 5.6:1. White fails. */
+    --secondary: 200 12% 92%; /* Ice Grey */
+    --secondary-foreground: 210 65% 12%;
+    --muted: 200 12% 92%;
+    --muted-foreground: 209 13% 54%; /* Slate */
+    --accent: 185 67% 50%; /* Aqua */
+    --accent-foreground: 210 65% 12%;
+    --destructive: 14 77% 44%; /* Ember */
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 65% 12% / 0.12;
+    --input: 210 65% 12% / 0.18;
+    --ring: 185 67% 50%;
+    --radius: 10px;
+
+    /* Layout */
+    --gutter: 16px;
+    --margin: 20px;
+
+    --font-plex-arabic: "Plex Arabic";
+
+    /* Typography stacks — swapped for Arabic below */
+    --font-text-stack: var(--font-plex), var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
+    /* Display = Plex SemiBold, as the brand book sets its own hero statements.
+       Kotech is reserved for the logotype (its G/S and I forms misread in running words). */
+    --font-display-stack: var(--font-plex), var(--font-plex-arabic), sans-serif;
+    --ts: 1; /* type scale multiplier */
+    --lh: 1; /* leading multiplier */
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --gutter: 24px;
+      --margin: 40px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    :root {
+      --margin: 56px;
+    }
+  }
+
+  /* Brand §14: Arabic is set 1–2pt larger with ~10% looser leading. */
+  html[lang="ar"] {
+    --font-text-stack: var(--font-plex-arabic), var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+    --font-display-stack: var(--font-plex-arabic), var(--font-plex), sans-serif;
+    --ts: 1.07;
+    --lh: 1.1;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans text-body antialiased;
+    font-feature-settings: "kern" 1;
+  }
+
+  ::selection {
+    background: #28c7d5;
+    color: #0b1f33;
+  }
+
+  :focus-visible {
+    outline: 2px solid #28c7d5;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* 12-column frame. Mirrors automatically in RTL. */
+  .frame {
+    @apply mx-auto w-full max-w-frame;
+    padding-inline: var(--margin);
+  }
+
+  .grid-12 {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+  }
+
+  /* Tracked caps (Brand §15 hierarchy). Arabic has no case, so no tracking. */
+  .label-caps {
+    @apply text-caption font-medium uppercase;
+  }
+
+  html[lang="ar"] .label-caps {
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Display statements — Plex SemiBold, tight tracking (Brand §13). */
+  .type-display {
+    @apply font-display text-display font-semibold;
+    letter-spacing: -0.045em;
+  }
+
+  html[lang="ar"] .type-display {
+    @apply font-bold;
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+
+  .type-display-sm {
+    @apply font-display text-display-sm font-semibold;
+    letter-spacing: -0.035em;
+  }
+
+  html[lang="ar"] .type-display-sm {
+    @apply font-bold;
+    line-height: 1.25;
+    letter-spacing: 0;
+  }
+
+  /* Flight path: drawn once on load (pathLength = 1). */
+  .flight-path-stroke {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw-path 2.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    animation-delay: var(--path-delay, 0ms);
+  }
+
+  @keyframes draw-path {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Scroll reveals — only hide when JS is present so content never disappears without it. */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+    transition:
+      opacity 700ms cubic-bezier(0.2, 0, 0, 1),
+      transform 900ms cubic-bezier(0.22, 1.2, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .js [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Hero load sequence — the "half-second lift": overshoot, then settle. */
+  .lift {
+    animation: lift-in 820ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+    animation-delay: var(--lift-delay, 0ms);
+  }
+
+  @keyframes lift-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 26px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

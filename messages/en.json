@@ -1,0 +1,157 @@
+{
+  "meta": {
+    "title": "Bungee Fly — Bungee fitness in Doha",
+    "description": "Low-impact, full-body bungee fitness classes for adults and kids across Doha. See the live timetable, packages and studios.",
+    "appName": "Bungee Fly"
+  },
+  "nav": {
+    "home": "Home",
+    "primary": "Main",
+    "programmes": "Classes",
+    "timetable": "Timetable",
+    "packages": "Packages",
+    "studios": "Studios",
+    "book": "Book a class",
+    "otherLanguage": "العربية",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "studio": "Studio",
+    "chooseStudio": "Choose a studio",
+    "yourStudio": "Your studio"
+  },
+  "common": {
+    "spotsLeft": "{count, plural, =0 {Full} one {{n} spot left} other {{n} spots left}}",
+    "minutes": "{n} min",
+    "openToday": "Open today",
+    "closedToday": "Closed today",
+    "directions": "Directions",
+    "whatsapp": "WhatsApp",
+    "close": "Close",
+    "ages": "Ages {range}",
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "all": "All levels"
+    }
+  },
+  "hero": {
+    "firstTime": "New to bungee? Start here",
+    "minUnit": "min",
+    "statLength": "per class",
+    "statStudios": "studios in Doha",
+    "statAges": "ages welcome",
+    "nextUp": "Next up",
+    "live": "Live timetable",
+    "noSessions": "No more classes today. Tomorrow's timetable is below."
+  },
+  "manifesto": {
+    "label": "Why we fly",
+    "figure": "Fig. 01 — The cord does the work.",
+    "statementLead": "We built Bungee Fly around half a second: the moment at the top of the lift when you stop working against gravity and feel",
+    "statementKey": "carried instead of held.",
+    "pillars": [
+      { "title": "Teach it properly", "body": "Every class is coached, every harness is fitted by hand, and nobody flies before they are ready." },
+      { "title": "Make it reachable", "body": "Low impact on knees and back, scaled for every level from age three upwards." },
+      { "title": "Keep it beautiful", "body": "Calm studios, honest prices, and a timetable you can read in two seconds." }
+    ]
+  },
+  "programmes": {
+    "label": "Programmes",
+    "title": "Three ways to leave the floor.",
+    "fromPerClass": "From {price} per class",
+    "adults": {
+      "kicker": "Adults · 14+",
+      "name": "Group classes",
+      "body": "Flow for your first flights, Sculpt for slow strength, Burn when you want intervals. Up to twelve flyers, one coach."
+    },
+    "kids": {
+      "kicker": "Kids · 3–12",
+      "name": "Kids & Mini",
+      "body": "Play-led classes with proper technique, taught by coaches trained to work with children."
+    },
+    "private": {
+      "kicker": "Private · 1:1",
+      "name": "Private sessions",
+      "body": "One coach, one flyer, your goals. A good first step if you'd like space."
+    }
+  },
+  "timetable": {
+    "label": "Timetable",
+    "title": "Find your next flight.",
+    "filters": { "all": "All classes", "adults": "Adults", "kids": "Kids", "private": "Private" },
+    "today": "Today",
+    "dayPicker": "Choose a day",
+    "studioPicker": "Choose a studio",
+    "empty": "Nothing on this day for that filter.",
+    "showAll": "Show all classes",
+    "with": "with {coach}",
+    "waitlist": "Full · join waitlist",
+    "details": "Details",
+    "tzNote": "All times are Doha time (GMT+3). Spots update every minute."
+  },
+  "sheet": {
+    "when": "When",
+    "where": "Where",
+    "coach": "Coach",
+    "length": "Length",
+    "level": "Level",
+    "spots": "Spots",
+    "reserve": "Reserve a spot",
+    "reserveNote": "Online booking opens with customer accounts in the next release.",
+    "drag": "Drag down to close"
+  },
+  "packages": {
+    "label": "Packages",
+    "title": "Pay per class, or commit and save.",
+    "intro": "Prices shown for {studio}. Every pack is spent on classes, not months.",
+    "tabs": { "adults": "Adults", "kids": "Kids", "private": "Private" },
+    "cols": { "pack": "Pack", "classes": "Classes", "valid": "Valid for", "perClass": "Per class", "price": "Price" },
+    "days": "{n} days",
+    "classes": "{count, plural, one {{n} class} other {{n} classes}}",
+    "mostChosen": "Most chosen",
+    "firstVisit": "First visit only",
+    "perClassShort": "{price} / class",
+    "extras": "Also available",
+    "checkout": "Secure checkout by SkipCash: cards, Apple Pay and Qatar debit cards."
+  },
+  "studios": {
+    "label": "Studios",
+    "title": "Find your Bungee Zone.",
+    "rigs": "{n} rigs",
+    "setStudio": "Make this my studio",
+    "yourStudio": "Your studio"
+  },
+  "firstFlight": {
+    "label": "First flight",
+    "title": "Never been on a cord? Good.",
+    "steps": [
+      { "title": "Pick a Flow class", "body": "Choose your studio and any Bungee Flow slot. It's built for first-timers." },
+      { "title": "Arrive ten minutes early", "body": "Your coach fits the harness by hand and walks you through the cord." },
+      { "title": "Wear fitted sportswear", "body": "Leggings or shorts and a fitted top. Grip socks recommended; water is on us." },
+      { "title": "Fly", "body": "Forty-five minutes. You'll feel it in your core tomorrow, not your knees." }
+    ],
+    "cta": "First Flight · 2 classes for {price}"
+  },
+  "install": {
+    "kicker": "Train like you",
+    "title": "Defy gravity.",
+    "appTitle": "Bungee Fly on your home screen",
+    "appBody": "Book in two taps, get class reminders, and keep your credits one thumb away. No app store needed.",
+    "installButton": "Install the app",
+    "installed": "You're using the app. Welcome back.",
+    "iosTitle": "On iPhone",
+    "iosSteps": "Tap Share, then Add to Home Screen.",
+    "androidTitle": "On Android",
+    "androidSteps": "Tap Install when Chrome asks, or Menu, then Install app."
+  },
+  "footer": {
+    "tagline": "Bungee fitness for adults and kids across Doha. Coached properly, priced honestly.",
+    "explore": "Explore",
+    "studios": "Studios",
+    "contact": "Contact",
+    "whatsapp": "Message us on WhatsApp",
+    "rights": "All rights reserved.",
+    "preview": "Preview build: studios, coaches, schedules and prices are sample data."
+  }
+}
