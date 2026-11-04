@@ -171,6 +171,91 @@
       "coaches": "{count, plural, =0 {No coaches} one {# coach} other {# coaches}}",
       "upcoming": "{count, plural, =0 {No classes scheduled} one {# upcoming class} other {# upcoming classes}}",
       "hiddenNote": "A hidden studio disappears from the website, the timetable and prices. Existing bookings are kept."
+    },
+    "classes": {
+      "kicker": "Studio",
+      "title": "Classes & coaches",
+      "lede": "What you teach and who teaches it. Changes appear on the website's programmes, timetable and booking screens.",
+      "tabs": {
+        "classes": "Classes",
+        "coaches": "Coaches"
+      },
+      "classList": "Classes",
+      "addClass": "New class",
+      "newClass": "New class",
+      "coachList": "Coaches",
+      "addCoach": "New coach",
+      "newCoach": "New coach",
+      "sections": {
+        "about": {
+          "title": "About the class",
+          "hint": "Shown on the programme cards and in the booking sheet."
+        },
+        "format": {
+          "title": "Format & level",
+          "hint": "Used to filter the timetable and to match class packs."
+        },
+        "session": {
+          "title": "Length & spots",
+          "hint": "Defaults for new timetable slots. Each slot can still have its own spots."
+        },
+        "look": {
+          "title": "Photo & visibility",
+          "hint": "The cover photo appears on the programme card."
+        },
+        "profile": {
+          "title": "Profile",
+          "hint": "How the coach is introduced on the website."
+        },
+        "studio": {
+          "title": "Home studio & photo",
+          "hint": "Where this coach mostly teaches."
+        }
+      },
+      "fields": {
+        "name": "Class name",
+        "tagline": "Tagline",
+        "taglineHint": "One line under the name.",
+        "description": "Description",
+        "audience": "Who it's for",
+        "format": "Format",
+        "formatHint": "A private session can never overlap a group class at the same studio.",
+        "level": "Level",
+        "minAge": "Youngest age",
+        "maxAge": "Oldest age",
+        "ageHint": "Leave empty for no limit.",
+        "duration": "Length",
+        "minutes": "min",
+        "capacity": "Spots per class",
+        "intensity": "Intensity",
+        "intensityHint": "1 is gentle, 5 is very demanding.",
+        "intensityNone": "Not shown",
+        "coachName": "Full name",
+        "coachTitle": "Role",
+        "coachTitleHint": "For example: Head Coach.",
+        "bio": "Short bio",
+        "branch": "Home studio",
+        "branchNone": "Not set",
+        "photo": "Photo"
+      },
+      "audiences": {
+        "adults": "Adults",
+        "kids": "Kids",
+        "all": "Everyone"
+      },
+      "formats": {
+        "group": "Group class",
+        "private": "Private session"
+      },
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+        "all": "All levels"
+      },
+      "slots": "{count, plural, =0 {Not on the timetable} one {# weekly slot} other {# weekly slots}}",
+      "hiddenClass": "A hidden class disappears from the website and can't be booked. Past bookings keep it.",
+      "hiddenCoach": "A hidden coach no longer appears on the website or the timetable."
     }
   }
 }
