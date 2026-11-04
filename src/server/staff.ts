@@ -9,12 +9,26 @@ import { getCurrentUser } from "./session";
 /** Who can open which part of the admin portal. */
 export const STAFF_ROLES = ["front_desk", "coach", "manager", "owner"] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
-export type StaffArea = "desk" | "settings";
+/**
+ * Sections of the studio desk, grouped the way the menu shows them:
+ *   Front desk: desk (orders & payments), customers
+ *   Studio:     studio (locations, classes & coaches, timetable)
+ *   Website:    website (homepage, FAQs, images & videos)
+ *   Settings:   settings (integrations, payment options)
+ */
+export const STAFF_AREAS = ["desk", "customers", "studio", "website", "settings"] as const;
+export type StaffArea = (typeof STAFF_AREAS)[number];
 
 const AREA_ROLES: Record<StaffArea, readonly StaffRole[]> = {
-  desk: ["front_desk", "manager", "owner"], // orders & payments
-  settings: ["manager", "owner"], // integrations (Resend, SkipCash), payment options
+  desk: ["front_desk", "manager", "owner"],
+  customers: ["front_desk", "manager", "owner"],
+  studio: ["manager", "owner"],
+  website: ["manager", "owner"],
+  settings: ["manager", "owner"],
 };
+
+/** Every section this role may open (drives the menu). */
+export const areasFor = (role: unknown): StaffArea[] => STAFF_AREAS.filter((a) => AREA_ROLES[a].includes(role as StaffRole));
 
 export const isStaff = (role: unknown): role is StaffRole => STAFF_ROLES.includes(role as StaffRole);
 export const canAccess = (role: unknown, area: StaffArea) => AREA_ROLES[area].includes(role as StaffRole);

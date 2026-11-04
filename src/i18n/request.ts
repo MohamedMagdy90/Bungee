@@ -15,6 +15,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
       ...(await import(`../../messages/app.${locale}.json`)).default,
       ...(await import(`../../messages/pay.${locale}.json`)).default,
       ...(await import(`../../messages/staff.${locale}.json`)).default,
+      // Studio desk sections (customers, locations, classes, timetable, website, media): top-level "manage".
+      ...(await import(`../../messages/manage.${locale}.json`)).default,
     },
   };
 });

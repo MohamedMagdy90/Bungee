@@ -1,5 +1,6 @@
 import "server-only";
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import type { AuthUser } from "./auth";
 import { BookingProblem } from "./booking/engine";
 import { CheckoutProblem } from "./payments/orders";
@@ -47,6 +48,11 @@ export async function requireStaff(area: StaffArea) {
 /** Turns known errors into `{ error: code }` JSON with the right status; logs the rest. */
 export function errorResponse(error: unknown) {
   if (error instanceof HttpError) return NextResponse.json({ error: error.code }, { status: error.status });
+  // Failed body validation: 400 with the offending field paths ("nameEn", "hours.2.opensAt") so forms can mark them.
+  if (error instanceof ZodError) {
+    const fields = [...new Set(error.issues.map((i) => i.path.join(".")).filter(Boolean))];
+    return NextResponse.json({ error: "invalid", fields }, { status: 400 });
+  }
   if (error instanceof BookingProblem) return NextResponse.json({ error: error.code }, { status: 409 });
   if (error instanceof CheckoutProblem) {
     return NextResponse.json({ error: error.code, detail: error.detail ?? null }, { status: error.code === "not_found" ? 404 : 409 });

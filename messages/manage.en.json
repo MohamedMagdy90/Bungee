@@ -1,0 +1,66 @@
+{
+  "manage": {
+    "nav": {
+      "groups": {
+        "frontDesk": "Front desk",
+        "studio": "Studio",
+        "website": "Website",
+        "settings": "Settings"
+      },
+      "orders": "Orders & payments",
+      "customers": "Customers",
+      "locations": "Locations",
+      "classes": "Classes & coaches",
+      "timetable": "Timetable",
+      "homepage": "Homepage & FAQs",
+      "media": "Images & videos",
+      "integrations": "Integrations"
+    },
+    "common": {
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Saved. The website now shows this.",
+      "created": "Created. It's on the website now if it's set to show.",
+      "create": "Create",
+      "cancel": "Cancel",
+      "discard": "Discard changes",
+      "unsaved": "Unsaved changes",
+      "add": "Add",
+      "remove": "Remove",
+      "back": "Back to the list",
+      "search": "Search",
+      "english": "English",
+      "arabic": "Arabic",
+      "optional": "Optional",
+      "shown": "Shown",
+      "hidden": "Hidden",
+      "showOnSite": "Show on the website",
+      "showOnSiteHint": "Turn off to hide it from customers without deleting anything.",
+      "order": "Position",
+      "orderHint": "Lower numbers appear first.",
+      "webAddress": "Web address",
+      "webAddressHint": "Lowercase letters, numbers and dashes, e.g. {example}.",
+      "count": "{count, plural, =0 {None} one {# item} other {# items}}",
+      "pickOne": "Pick one on the left to edit it, or add a new one.",
+      "noMatches": "Nothing matches that search.",
+      "cover": "Cover image",
+      "coverNone": "No image",
+      "choose": "Choose",
+      "change": "Change",
+      "clear": "Clear"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "network": "Can't reach the server. Check the connection and try again.",
+      "auth": "You've been signed out. Sign in again to continue.",
+      "forbidden": "Your role can't change this.",
+      "bad_origin": "This change was blocked for safety. Reload the page and try again.",
+      "not_found": "This item no longer exists. Reload the page.",
+      "invalid": "Some fields need attention. Check the highlighted ones.",
+      "slug_taken": "That web address is already used by another item.",
+      "in_use": "This is still in use, so it can't be removed. Hide it instead.",
+      "too_large": "That file is too big.",
+      "bad_type": "That file type isn't supported."
+    }
+  }
+}

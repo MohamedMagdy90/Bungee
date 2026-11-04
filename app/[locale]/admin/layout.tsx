@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { AdminNav } from "@/components/admin/admin-nav";
-import { canAccess, getStaffUser } from "@/server/staff";
+import { areasFor, getStaffUser } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -25,7 +25,7 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-svh flex-col bg-ice text-navy md:flex-row">
-      <AdminNav name={staff.name || staff.email} role={staff.role} canSettings={canAccess(staff.role, "settings")} />
+      <AdminNav name={staff.name || staff.email} role={staff.role} areas={areasFor(staff.role)} />
       <main className="flex min-w-0 flex-1 flex-col">{children}</main>
     </div>
   );
