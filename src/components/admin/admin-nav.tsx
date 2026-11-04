@@ -57,7 +57,7 @@ export function AdminNav({ name, role, canSettings }: { name: string; role: stri
         <div className="mt-auto hidden space-y-4 border-t border-hairline-dark px-6 py-6 md:block">
           <div>
             <p className="truncate text-meta font-medium">{name}</p>
-            <p className="label-caps mt-1 text-ice/50">{role.replace("_", " ")}</p>
+            <p className="label-caps mt-1 text-ice/50">{t.has(`roles.${role}`) ? t(`roles.${role}` as "roles.owner") : role}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
