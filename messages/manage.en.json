@@ -14,7 +14,8 @@
       "timetable": "Timetable",
       "homepage": "Homepage & FAQs",
       "media": "Images & videos",
-      "integrations": "Integrations"
+      "integrations": "Integrations",
+      "overview": "Overview"
     },
     "common": {
       "save": "Save changes",
@@ -492,6 +493,38 @@
         "create": "Register customer",
         "created": "Customer registered."
       }
+    },
+    "overview": {
+      "kicker": "Studio desk",
+      "greeting": "Hello, {name}",
+      "lede": "Everything the studio runs on, in one place. Pick a section to get started.",
+      "today": "Today",
+      "stats": {
+        "classes": "Classes today",
+        "booked": "Places booked today",
+        "awaiting": "Orders to collect",
+        "newCustomers": "New customers this week"
+      },
+      "items": {
+        "orders": "Take payments at the desk, check online payments and refunds.",
+        "customers": "Find a customer, see their packs and bookings, register walk-ins.",
+        "locations": "Studios, addresses, opening hours, contact details and photos.",
+        "classes": "What you teach and who teaches it: classes and coach profiles.",
+        "timetable": "Each studio's weekly plan, and the classes of the next two weeks.",
+        "homepage": "The main banner, the first-flight photo and the questions list.",
+        "media": "Every image and video on the site, with descriptions in both languages.",
+        "integrations": "Payment gateway and email settings."
+      },
+      "meta": {
+        "orders": "{count, plural, =0 {Nothing to collect} other {# to collect}}",
+        "customers": "{count, plural, =0 {No customers yet} one {# customer} other {# customers}}",
+        "locations": "{count, plural, =0 {No studios open} one {# studio open} other {# studios open}}",
+        "classes": "{classes} classes · {coaches} coaches",
+        "timetable": "{count, plural, =0 {No classes today} one {# class today} other {# classes today}}",
+        "homepage": "{count, plural, =0 {No questions yet} one {# question} other {# questions}}",
+        "media": "{count, plural, =0 {No files yet} one {# file} other {# files}}"
+      },
+      "open": "Open"
     }
   }
 }

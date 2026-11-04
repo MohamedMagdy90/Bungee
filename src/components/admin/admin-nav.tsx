@@ -5,36 +5,7 @@ import { Logo } from "@/components/brand/logo";
 import { SignOutButton } from "@/components/member/account-client";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
-
-type Area = "desk" | "customers" | "studio" | "website" | "settings";
-type Item = { href: string; key: string; area: Area };
-
-/** The whole studio desk on one map: four groups, each section in exactly one place. */
-const GROUPS: { key: "frontDesk" | "studio" | "website" | "settings"; items: Item[] }[] = [
-  {
-    key: "frontDesk",
-    items: [
-      { href: "/admin/orders", key: "orders", area: "desk" },
-      { href: "/admin/customers", key: "customers", area: "customers" },
-    ],
-  },
-  {
-    key: "studio",
-    items: [
-      { href: "/admin/locations", key: "locations", area: "studio" },
-      { href: "/admin/classes", key: "classes", area: "studio" },
-      { href: "/admin/timetable", key: "timetable", area: "studio" },
-    ],
-  },
-  {
-    key: "website",
-    items: [
-      { href: "/admin/website", key: "homepage", area: "website" },
-      { href: "/admin/media", key: "media", area: "website" },
-    ],
-  },
-  { key: "settings", items: [{ href: "/admin/integrations", key: "integrations", area: "settings" }] },
-];
+import { deskGroupsFor } from "./sections";
 
 /** Admin rail (desktop) / top bar with scrolling tabs (mobile). Only the sections this role can open are listed. */
 export function AdminNav({ name, role, areas }: { name: string; role: string; areas: string[] }) {
@@ -44,9 +15,8 @@ export function AdminNav({ name, role, areas }: { name: string; role: string; ar
   const locale = useLocale();
   const pathname = usePathname();
   const other = locale === "ar" ? "en" : "ar";
-  const groups = GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => areas.includes(i.area)) })).filter(
-    (g) => g.items.length > 0,
-  );
+  const groups = deskGroupsFor(areas);
+  const home = pathname === "/admin";
 
   const itemClass = (on: boolean) =>
     cn(
@@ -73,9 +43,12 @@ export function AdminNav({ name, role, areas }: { name: string; role: string; ar
 
         {/* Mobile: one scrolling row of every section; thin dividers mark the groups. */}
         <nav className="flex items-center gap-1 overflow-x-auto px-3 pb-3 md:hidden" aria-label={t("title")}>
-          {groups.map((g, gi) => (
+          <Link href="/admin" aria-current={home ? "page" : undefined} className={itemClass(home)}>
+            {tm("overview")}
+          </Link>
+          {groups.map((g) => (
             <div key={g.key} className="flex shrink-0 items-center gap-1">
-              {gi > 0 && <span className="mx-1 h-4 w-px bg-ice/15" aria-hidden="true" />}
+              <span className="mx-1 h-4 w-px bg-ice/15" aria-hidden="true" />
               {g.items.map((i) => {
                 const on = pathname.startsWith(i.href);
                 return (
@@ -91,6 +64,14 @@ export function AdminNav({ name, role, areas }: { name: string; role: string; ar
         {/* Desktop: labelled groups. */}
         <nav className="hidden min-h-0 flex-1 overflow-y-auto px-3 pb-4 md:block" aria-label={t("title")}>
           <p className="label-caps px-3 text-aqua">{t("title")}</p>
+          <Link
+            href="/admin"
+            aria-current={home ? "page" : undefined}
+            className={cn(itemClass(home), "mt-3")}
+          >
+            {home && <span className="absolute inset-y-2 start-0 w-0.5 rounded-pill bg-orange" />}
+            {tm("overview")}
+          </Link>
           <div className="mt-4 space-y-5">
             {groups.map((g) => (
               <div key={g.key}>
