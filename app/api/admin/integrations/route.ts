@@ -66,10 +66,14 @@ export async function PUT(request: Request) {
     const parsed = Save.safeParse(await request.json().catch(() => null));
     if (!parsed.success) throw new HttpError(400, "bad_request");
     const db = await getDb();
-    const { section, ...values } = parsed.data;
-    if (section === "skipcash") await saveSkipCash(db, values, staff.id);
-    else if (section === "resend") await saveResend(db, values, staff.id);
-    else await savePaymentOptions(db, values, staff.id);
+    const input = parsed.data;
+    if (input.section === "skipcash") await saveSkipCash(db, input, staff.id);
+    else if (input.section === "resend") await saveResend(db, input, staff.id);
+    else {
+      // Rest keeps absent keys absent, so untouched options aren't overwritten with undefined.
+      const { section: _section, ...options } = input;
+      await savePaymentOptions(db, options, staff.id);
+    }
     return NextResponse.json(await view(request), { headers: noStore });
   } catch (error) {
     return errorResponse(error);
