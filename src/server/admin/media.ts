@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import type { Database } from "../db";
 import { banners, branchGallery, branches, classTypes, coaches, media, mediaFiles, products } from "../db/schema";
 import { HttpError } from "../http";
@@ -36,7 +37,7 @@ const sourceOf = (key: string): MediaItem["source"] =>
 
 /** Where each media item appears, so staff see the impact of a change and can't delete something in use. */
 async function usage(db: Database, ids?: string[]) {
-  const only = <T extends Parameters<typeof inArray>[0]>(col: T) => (ids ? inArray(col, ids) : isNotNull(col));
+  const only = (col: AnyPgColumn) => (ids ? inArray(col, ids) : isNotNull(col));
   const [b, c, k, bn, p, g] = await Promise.all([
     db.select({ id: branches.coverMediaId, en: branches.nameEn, ar: branches.nameAr }).from(branches).where(only(branches.coverMediaId)),
     db.select({ id: classTypes.coverMediaId, en: classTypes.nameEn, ar: classTypes.nameAr }).from(classTypes).where(only(classTypes.coverMediaId)),
