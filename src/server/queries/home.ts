@@ -11,6 +11,7 @@ import {
   classSessions,
   classTypes,
   coaches,
+  faqs,
   media,
   productClassTypes,
   productPrices,
@@ -35,8 +36,19 @@ async function loadHomeData(locale: string) {
   const now = new Date();
   const until = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000);
 
-  const [mediaRows, bannerRows, branchRows, hourRows, typeRows, coachRows, sessionRows, productRows, priceRows, pctRows] =
-    await Promise.all([
+  const [
+    mediaRows,
+    bannerRows,
+    branchRows,
+    hourRows,
+    typeRows,
+    coachRows,
+    sessionRows,
+    productRows,
+    priceRows,
+    pctRows,
+    faqRows,
+  ] = await Promise.all([
       db.select().from(media),
       db
         .select()
@@ -75,6 +87,7 @@ async function loadHomeData(locale: string) {
         .orderBy(asc(products.sortOrder)),
       db.select().from(productPrices),
       db.select().from(productClassTypes),
+      db.select().from(faqs).where(eq(faqs.isActive, true)).orderBy(asc(faqs.sortOrder), asc(faqs.createdAt)),
     ]);
 
   const mediaById = new Map(mediaRows.map((m) => [m.id, m]));
@@ -158,6 +171,11 @@ async function loadHomeData(locale: string) {
         .filter((x) => x.productId === p.id)
         .map((x): PriceRow => ({ branchId: x.branchId, amount: x.amount, compareAt: x.compareAt })),
       classTypeIds: pctRows.filter((x) => x.productId === p.id).map((x) => x.classTypeId),
+    })),
+    faqs: faqRows.map((f) => ({
+      id: f.id,
+      question: pick(locale, f.questionEn, f.questionAr),
+      answer: pick(locale, f.answerEn, f.answerAr),
     })),
   };
 }

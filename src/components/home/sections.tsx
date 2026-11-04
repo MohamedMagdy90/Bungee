@@ -358,6 +358,47 @@ export async function FirstFlight({ data, locale }: { data: HomeData; locale: st
   );
 }
 
+/* ── 07 Questions ─────────────────────────────────────────────────────────────── */
+/** Edited by staff in Website › Homepage & FAQs. Native <details> rows, so they open before JS loads. */
+export async function Faqs({ data }: { data: HomeData }) {
+  if (data.faqs.length === 0) return null;
+  const t = await getTranslations("faq");
+  return (
+    <section id="faq" className="scroll-mt-16 border-b border-navy/10 bg-ice py-24 text-navy md:py-32">
+      <div className="frame grid-12 gap-y-12">
+        <div className="col-span-12 lg:col-span-4">
+          <SectionLabel index="07" tone="light">
+            {t("kicker")}
+          </SectionLabel>
+          <h2 className="mt-8 text-h1 font-semibold text-balance">{t("title")}</h2>
+          <p className="mt-4 max-w-sm text-body text-steel">{t("more")}</p>
+        </div>
+        <div className="col-span-12 lg:col-span-7 lg:col-start-6">
+          <ul className="border-t border-navy/15">
+            {data.faqs.map((f, i) => (
+              <Reveal as="li" key={f.id} delay={Math.min(i, 6) * 60} className="border-b border-navy/15">
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-start gap-5 py-6 [&::-webkit-details-marker]:hidden">
+                    <span className="tabular pt-1 text-meta font-medium text-steel">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="flex-1 text-h3 font-semibold text-balance">{f.question}</span>
+                    <span
+                      aria-hidden
+                      className="relative mt-2 size-4 shrink-0 before:absolute before:inset-x-0 before:top-1/2 before:h-0.5 before:-translate-y-1/2 before:bg-orange after:absolute after:inset-y-0 after:start-1/2 after:w-0.5 after:-translate-x-1/2 after:bg-orange after:transition-transform after:duration-300 group-open:after:scale-y-0 rtl:after:translate-x-1/2"
+                    />
+                  </summary>
+                  <p className="max-w-2xl whitespace-pre-line ps-10 pb-7 text-body text-steel">{f.answer}</p>
+                </details>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ── Install / tagline band ───────────────────────────────────────────────────── */
 export async function InstallBand() {
   const t = await getTranslations("install");

@@ -1,7 +1,16 @@
 import { cookies } from "next/headers";
 import { setRequestLocale } from "next-intl/server";
 import { Hero } from "@/components/home/hero";
-import { FirstFlight, InstallBand, Manifesto, Packages, Programmes, Studios, Timetable } from "@/components/home/sections";
+import {
+  Faqs,
+  FirstFlight,
+  InstallBand,
+  Manifesto,
+  Packages,
+  Programmes,
+  Studios,
+  Timetable,
+} from "@/components/home/sections";
 import { BranchProvider } from "@/components/site/branch-context";
 import { MobileTabBar } from "@/components/site/mobile-tab-bar";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -35,6 +44,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <Packages data={data} />
           <Studios data={data} locale={locale} now={now} />
           <FirstFlight data={data} locale={locale} />
+          <Faqs data={data} />
           <InstallBand />
         </main>
         <SiteFooter branches={data.branches} />
