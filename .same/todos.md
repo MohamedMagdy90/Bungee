@@ -81,6 +81,20 @@
   project root (not src/app) and the QR ticket is /ticket?c= (not /r/[code]). Check before adding nested routes:
   find . -mindepth 6 -type f -not -path "./node_modules/*" -not -path "./.next/*" -not -path "./.data/*"
 - [x] UI batch 1 (auth pages) · [x] UI batch 2 (account + ticket) · [x] UI batch 3 (sheet booking + header link)
+## Staff back office (Nov 4) — grouped desk, one map in src/components/admin/sections.ts
+- [x] Staff sign-in page (/admin/sign-in) + "Studio staff?" link; staffGate sends signed-out to it
+- [x] Access by role (staff.ts AREA_ROLES): front desk = orders + customers; manager/owner = everything
+- [x] Shared kit (kit.tsx), copy in messages/manage.{en,ar}.json ("manage" namespace)
+- [x] Images & videos (media_files bytea table, /api/media?id= with ranges), picker used by every editor
+- [x] Locations, Classes & coaches, Homepage & FAQs (+ public FAQ section 07), Timetable, Customers
+- [x] /admin overview (today band + section cards); Overview link in the menu
+- [ ] Runtime test every section in EN + AR, then version + deploy
+- [ ] Media in production: DO Spaces driver (DB storage works everywhere but caps size; Netlify body limit 6 MB)
+- [ ] Session materialisation in the worker (today: seed + timetable page load + slot saves)
+- Gotcha: several string_replace calls on the SAME file back to back can silently drop earlier ones
+  -> one edit per file per step, or a python patch script; always grep to verify
+- Gotcha: memory limit 4 GB; ship ~1.6 GB + dev server ~1 GB + tsc ~1.2 GB = restarts. Never run tsc with dev up.
+
 ## Phase 3 — Admin
 - [ ] Walk-in registration (R8), QR check-in (R3), branches/schedule/products/stock (R9, R11)
 - [ ] Branches (locations, hours, map, gallery), media library uploads (Spaces presigned)
