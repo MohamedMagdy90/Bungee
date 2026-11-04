@@ -65,7 +65,11 @@
       "below_booked": "More people are already booked than that. Choose a higher number.",
       "class_cancelled": "This class is already cancelled.",
       "closed": "This class has already started.",
-      "not_reinstatable": "This class can't be brought back."
+      "not_reinstatable": "This class can't be brought back.",
+      "phone_taken": "Someone is already registered with that phone number. Search for them instead.",
+      "email_taken": "That email already belongs to an account.",
+      "below_zero": "A pack can't go below zero sessions.",
+      "not_cancellable": "This booking can't be cancelled any more."
     },
     "media": {
       "kicker": "Website",
@@ -383,6 +387,109 @@
         "cancelledDone": "{count, plural, =0 {Class cancelled.} one {Class cancelled. Credits went back and # person was emailed.} other {Class cancelled. Credits went back and # people were emailed.}}",
         "reinstate": "Bring back",
         "reinstated": "The class is back on the timetable. Earlier bookings were not restored."
+      }
+    },
+    "customers": {
+      "kicker": "Front desk",
+      "title": "Customers",
+      "lede": "Find anyone by name, phone or email. See their packs, bookings and orders, fix their details, and register walk-ins.",
+      "search": "Search name, phone or email",
+      "filters": {
+        "all": "All",
+        "walkin": "Walk-ins",
+        "credits": "Has sessions"
+      },
+      "add": "Register walk-in",
+      "listTitle": "Customers",
+      "count": "{count, plural, =0 {No customers} one {# customer} other {# customers}}",
+      "showingFirst": "Showing the newest {count}. Search to find others.",
+      "empty": "No customers match.",
+      "emptyAll": "No customers yet.",
+      "row": {
+        "credits": "{count, plural, =0 {No sessions} one {# session} other {# sessions}}",
+        "upcoming": "{count} upcoming",
+        "walkIn": "Walk-in",
+        "unverified": "Email not verified",
+        "noEmail": "No email"
+      },
+      "profile": {
+        "since": "Customer since {date}",
+        "stats": {
+          "credits": "Sessions left",
+          "upcoming": "Upcoming",
+          "visits": "Classes taken",
+          "spent": "Spent"
+        },
+        "details": "Details",
+        "detailsHint": "What the desk sees, and what's on their account.",
+        "name": "Full name",
+        "phone": "Phone",
+        "phoneHint": "With country code, e.g. +974 5555 1234.",
+        "email": "Email",
+        "emailHint": "Customers change their email from their own account.",
+        "dob": "Date of birth",
+        "language": "Emails in",
+        "languages": {
+          "en": "English",
+          "ar": "Arabic"
+        },
+        "studio": "Home studio",
+        "studioNone": "No preference",
+        "marketing": "News and offers",
+        "marketingHint": "Only if they asked to receive them.",
+        "packs": "Packs",
+        "packsHint": "Sessions they can book with. Adjust to gift a session or fix a mistake.",
+        "noPacks": "No packs yet.",
+        "packLeft": "{left} of {total} left",
+        "expires": "Expires {date}",
+        "expired": "Expired {date}",
+        "packStatus": {
+          "active": "Active",
+          "frozen": "Frozen",
+          "exhausted": "Used up",
+          "expired": "Expired",
+          "refunded": "Refunded"
+        },
+        "adjust": "Adjust",
+        "adjustTitle": "Add or remove sessions",
+        "adjustDelta": "Sessions",
+        "adjustDeltaHint": "Use a minus sign to remove, e.g. -1.",
+        "adjustNote": "Reason",
+        "adjustNotePlaceholder": "e.g. Birthday gift",
+        "adjustSave": "Apply",
+        "adjusted": "Pack updated: {count} left.",
+        "bookings": "Bookings",
+        "bookingsHint": "Upcoming first, then history.",
+        "noBookings": "No bookings yet.",
+        "upcomingTitle": "Upcoming",
+        "historyTitle": "History",
+        "forChild": "for {name}",
+        "cancelBooking": "Cancel booking",
+        "cancelConfirm": "Yes, cancel",
+        "bookingCancelled": "Booking cancelled.",
+        "bookingRefunded": "Booking cancelled. The session went back to their pack.",
+        "bookingLate": "Booking cancelled inside the cancellation window, so the session was kept.",
+        "orders": "Orders",
+        "ordersHint": "Open one at the desk to take payment or refund.",
+        "noOrders": "No orders yet.",
+        "order": "Order #{number}",
+        "open": "Open",
+        "children": "Children",
+        "noChildren": "No children added.",
+        "age": "{count, plural, one {# year} other {# years}}",
+        "ledger": "Session history",
+        "noLedger": "No session activity yet."
+      },
+      "walkIn": {
+        "title": "Register a walk-in",
+        "lede": "For customers at the desk. A phone number is enough; they don't need to verify an email.",
+        "name": "Full name",
+        "phone": "Phone",
+        "email": "Email",
+        "emailHint": "Optional. Add it so they get receipts and reminders.",
+        "language": "Emails in",
+        "create": "Register customer",
+        "created": "Customer registered."
       }
     }
   }
