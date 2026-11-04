@@ -51,9 +51,18 @@
     "statementLead": "We built Bungee Fly around half a second: the moment at the top of the lift when you stop working against gravity and feel",
     "statementKey": "carried instead of held.",
     "pillars": [
-      { "title": "Teach it properly", "body": "Every class is coached, every harness is fitted by hand, and nobody flies before they are ready." },
-      { "title": "Make it reachable", "body": "Low impact on knees and back, scaled for every level from age three upwards." },
-      { "title": "Keep it beautiful", "body": "Calm studios, honest prices, and a timetable you can read in two seconds." }
+      {
+        "title": "Teach it properly",
+        "body": "Every class is coached, every harness is fitted by hand, and nobody flies before they are ready."
+      },
+      {
+        "title": "Make it reachable",
+        "body": "Low impact on knees and back, scaled for every level from age three upwards."
+      },
+      {
+        "title": "Keep it beautiful",
+        "body": "Calm studios, honest prices, and a timetable you can read in two seconds."
+      }
     ]
   },
   "programmes": {
@@ -79,7 +88,12 @@
   "timetable": {
     "label": "Timetable",
     "title": "Find your next flight.",
-    "filters": { "all": "All classes", "adults": "Adults", "kids": "Kids", "private": "Private" },
+    "filters": {
+      "all": "All classes",
+      "adults": "Adults",
+      "kids": "Kids",
+      "private": "Private"
+    },
     "today": "Today",
     "dayPicker": "Choose a day",
     "studioPicker": "Choose a studio",
@@ -105,8 +119,18 @@
     "label": "Packages",
     "title": "Pay per class, or commit and save.",
     "intro": "Prices shown for {studio}. Every pack is spent on classes, not months.",
-    "tabs": { "adults": "Adults", "kids": "Kids", "private": "Private" },
-    "cols": { "pack": "Pack", "classes": "Classes", "valid": "Valid for", "perClass": "Per class", "price": "Price" },
+    "tabs": {
+      "adults": "Adults",
+      "kids": "Kids",
+      "private": "Private"
+    },
+    "cols": {
+      "pack": "Pack",
+      "classes": "Classes",
+      "valid": "Valid for",
+      "perClass": "Per class",
+      "price": "Price"
+    },
     "days": "{n} days",
     "classes": "{count, plural, one {{n} class} other {{n} classes}}",
     "mostChosen": "Most chosen",
@@ -126,10 +150,22 @@
     "label": "First flight",
     "title": "Never been on a cord? Good.",
     "steps": [
-      { "title": "Pick a Flow class", "body": "Choose your studio and any Bungee Flow slot. It's built for first-timers." },
-      { "title": "Arrive ten minutes early", "body": "Your coach fits the harness by hand and walks you through the cord." },
-      { "title": "Wear fitted sportswear", "body": "Leggings or shorts and a fitted top. Grip socks recommended; water is on us." },
-      { "title": "Fly", "body": "Forty-five minutes. You'll feel it in your core tomorrow, not your knees." }
+      {
+        "title": "Pick a Flow class",
+        "body": "Choose your studio and any Bungee Flow slot. It's built for first-timers."
+      },
+      {
+        "title": "Arrive ten minutes early",
+        "body": "Your coach fits the harness by hand and walks you through the cord."
+      },
+      {
+        "title": "Wear fitted sportswear",
+        "body": "Leggings or shorts and a fitted top. Grip socks recommended; water is on us."
+      },
+      {
+        "title": "Fly",
+        "body": "Forty-five minutes. You'll feel it in your core tomorrow, not your knees."
+      }
     ],
     "cta": "First Flight · 2 classes for {price}"
   },
@@ -153,5 +189,10 @@
     "whatsapp": "Message us on WhatsApp",
     "rights": "All rights reserved.",
     "preview": "Preview build: studios, coaches, schedules and prices are sample data."
+  },
+  "faq": {
+    "kicker": "Questions",
+    "title": "Before you fly",
+    "more": "Still unsure? Message your studio and we'll help."
   }
 }

@@ -256,6 +256,44 @@
       "slots": "{count, plural, =0 {Not on the timetable} one {# weekly slot} other {# weekly slots}}",
       "hiddenClass": "A hidden class disappears from the website and can't be booked. Past bookings keep it.",
       "hiddenCoach": "A hidden coach no longer appears on the website or the timetable."
+    },
+    "website": {
+      "kicker": "Website",
+      "title": "Homepage & FAQs",
+      "lede": "The first things customers see. Changes go live as soon as you save.",
+      "hero": {
+        "title": "Main banner",
+        "hint": "The big statement at the top of the homepage. The headline's last word is shown in aqua.",
+        "eyebrow": "Small label above",
+        "eyebrowHint": "For example: Bungee fitness · Doha.",
+        "headline": "Headline",
+        "headlineHint": "Short works best: two to four words.",
+        "body": "Text under the headline",
+        "ctaLabel": "Button text",
+        "ctaHref": "Button link",
+        "ctaHrefHint": "A homepage section like #timetable or #packages, a page like /sign-up, or a full https:// link.",
+        "media": "Background image or video",
+        "mediaHint": "Videos play silently on a loop. A short clip (under 15 seconds) loads fastest.",
+        "preview": "Preview",
+        "firstTime": "First time?"
+      },
+      "photos": {
+        "title": "First flight photo",
+        "hint": "The picture beside the \"first flight\" section. When empty, the first studio's photo is used.",
+        "label": "Photo"
+      },
+      "faqs": {
+        "title": "FAQs",
+        "hint": "The questions customers ask most, shown on the homepage in this order.",
+        "add": "New question",
+        "newTitle": "New question",
+        "question": "Question",
+        "answer": "Answer",
+        "delete": "Delete question",
+        "deleteConfirm": "Delete for good",
+        "deleted": "Question deleted.",
+        "empty": "No questions yet. Add the first one."
+      }
     }
   }
 }
