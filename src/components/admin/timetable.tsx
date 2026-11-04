@@ -183,7 +183,7 @@ export function TimetableManager({
         lede={t("lede")}
         actions={
           tab === "week" ? (
-            <Button onClick={() => openNew(new Date(now).getUTCDay())}>
+            <Button onClick={() => openNew(weekdayOf(view.today))}>
               <PlusIcon size={16} />
               {t("addSlot")}
             </Button>

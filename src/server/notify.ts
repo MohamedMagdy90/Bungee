@@ -22,6 +22,8 @@ export async function queueEmail(
   db: Database,
   msg: { template: EmailTemplate; to: string; userId?: string | null; payload: Record<string, unknown>; dedupeKey?: string },
 ) {
+  // Phone-only walk-ins registered at the desk have a placeholder address: nothing to send.
+  if (msg.to.endsWith("@walk-in.bungeefly.invalid")) return;
   await db
     .insert(notificationOutbox)
     .values({
