@@ -183,6 +183,32 @@ function content(template: EmailTemplate, p: Payload, ar: boolean, origin: strin
       };
     }
     case "booking.cancelled":
+      if (p.byStudio) {
+        const reason = typeof p.reason === "string" && p.reason.trim() ? p.reason.trim() : null;
+        return {
+          subject: ar ? "ألغى الاستوديو حصتك" : "Your class has been cancelled",
+          heading: ar ? "أُلغيت الحصة." : "Class cancelled.",
+          lines: [
+            hi,
+            classLine(p, ar),
+            ar
+              ? `نعتذر، اضطر الاستوديو إلى إلغاء هذه الحصة.${reason ? ` السبب: ${reason}` : ""}`
+              : `Sorry, the studio had to cancel this class.${reason ? ` Reason: ${reason}` : ""}`,
+            p.refunded
+              ? ar
+                ? "عادت الحصة إلى باقتك، ويمكنك حجز حصة أخرى في أي وقت."
+                : "The session is back in your pack, so you can book another class any time."
+              : p.wasWaitlisted
+                ? ar
+                  ? "كنت على قائمة الانتظار، ولم يُخصم شيء من باقتك."
+                  : "You were on the waitlist, so nothing was taken from your pack."
+                : ar
+                  ? "لم يُخصم شيء من باقتك."
+                  : "Nothing was taken from your pack.",
+          ],
+          action: undefined,
+        };
+      }
       return {
         subject: ar ? "تم إلغاء حجزك" : "Booking cancelled",
         heading: ar ? "تم الإلغاء." : "Booking cancelled.",

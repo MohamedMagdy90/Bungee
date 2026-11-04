@@ -609,3 +609,103 @@ export async function releaseExpiredHolds(db: Database, now = new Date()) {
   }
   return released;
 }
+
+/**
+ * Staff cancel a whole class (Studio › Timetable). Every live booking is cancelled, used credits always go
+ * back (it's the studio's call, so no late-cancel rule), unpaid holds are released and everyone who had a
+ * place or was waiting gets an email. One transaction, class row locked first like everywhere else.
+ */
+export async function cancelSessionByStudio(
+  db: Database,
+  input: { sessionId: string; actorId: string; reason: string | null; now?: Date },
+) {
+  const now = input.now ?? new Date();
+  return db.transaction(async (txRaw) => {
+    const tx = txRaw as unknown as Database;
+    const s = await lockSession(tx, input.sessionId);
+    if (!s) throw new BookingProblem("not_found");
+    if (s.status !== "scheduled") throw new BookingProblem("class_cancelled");
+    if (s.startsAt <= now) throw new BookingProblem("closed");
+
+    const live = await tx
+      .select()
+      .from(bookings)
+      .where(and(eq(bookings.sessionId, s.id), inArray(bookings.status, [...LIVE])))
+      .for("update");
+
+    let refunded = 0;
+    let notified = 0;
+    for (const b of live) {
+      await tx
+        .update(bookings)
+        .set({ status: "cancelled", cancelledAt: now, cancelledBy: input.actorId, waitlistPosition: null, holdExpiresAt: null })
+        .where(eq(bookings.id, b.id));
+
+      let gotCredit = false;
+      if (b.status === "booked" && b.customerPackageId && b.creditsUsed > 0) {
+        const [pkg] = await tx
+          .select()
+          .from(customerPackages)
+          .where(eq(customerPackages.id, b.customerPackageId))
+          .for("update");
+        if (pkg) {
+          const balance = Math.min(pkg.creditsTotal, pkg.creditsRemaining + b.creditsUsed);
+          const reopen = pkg.status === "exhausted" && pkg.expiresAt > now;
+          await tx
+            .update(customerPackages)
+            .set({ creditsRemaining: balance, ...(reopen ? { status: "active" as const } : {}) })
+            .where(eq(customerPackages.id, pkg.id));
+          await tx.insert(creditLedger).values({
+            userId: b.userId,
+            customerPackageId: pkg.id,
+            bookingId: b.id,
+            delta: balance - pkg.creditsRemaining,
+            balanceAfter: balance,
+            reason: "cancel_refund",
+            note: input.reason ? `Class cancelled by the studio: ${input.reason}` : "Class cancelled by the studio",
+          });
+          gotCredit = true;
+          refunded += 1;
+        }
+      }
+
+      // Unpaid holds were never confirmed to the customer; everyone else hears about it.
+      if (b.status !== "pending_payment") {
+        const [user] = await tx.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, b.userId));
+        if (user) {
+          await queueEmail(tx, {
+            template: "booking.cancelled",
+            to: user.email,
+            userId: b.userId,
+            payload: emailPayload(s, {
+              name: user.name,
+              refunded: gotCredit,
+              byStudio: true,
+              wasWaitlisted: b.status === "waitlisted",
+              reason: input.reason,
+            }),
+            dedupeKey: `booking.cancelled:${b.id}`,
+          });
+          notified += 1;
+        }
+      }
+    }
+
+    await tx
+      .update(classSessions)
+      .set({ status: "cancelled", cancelledReason: input.reason, bookedCount: 0, waitlistCount: 0 })
+      .where(eq(classSessions.id, s.id));
+    return { bookings: live.length, refunded, notified };
+  });
+}
+
+/** After staff raise a class's capacity: lets people on the waitlist move up into the new places. */
+export async function promoteAfterCapacityChange(db: Database, sessionId: string, now = new Date()) {
+  return db.transaction(async (txRaw) => {
+    const tx = txRaw as unknown as Database;
+    const s = await lockSession(tx, sessionId);
+    if (!s || s.status !== "scheduled" || s.waitlistCount === 0) return 0;
+    const policy = await getBookingPolicy(tx);
+    return policy.waitlistAutoPromote ? promoteWaitlist(tx, s, now) : 0;
+  });
+}
