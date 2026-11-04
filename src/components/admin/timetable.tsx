@@ -261,7 +261,7 @@ export function TimetableManager({
         />
       )}
 
-      <Drawer open={editing !== null} onClose={close} label={t("editor.newTitle")}>
+      <Drawer open={editing !== null} onClose={close} label={t("tabs.week")}>
         {editing && (
           <SlotEditor
             key={editing.key}
@@ -853,7 +853,6 @@ function Upcoming({
                     setOpen(null);
                     onChange(view, flash);
                   }}
-                  onError={(flash) => onChange({ slots: [], sessions: [], today } as never, flash)}
                 />
               ))}
             </ul>
