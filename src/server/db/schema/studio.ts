@@ -1,6 +1,7 @@
 import {
   boolean,
   check,
+  customType,
   doublePrecision,
   index,
   integer,
@@ -41,6 +42,26 @@ export const media = pgTable(
     check("media_focal_range", sql`${t.focalX} between 0 and 1 and ${t.focalY} between 0 and 1`),
     index("media_kind_idx").on(t.kind, t.createdAt),
   ],
+);
+
+const bytea = customType<{ data: Uint8Array; driverData: Uint8Array }>({ dataType: () => "bytea" });
+
+/**
+ * File bytes for media uploaded through the studio desk while no CDN bucket is configured
+ * (served by /api/media?id=…&v=original|poster). One row per media item and variant.
+ */
+export const mediaFiles = pgTable(
+  "media_files",
+  {
+    mediaId: uuid("media_id")
+      .notNull()
+      .references(() => media.id, { onDelete: "cascade" }),
+    variant: text("variant").notNull().default("original"), // original | poster
+    mimeType: text("mime_type").notNull(),
+    data: bytea("data").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.mediaId, t.variant] })],
 );
 
 export const branches = pgTable(
