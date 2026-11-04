@@ -506,6 +506,18 @@ export async function markOrderPaid(
       });
     }
     await tx.update(orders).set({ status: "paid", paidAt: now }).where(eq(orders.id, o.id));
+    // Paid another way (e.g. cash at the desk after showing a QR): close the other open attempts so the history is
+    // honest. A late SkipCash payment on one of them still lands via the webhook (looked up by id) for a refund.
+    await tx
+      .update(payments)
+      .set({ status: "cancelled" })
+      .where(
+        and(
+          eq(payments.orderId, o.id),
+          inArray(payments.status, ["initiated", "pending"]),
+          input.paymentId ? sql`${payments.id} <> ${input.paymentId}` : undefined,
+        ),
+      );
 
     const items = await tx
       .select({ item: orderItems, type: products.type, trackStock: products.trackStock })

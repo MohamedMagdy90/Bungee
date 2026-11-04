@@ -85,16 +85,28 @@ async function write(db: Database, key: string, value: Stored, actor: string | n
 }
 
 const s = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-const env = (name: string) => (process.env[name] ?? "").trim();
+// Literal reads (not process.env[name]) so Netlify preview builds can inline them through next.config `env`.
+const envVars = () => ({
+  SKIPCASH_API_URL: process.env.SKIPCASH_API_URL,
+  SKIPCASH_CLIENT_ID: process.env.SKIPCASH_CLIENT_ID,
+  SKIPCASH_KEY_ID: process.env.SKIPCASH_KEY_ID,
+  SKIPCASH_KEY_SECRET: process.env.SKIPCASH_KEY_SECRET,
+  SKIPCASH_WEBHOOK_KEY: process.env.SKIPCASH_WEBHOOK_KEY,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM: process.env.RESEND_FROM,
+  RESEND_REPLY_TO: process.env.RESEND_REPLY_TO,
+});
+type EnvName = keyof ReturnType<typeof envVars>;
+const env = (name: EnvName) => (envVars()[name] ?? "").trim();
 
-function field(saved: unknown, envName: string): FieldView {
+function field(saved: unknown, envName: EnvName): FieldView {
   const v = s(saved);
   if (v) return { value: v, source: "saved" };
   const e = env(envName);
   return e ? { value: e, source: "env" } : { value: "", source: "missing" };
 }
 
-function secret(sealed: unknown, envName: string): { value: string; view: SecretView } {
+function secret(sealed: unknown, envName: EnvName): { value: string; view: SecretView } {
   const v = unseal(sealed);
   const value = v || env(envName);
   const source: Source = v ? "saved" : value ? "env" : "missing";

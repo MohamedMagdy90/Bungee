@@ -33,13 +33,22 @@
 - Prefer shallow app/ paths for new routes (6-segment app files went missing once); flat app/api/<name>/route.ts.
 - [x] R-2 Restored APIs: auth/[...all], booking/cancel, booking/context, me/children, me/preview-credits (V23)
 - [x] R-3 Restored pages: sign-in, sign-up, forgot-password, reset-password, account, ticket, mailbox (V23)
-- [ ] R-1 request.ts merges pay.* (+ staff.*); add checkout.buy/bookAndPay/bookAndPayNote; buy links on packages board
-- [ ] R-4 checkout + order pages, SkipCash webhook route (orders.ts passes the webhook URL; check path)
-- [ ] R-5 Admin: staff.*.json, admin layout/pages, orders desk, integrations form, admin orders/integrations APIs
+- [x] R-1 request.ts merges pay.* + staff.*; checkout copy; buy links on packages board (ccbb768)
+- [x] R-4 checkout + order pages, SkipCash webhook route (eb21d70)
+- [x] R-5 Admin: staff.*.json (cc46b7f), admin APIs (6c2bb99), shell + gate + orders desk (af0428e), integrations (6dcc7da)
+  - Routes: /admin -> /admin/orders (?view=&q=&id= ; desk QR on the order page deep-links ?id=), /admin/integrations
+  - Access: staffGate(area) per page (signed out -> sign-in?next=…; customer/coach -> <Denied/>); layout only shows the rail
+  - Preview owner: PREVIEW_ADMIN_EMAIL / PREVIEW_ADMIN_PASSWORD in .env.local (seeded on boot)
 - [x] GitHub backup: AmrDNAERP has write access; source pushed as real files (commit e0e4b7b on main)
   - Push after EVERY batch: git add --ignore-removal . && git commit && git -c credential.helper='!gh auth git-credential' push origin main
   - Restore after a wipe: git clone https://github.com/MohamedMagdy90/Bungee.git bungee-fly && cd bungee-fly && bun install,
     then recreate .env.local (never committed). Archive.zip in the repo is the user's upload: leave it alone.
+    .env.local recovery: git show 1a068f7^:bungee-fly.zip > /tmp/o.zip && unzip -p /tmp/o.zip bungee-fly/.env.local > .env.local
+  - Partial wipe (files kept, .git emptied): git clone --no-checkout <repo> /tmp/g && mv /tmp/g/.git . && git reset -q
+  - No git identity on fresh hosts: pass GIT_AUTHOR_/GIT_COMMITTER_ NAME/EMAIL from `git log -1` per command (never git config)
+  - GitHub push sometimes returns 500: retry loop in background (for i in 1 2 3 4; do push && break; sleep 15; done)
+  - Wipes happen MID-BATCH: commit + push after every 1-2 files, not at the end of a batch
+  - Python urllib won't resend Better Auth's Secure cookie over http://localhost: carry the Cookie header by hand in tests
 - [ ] Security: bungee-fly.zip (deleted, still in history) had .env.local; repo still PUBLIC -> make private + rotate sandbox keys
 ## Phase 1 — Public website (after recovery)
 - [ ] Timetable page, Programmes, Packages, Studios (branch pages), Coaches, FAQ, Contact

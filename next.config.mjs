@@ -2,6 +2,21 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const demo = process.env.NETLIFY === "true";
+// Netlify preview only: functions don't read .env.local at runtime, so the sample owner login and the SkipCash
+// sandbox keys from the build machine's .env.local are inlined into the server bundle (read only in server-only
+// modules). Real builds (DigitalOcean) take these from the environment at runtime instead.
+const PREVIEW_KEYS = [
+  "PREVIEW_ADMIN_EMAIL",
+  "PREVIEW_ADMIN_PASSWORD",
+  "SKIPCASH_API_URL",
+  "SKIPCASH_CLIENT_ID",
+  "SKIPCASH_KEY_ID",
+  "SKIPCASH_KEY_SECRET",
+  "SKIPCASH_WEBHOOK_KEY",
+];
+const previewEnv = demo ? Object.fromEntries(PREVIEW_KEYS.filter((k) => process.env[k]).map((k) => [k, process.env[k]])) : {};
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Self-contained server bundle for the Docker image on DigitalOcean App Platform.
@@ -16,7 +31,7 @@ const nextConfig = {
     "/**": ["./drizzle/**/*", "./node_modules/@electric-sql/pglite/dist/**/*"],
   },
   // Netlify preview builds run the sample database in memory (see src/server/db/index.ts).
-  env: { BF_DEMO_DB: process.env.NETLIFY === "true" ? "1" : "0" },
+  env: { BF_DEMO_DB: demo ? "1" : "0", ...previewEnv },
   images: {
     // Media variants are produced at upload time and served from Spaces CDN.
     unoptimized: true,
