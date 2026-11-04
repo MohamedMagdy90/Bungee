@@ -1,0 +1,232 @@
+{
+  "admin": {
+    "title": "Studio desk",
+    "nav": {
+      "orders": "Orders & payments",
+      "integrations": "Integrations",
+      "site": "Back to the website"
+    },
+    "roles": {
+      "front_desk": "Front desk",
+      "coach": "Coach",
+      "manager": "Manager",
+      "owner": "Owner"
+    },
+    "meta": {
+      "orders": "Orders & payments",
+      "integrations": "Integrations"
+    },
+    "denied": {
+      "title": "This part of the studio desk isn’t open to your account",
+      "body": "Orders and payments are for front desk, managers and owners. Integrations are for managers and owners. Ask an owner to change your role if you need access.",
+      "home": "Back to the website",
+      "account": "My account"
+    },
+    "errors": {
+      "auth": "Your session ended. Sign in again to continue.",
+      "forbidden": "Your role can’t do this.",
+      "bad_request": "Check the values and try again.",
+      "bad_origin": "That request was blocked. Reload the page and try again.",
+      "network": "No connection. Check the network and try again.",
+      "generic": "Something went wrong. Try again."
+    },
+    "orders": {
+      "kicker": "Front desk",
+      "title": "Orders & payments",
+      "lede": "Find an order by number, name, email or phone. Take payment at the desk, or show the customer a SkipCash QR to pay on their phone.",
+      "views": {
+        "open": "To collect",
+        "paid": "Paid",
+        "all": "All"
+      },
+      "searchLabel": "Search orders",
+      "search": "Order no., name, email or phone",
+      "refresh": "Refresh",
+      "count": "{count, plural, =0 {No orders} one {# order} other {# orders}}",
+      "empty": {
+        "open": "Nothing to collect. Every order is settled.",
+        "paid": "No paid orders yet.",
+        "all": "No orders yet.",
+        "search": "No orders match “{q}”."
+      },
+      "pick": "Pick an order to see the customer, what they bought and how to take payment.",
+      "status": {
+        "pending": "Paying online",
+        "awaiting_payment": "Pay at studio",
+        "paid": "Paid",
+        "failed": "Payment failed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "partially_refunded": "Part refunded"
+      },
+      "method": {
+        "online": "Online",
+        "at_studio": "At studio"
+      },
+      "detail": {
+        "back": "All orders",
+        "number": "Order #{number}",
+        "placed": "Placed {date}",
+        "customer": "Customer",
+        "noPhone": "No mobile number",
+        "items": "Items",
+        "total": "Total",
+        "studio": "Studio",
+        "class": "Class",
+        "spot": {
+          "held": "Spot held until {time}",
+          "heldOpen": "Spot held",
+          "booked": "Spot confirmed",
+          "released": "Spot released",
+          "waitlisted": "On the waitlist"
+        },
+        "payments": "Payment history",
+        "noPayments": "No payment attempts yet.",
+        "by": "by {name}",
+        "customerPage": "Open the customer’s order page",
+        "invoice": "Invoice INV-{number}",
+        "paidOn": "Paid {date} · {method}",
+        "closed": "This order is closed. Nothing to collect."
+      },
+      "take": {
+        "title": "Take payment",
+        "due": "Amount due",
+        "tabs": {
+          "qr": "SkipCash QR",
+          "desk": "Paid at the desk"
+        },
+        "qrIntro": "The customer scans the code with their phone camera and pays by card or Apple Pay. The order updates here by itself.",
+        "qrShow": "Show SkipCash QR",
+        "qrBuilding": "Creating the payment link…",
+        "qrWaiting": "Waiting for the customer to pay…",
+        "qrNew": "New code",
+        "copy": "Copy link",
+        "copied": "Link copied",
+        "qrOff": "SkipCash isn’t connected, so the QR is off. Take payment at the desk, or ask a manager to connect SkipCash under Integrations.",
+        "methods": {
+          "cash": "Cash",
+          "card": "Card machine",
+          "other": "Other"
+        },
+        "methodLabel": "How did they pay?",
+        "note": "Note (optional)",
+        "notePlaceholder": "Receipt no., last 4 card digits…",
+        "markPaid": "Mark {amount} paid",
+        "confirmPaid": "{amount} received by {method}? The customer gets their invoice by email straight away.",
+        "confirmYes": "Yes, mark paid",
+        "goBack": "Go back",
+        "recheck": "Re-check SkipCash",
+        "cancel": "Cancel order",
+        "confirmCancel": "Cancel order #{number}? Any class spot it holds goes back on sale.",
+        "confirmCancelYes": "Yes, cancel order"
+      },
+      "pay": {
+        "status": {
+          "initiated": "Started",
+          "pending": "Waiting",
+          "succeeded": "Paid",
+          "failed": "Failed",
+          "cancelled": "Cancelled",
+          "refunded": "Refunded"
+        },
+        "provider": {
+          "skipcash": "SkipCash",
+          "cash": "Cash",
+          "card": "Card machine",
+          "other": "Other"
+        }
+      },
+      "done": {
+        "paid": "Payment recorded. The invoice is on its way to the customer.",
+        "cancelled": "Order cancelled.",
+        "synced": "Checked with SkipCash. Nothing new yet.",
+        "skipcashPaid": "SkipCash confirmed the payment."
+      },
+      "errors": {
+        "phone_required": "This customer has no mobile number on file, and SkipCash needs one. Record the payment at the desk instead.",
+        "payments_unavailable": "SkipCash isn’t connected yet. Ask a manager to add the keys under Integrations.",
+        "method_unavailable": "That payment option is switched off under Integrations.",
+        "payment_provider": "SkipCash didn’t respond. Try again, or take payment at the desk.",
+        "already_paid": "This order is already paid.",
+        "not_payable": "This order can’t take payment any more.",
+        "not_cancellable": "Paid orders can’t be cancelled here.",
+        "not_found": "Order not found. It may have been removed."
+      }
+    },
+    "integrations": {
+      "kicker": "Settings",
+      "title": "Integrations",
+      "lede": "Connect payments and email. Keys are encrypted before they’re stored and are never shown in full again.",
+      "ready": "Connected",
+      "notReady": "Not connected",
+      "source": {
+        "saved": "Saved here",
+        "env": "From server settings",
+        "missing": "Not set"
+      },
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "secretSet": "Set · {hint}",
+      "secretKeep": "Leave blank to keep the current key",
+      "secretNew": "Paste the key",
+      "clear": "Clear",
+      "undo": "Undo",
+      "willClear": "Cleared on save. Falls back to the server setting, if there is one.",
+      "skipcash": {
+        "title": "SkipCash",
+        "body": "Card and Apple Pay payments for online checkout and the desk QR.",
+        "mode": "Environment",
+        "modes": {
+          "sandbox": "Sandbox (test)",
+          "live": "Live"
+        },
+        "liveWarn": "Live takes real money. Switch only once SkipCash has given you live keys, and paste them below.",
+        "clientId": "Client ID",
+        "keyId": "Key ID",
+        "keySecret": "Key secret",
+        "webhookKey": "Webhook key",
+        "webhook": "Webhook URL",
+        "webhookHint": "Paste this into the SkipCash merchant portal so payments confirm the moment they go through.",
+        "webhookLocal": "This preview isn’t on a public https address, so SkipCash can’t reach the webhook yet. Payments still confirm when the customer comes back to the site or the desk re-checks.",
+        "copy": "Copy",
+        "copied": "Copied",
+        "test": "Test connection",
+        "testing": "Testing…",
+        "testOk": "SkipCash accepted the keys ({mode}). It created a QAR 1.00 test link, which expires if nobody pays it.",
+        "openLink": "Open the test link"
+      },
+      "resend": {
+        "title": "Email · Resend",
+        "body": "Sends sign-up verification, booking confirmations, invoices and password resets.",
+        "apiKey": "API key",
+        "from": "From",
+        "fromHint": "Leave blank for {from}. For real customers, use an address on a domain you’ve verified in Resend.",
+        "replyTo": "Reply-to",
+        "replyToHint": "Where customer replies go, e.g. the studio inbox.",
+        "testTo": "Send a test to",
+        "test": "Send test email",
+        "testing": "Sending…",
+        "testOk": "Test email sent to {to}. It should arrive within a minute."
+      },
+      "payments": {
+        "title": "Payment options",
+        "body": "What customers can choose at checkout.",
+        "online": "Pay online with SkipCash",
+        "onlineHint": "Only offered while SkipCash is connected.",
+        "atStudio": "Pay at the studio",
+        "atStudioHint": "The customer reserves now and the front desk takes payment.",
+        "hold": "Hold a class spot for",
+        "holdHint": "How long a spot stays held while an online payment is in progress. 5 to 120 minutes.",
+        "minutes": "minutes",
+        "oneRequired": "Keep at least one option switched on, or nobody can check out."
+      },
+      "errors": {
+        "not_configured": "Save the keys first, then test.",
+        "phone_required": "Add a mobile number to your own account to run a live test.",
+        "skipcash": "SkipCash rejected the request: {detail}",
+        "resend": "Resend rejected the request: {detail}"
+      }
+    }
+  }
+}
