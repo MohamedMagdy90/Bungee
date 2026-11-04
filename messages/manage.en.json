@@ -478,7 +478,8 @@
         "noChildren": "No children added.",
         "age": "{count, plural, one {# year} other {# years}}",
         "ledger": "Session history",
-        "noLedger": "No session activity yet."
+        "noLedger": "No session activity yet.",
+        "saved": "Details saved."
       },
       "walkIn": {
         "title": "Register a walk-in",

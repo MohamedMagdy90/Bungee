@@ -478,7 +478,8 @@
         "noChildren": "لم يُضف أطفال.",
         "age": "{count, plural, one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
         "ledger": "سجل الحصص",
-        "noLedger": "لا نشاط بعد."
+        "noLedger": "لا نشاط بعد.",
+        "saved": "حُفظت البيانات."
       },
       "walkIn": {
         "title": "تسجيل عميل حاضر",
