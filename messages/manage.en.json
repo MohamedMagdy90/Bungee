@@ -61,6 +61,62 @@
       "in_use": "This is still in use, so it can't be removed. Hide it instead.",
       "too_large": "That file is too big.",
       "bad_type": "That file type isn't supported."
+    },
+    "media": {
+      "kicker": "Website",
+      "title": "Images & videos",
+      "lede": "Every photo and video on the website lives here. Upload it once, then pick it for a location, a class, a coach or the homepage.",
+      "filters": {
+        "all": "All",
+        "image": "Images",
+        "video": "Videos"
+      },
+      "upload": "Upload files",
+      "uploadHint": "Drop images or videos here, or choose files. Large photos are resized automatically.",
+      "dropHere": "Drop to upload",
+      "uploading": "Uploading {name}…",
+      "uploaded": "Uploaded. Add a short description so everyone knows what it shows.",
+      "limits": "Images up to 6 MB, videos up to 40 MB. For longer videos, add a link instead.",
+      "addLink": "Add by link",
+      "linkTitle": "Add a file hosted elsewhere",
+      "linkHint": "For long videos already on a CDN or video host. The link must start with https://",
+      "linkUrl": "File link",
+      "linkPoster": "Poster image link (videos)",
+      "linkKind": "Type",
+      "linkAdd": "Add to library",
+      "empty": "No images or videos yet. Upload the first one.",
+      "details": "Details",
+      "description": "Description",
+      "descriptionHint": "A few words on what the picture shows. Read aloud to people who can't see it.",
+      "focus": "Focus point",
+      "focusHint": "Click the part that must always stay in view when the picture is cropped.",
+      "usedIn": "Used in",
+      "notUsed": "Not used anywhere yet.",
+      "uses": {
+        "location": "Location cover",
+        "class": "Class cover",
+        "coach": "Coach photo",
+        "banner": "Homepage banner",
+        "product": "Product image",
+        "gallery": "Location gallery"
+      },
+      "source": {
+        "upload": "Uploaded",
+        "link": "Link",
+        "built_in": "Built in"
+      },
+      "copyLink": "Copy link",
+      "copied": "Link copied",
+      "delete": "Delete",
+      "deleteConfirm": "Delete for good",
+      "deleted": "Deleted.",
+      "inUse": "It's in use, so it can't be deleted. Replace it where it's used first.",
+      "untitled": "No description yet",
+      "pickerTitle": "Choose an image",
+      "pickerTitleAny": "Choose an image or video",
+      "pickerUse": "Use this",
+      "pickerEmpty": "Nothing here yet. Upload a file to start.",
+      "close": "Close"
     }
   }
 }
