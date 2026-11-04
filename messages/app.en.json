@@ -22,7 +22,9 @@
       "submit": "Sign in",
       "noAccount": "New to Bungee Fly?",
       "create": "Create an account",
-      "forgot": "Forgot password?"
+      "forgot": "Forgot password?",
+      "staffPrompt": "Studio staff?",
+      "staffLink": "Staff sign-in"
     },
     "signUp": {
       "title": "Your first flight starts here.",

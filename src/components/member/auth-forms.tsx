@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { ArrowIcon } from "@/components/brand/icons";
 import { ButtonArrow, Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { authClient, authErrorKey } from "@/lib/auth-client";
@@ -22,8 +23,24 @@ function useAuthCopy() {
   return { t, errorText };
 }
 
-export function SignInForm({ next, verifyExpired }: { next?: string; verifyExpired?: boolean }) {
+/** Staff sign-in only ever lands inside the desk (never back on the sign-in page itself). */
+export function staffNext(next: string | null | undefined) {
+  const n = safeNext(next);
+  return n.startsWith("/admin") && !n.startsWith("/admin/sign-in") ? n : "/admin/orders";
+}
+
+export function SignInForm({
+  next,
+  verifyExpired,
+  staff = false,
+}: {
+  next?: string;
+  verifyExpired?: boolean;
+  /** Staff door: lands on the studio desk, links back to the customer sign-in instead of sign-up. */
+  staff?: boolean;
+}) {
   const { t, errorText } = useAuthCopy();
+  const ts = useTranslations("admin.signIn");
   const locale = useLocale();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +56,7 @@ export function SignInForm({ next, verifyExpired }: { next?: string; verifyExpir
       const { error: err } = await authClient.signIn.email({
         email: String(form.get("email")).trim(),
         password: String(form.get("password")),
-        callbackURL: `/${locale}/account?welcome=1`,
+        callbackURL: staff ? `/${locale}/admin/orders` : `/${locale}/account?welcome=1`,
       });
       if (err) {
         if (err.status === 403 || err.code === "EMAIL_NOT_VERIFIED") setUnverified(true);
@@ -48,7 +65,7 @@ export function SignInForm({ next, verifyExpired }: { next?: string; verifyExpir
         return;
       }
       // Full navigation so every server component sees the fresh session cookie.
-      window.location.assign(`/${locale}${safeNext(next)}`);
+      window.location.assign(`/${locale}${staff ? staffNext(next) : safeNext(next)}`);
     } catch {
       setError(t("errors.network"));
       setBusy(false);
@@ -70,15 +87,36 @@ export function SignInForm({ next, verifyExpired }: { next?: string; verifyExpir
         </div>
       </div>
       <Button type="submit" size="lg" className="w-full" disabled={busy} aria-busy={busy}>
-        {t("signIn.submit")}
+        {staff ? ts("submit") : t("signIn.submit")}
         <ButtonArrow />
       </Button>
-      <p className="border-t border-navy/10 pt-5 text-body text-steel">
-        {t("signIn.noAccount")}{" "}
-        <Link href={next ? `/sign-up?next=${encodeURIComponent(next)}` : "/sign-up"} className={linkClass}>
-          {t("signIn.create")}
-        </Link>
-      </p>
+      {staff ? (
+        <p className="border-t border-navy/10 pt-5 text-body text-steel">
+          {ts("notStaff")}{" "}
+          <Link href="/sign-in" className={linkClass}>
+            {ts("customerLink")}
+          </Link>
+        </p>
+      ) : (
+        <div className="space-y-4 border-t border-navy/10 pt-5">
+          <p className="text-body text-steel">
+            {t("signIn.noAccount")}{" "}
+            <Link href={next ? `/sign-up?next=${encodeURIComponent(next)}` : "/sign-up"} className={linkClass}>
+              {t("signIn.create")}
+            </Link>
+          </p>
+          <Link
+            href="/admin/sign-in"
+            className="group flex items-center gap-3 rounded-md border border-navy/10 bg-white/70 px-4 py-3 text-meta text-steel transition-colors hover:border-navy/25 hover:bg-white hover:text-navy"
+          >
+            <span className="size-1.5 shrink-0 rounded-pill bg-orange" aria-hidden="true" />
+            <span className="me-auto">
+              {t("signIn.staffPrompt")} <span className="font-medium text-navy">{t("signIn.staffLink")}</span>
+            </span>
+            <ArrowIcon size={16} className="transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+          </Link>
+        </div>
+      )}
     </form>
   );
 }

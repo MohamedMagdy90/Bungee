@@ -7,12 +7,12 @@ import { getCurrentUser } from "@/server/session";
 import { canAccess, isStaff, type StaffArea, type StaffRole } from "@/server/staff";
 
 /**
- * Per-page access check for the studio desk. Signed out → sign-in, then straight back to `next` (keeps the
+ * Per-page access check for the studio desk. Signed out → staff sign-in, then straight back to `next` (keeps the
  * order id from the desk QR). Customers, unverified accounts and roles without the area get `null` → <Denied />.
  */
 export async function staffGate(area: StaffArea, locale: string, next: string) {
   const user = await getCurrentUser();
-  if (!user) return redirect({ href: `/sign-in?next=${encodeURIComponent(next)}`, locale });
+  if (!user) return redirect({ href: `/admin/sign-in?next=${encodeURIComponent(next)}`, locale });
   if (!user.emailVerified || !isStaff(user.role) || !canAccess(user.role, area)) return null;
   return user as typeof user & { role: StaffRole };
 }

@@ -227,6 +227,22 @@
         "skipcash": "SkipCash rejected the request: {detail}",
         "resend": "Resend rejected the request: {detail}"
       }
+    },
+    "signIn": {
+      "kicker": "Studio desk",
+      "statement": "Orders, payments and settings for the Bungee Fly team.",
+      "points": {
+        "orders": "Find any order by number, name or phone",
+        "payments": "Take payment by SkipCash QR or at the desk",
+        "settings": "Manage payment and email settings"
+      },
+      "badge": "Staff only",
+      "title": "Staff sign-in",
+      "lede": "Use the account the studio set up for you. You'll go straight to the desk.",
+      "submit": "Sign in to the desk",
+      "notStaff": "Not on the team?",
+      "customerLink": "Customer sign-in",
+      "signedInAsCustomer": "You're signed in as {email}, which isn't a staff account. Sign in with your staff account to continue."
     }
   }
 }
