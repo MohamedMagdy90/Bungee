@@ -99,11 +99,17 @@
   - Fixed: phone search compared digits to formatted phones (b9b61c6)
 - [ ] Re-check /admin/classes + /admin/media pages after the restarts (OOM at 3 GB dev server mid-run)
 - [ ] Version + deploy
-- [ ] GAP: desk cannot sell a pack to a customer (orders desk only acts on customer-made orders) -> walk-ins
-      can't get credits. Add "New order" at the desk (pick customer + product + branch, pay at studio / QR)
+- [x] Desk "New order" (Nov 5): Orders > New order (or Customer profile > New order = ?new=1&customer=):
+      find customer or register walk-in -> studio (remembered per device) -> pack / service / shop item ->
+      order opens in the normal panel (SkipCash QR or cash / card). createCheckout source:"admin" skips the
+      customer-facing at-studio switch + "awaiting" email; audit order.create. Extensions not sold at the desk yet
+      (need a pack picker). Walk-in placeholder emails hidden in desk, order page, invoice. Tested 17/17.
+  - Prices are minor units (QAR x100): adult-10 at West Bay = 110000
 - [ ] Media in production: DO Spaces driver (DB storage works everywhere but caps size; Netlify body limit 6 MB)
 - [ ] Session materialisation in the worker (today: seed + timetable page load + slot saves)
 - Gotcha: several string_replace calls on the SAME file back to back can silently drop earlier ones
+- Gotcha: a `!` inside double quotes in bash triggers history expansion and kills the whole command line;
+  use single quotes for grep patterns containing `!`
   -> one edit per file per step, or a python patch script; always grep to verify
 - Gotcha: memory limit 4 GB; ship ~1.6 GB + dev server ~1 GB + tsc ~1.2 GB = restarts. Never run tsc with dev up.
 
