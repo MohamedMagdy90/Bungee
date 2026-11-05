@@ -1,12 +1,16 @@
+import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ticketQrSvg } from "@/server/booking/ticket";
+import { audit } from "@/server/admin/common";
 import { getDb } from "@/server/db";
+import { users } from "@/server/db/schema";
 import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } from "@/server/http";
 import { rememberOrigin } from "@/server/mail/outbox";
 import {
   cancelOrder,
+  createCheckout,
   customerState,
   getOrderView,
   listOrders,
@@ -60,11 +64,19 @@ const Body = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("cancel"), id: z.uuid() }),
   z.object({ action: z.literal("sync"), id: z.uuid() }),
+  z.object({
+    action: z.literal("create"),
+    customerId: z.string().min(1).max(64),
+    productSlug: z.string().min(1).max(80),
+    branchSlug: z.string().min(1).max(80),
+    phone: z.string().trim().max(24).nullish(),
+  }),
 ]);
 
 /**
  * POST /api/admin/orders — front-desk actions on one order:
  * show a SkipCash QR for the customer's phone, record a cash/card payment, cancel, or re-check SkipCash.
+ * "create" sells something over the counter (any customer, walk-ins included) and returns the new unpaid order.
  */
 export async function POST(request: Request) {
   try {
@@ -74,6 +86,30 @@ export async function POST(request: Request) {
     if (!parsed.success) throw new HttpError(400, "bad_request");
     const input = parsed.data;
     const db = await getDb();
+
+    if (input.action === "create") {
+      const [customer] = await db
+        .select({ id: users.id, role: users.role, locale: users.locale })
+        .from(users)
+        .where(eq(users.id, input.customerId));
+      if (!customer || customer.role !== "customer") throw new HttpError(404, "not_found");
+      const created = await createCheckout(db, {
+        userId: customer.id,
+        locale: customer.locale === "ar" ? "ar" : "en",
+        method: "at_studio",
+        productSlug: input.productSlug,
+        branchSlug: input.branchSlug,
+        phone: input.phone || null,
+        source: "admin",
+      });
+      await audit(db, staff.id, "order.create", "order", created.orderId, null, {
+        number: created.number,
+        customerId: customer.id,
+        product: input.productSlug,
+        branch: input.branchSlug,
+      });
+      return NextResponse.json({ order: await detail(created.orderId, false) }, { headers: noStore });
+    }
 
     if (input.action === "skipcash_qr") {
       const origin = publicOrigin(request.headers);
