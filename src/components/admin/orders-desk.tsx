@@ -3,13 +3,15 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowIcon, ArrowUpRightIcon, CheckIcon, TicketIcon } from "@/components/brand/icons";
+import { ArrowIcon, ArrowUpRightIcon, CheckIcon, PlusIcon, TicketIcon } from "@/components/brand/icons";
 import { TicketQr } from "@/components/member/account-client";
 import { Notice } from "@/components/member/field";
 import { Button } from "@/components/ui/button";
 import { STUDIO_TZ } from "@/lib/constants";
 import { fmtLongDate, fmtMoney, fmtNum, fmtShortDate, fmtTime, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import type { DeskCatalog } from "@/server/payments/orders";
+import { type DeskCustomer, NewOrder } from "./new-order";
 
 /* ── Types (dates arrive as ISO strings: the page serialises them, the API sends JSON) ── */
 
@@ -240,12 +242,17 @@ export function OrdersDesk({
   initialQuery,
   initialOrder,
   qrReady,
+  catalog,
+  initialCompose,
 }: {
   initialRows: DeskRow[];
   initialView: DeskView;
   initialQuery: string;
   initialOrder: DeskOrder | null;
   qrReady: boolean;
+  catalog: DeskCatalog;
+  /** Opened as /admin/orders?new=1[&customer=…] (e.g. from a customer's profile). */
+  initialCompose: { customer: DeskCustomer | null } | null;
 }) {
   const { t, errorText } = useDeskText();
   const locale = useLocale();
@@ -258,6 +265,9 @@ export function OrdersDesk({
   const [order, setOrder] = useState<DeskOrder | null>(initialOrder);
   const [orderBusy, setOrderBusy] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [composing, setComposing] = useState(!!initialCompose && !initialOrder);
+  const [composeCustomer, setComposeCustomer] = useState<DeskCustomer | null>(initialCompose?.customer ?? null);
+  const [intro, setIntro] = useState<{ id: string; text: string } | null>(null);
 
   const errRef = useRef(errorText);
   errRef.current = errorText;
@@ -286,6 +296,7 @@ export function OrdersDesk({
     async (id: string) => {
       selRef.current = id;
       setSelectedId(id);
+      setComposing(false);
       setOrderError(null);
       setOrder((cur) => (cur?.id === id ? cur : null));
       setOrderBusy(true);
@@ -314,15 +325,52 @@ export function OrdersDesk({
     if (view !== "open") params.set("view", view);
     if (query.trim()) params.set("q", query.trim());
     if (selectedId) params.set("id", selectedId);
+    if (composing) params.set("new", "1");
     const qs = params.toString();
     window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
-  }, [view, query, selectedId]);
+  }, [view, query, selectedId, composing]);
 
   const back = () => {
     selRef.current = null;
     setSelectedId(null);
     setOrder(null);
     setOrderError(null);
+    setComposing(false);
+  };
+
+  const startNew = () => {
+    back();
+    setComposeCustomer(null);
+    setComposing(true);
+  };
+
+  // A desk order opens straight in the order panel, ready to take payment.
+  const created = (o: DeskOrder) => {
+    setComposing(false);
+    setComposeCustomer(null);
+    selRef.current = o.id;
+    setSelectedId(o.id);
+    setOrder(o);
+    setOrderError(null);
+    setIntro({ id: o.id, text: t("orders.new.created", { number: String(o.number) }) });
+    if (view !== "paid") {
+      const row: DeskRow = {
+        id: o.id,
+        number: o.number,
+        status: o.status,
+        paymentMethod: o.paymentMethod,
+        total: o.total,
+        createdAt: o.createdAt,
+        paidAt: o.paidAt,
+        name: o.user.name,
+        email: o.user.email,
+        phone: o.user.phone,
+        branchEn: o.branch?.en ?? null,
+        branchAr: o.branch?.ar ?? null,
+        items: o.items.map((i) => ({ en: i.nameEn, ar: i.nameAr })),
+      };
+      setRows((rs) => [row, ...rs.filter((r) => r.id !== o.id)]);
+    }
   };
 
   const refresh = () => {
@@ -332,10 +380,16 @@ export function OrdersDesk({
 
   return (
     <div className="flex-1 px-5 py-7 md:px-8 md:py-10 xl:px-10">
-      <header className={cn("lift mb-7 max-w-3xl", selectedId && "hidden xl:block")}>
-        <p className="label-caps text-orange-ember">{t("orders.kicker")}</p>
-        <h1 className="mt-2 text-h2 font-semibold">{t("orders.title")}</h1>
-        <p className="mt-2 text-body text-steel text-pretty">{t("orders.lede")}</p>
+      <header className={cn("lift mb-7 flex flex-wrap items-end justify-between gap-x-8 gap-y-4", (selectedId || composing) && "hidden xl:flex")}>
+        <div className="max-w-3xl">
+          <p className="label-caps text-orange-ember">{t("orders.kicker")}</p>
+          <h1 className="mt-2 text-h2 font-semibold">{t("orders.title")}</h1>
+          <p className="mt-2 text-body text-steel text-pretty">{t("orders.lede")}</p>
+        </div>
+        <Button onClick={startNew} disabled={composing} aria-pressed={composing}>
+          <PlusIcon size={18} />
+          {t("orders.new.button")}
+        </Button>
       </header>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(21rem,25rem)_minmax(0,1fr)] xl:items-start">
@@ -344,7 +398,7 @@ export function OrdersDesk({
           aria-label={t("orders.title")}
           className={cn(
             "lift flex flex-col overflow-hidden rounded-xl border border-navy/10 bg-white xl:sticky xl:top-6 xl:max-h-[calc(100svh-3rem)]",
-            selectedId && "hidden xl:flex",
+            (selectedId || composing) && "hidden xl:flex",
           )}
           style={{ "--lift-delay": "60ms" } as React.CSSProperties}
         >
@@ -443,8 +497,17 @@ export function OrdersDesk({
         </section>
 
         {/* Detail */}
-        <section className={cn("min-w-0", !selectedId && "hidden xl:block")} aria-live="polite">
-          {!selectedId && (
+        <section className={cn("min-w-0", !selectedId && !composing && "hidden xl:block")} aria-live="polite">
+          {composing && (
+            <NewOrder
+              catalog={catalog}
+              initialCustomer={composeCustomer}
+              qrReady={qrReady}
+              onCreated={created}
+              onClose={() => setComposing(false)}
+            />
+          )}
+          {!selectedId && !composing && (
             <div
               className="lift flex min-h-[24rem] flex-col items-center justify-center rounded-xl border border-dashed border-navy/20 p-10 text-center"
               style={{ "--lift-delay": "120ms" } as React.CSSProperties}
@@ -471,7 +534,15 @@ export function OrdersDesk({
             </div>
           )}
           {order && (
-            <OrderDetail key={order.id} order={order} qrReady={qrReady} loading={orderBusy} onUpdate={applyOrder} onBack={back} />
+            <OrderDetail
+              key={order.id}
+              order={order}
+              qrReady={qrReady}
+              loading={orderBusy}
+              onUpdate={applyOrder}
+              onBack={back}
+              intro={intro?.id === order.id ? intro.text : undefined}
+            />
           )}
         </section>
       </div>
@@ -500,12 +571,15 @@ function OrderDetail({
   loading,
   onUpdate,
   onBack,
+  intro,
 }: {
   order: DeskOrder;
   qrReady: boolean;
   loading: boolean;
   onUpdate: (o: DeskOrder) => void;
   onBack: () => void;
+  /** Shown once when the panel opens (e.g. "Order #… created"). */
+  intro?: string;
 }) {
   const { t, errorText } = useDeskText();
   const locale = useLocale();
@@ -515,7 +589,7 @@ function OrderDetail({
   const [tab, setTab] = useState<"qr" | "desk">(canQr ? "qr" : "desk");
   const [qr, setQr] = useState<{ svg: string; url: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [flash, setFlash] = useState<Flash>(null);
+  const [flash, setFlash] = useState<Flash>(intro ? { tone: "success", text: intro } : null);
   const [method, setMethod] = useState<DeskMethod>("cash");
   const [note, setNote] = useState("");
   const [confirm, setConfirm] = useState<"paid" | "cancel" | null>(null);
@@ -850,9 +924,11 @@ function OrderDetail({
           <div className="min-w-0">
             <p className="label-caps text-steel">{t("orders.detail.customer")}</p>
             <p className="mt-2 text-body font-semibold">{order.user.name}</p>
-            <a href={`mailto:${order.user.email}`} className="mt-0.5 block truncate text-meta text-steel hover:text-navy hover:underline">
-              {order.user.email}
-            </a>
+            {order.user.email && (
+              <a href={`mailto:${order.user.email}`} className="mt-0.5 block truncate text-meta text-steel hover:text-navy hover:underline">
+                {order.user.email}
+              </a>
+            )}
             {order.user.phone ? (
               <a href={`tel:${order.user.phone}`} className="tabular mt-0.5 block text-meta text-steel hover:text-navy hover:underline">
                 <bdi>{order.user.phone}</bdi>

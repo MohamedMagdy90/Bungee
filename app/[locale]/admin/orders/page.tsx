@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Denied, staffGate } from "@/components/admin/gate";
+import type { DeskCustomer } from "@/components/admin/new-order";
 import { type DeskOrder, type DeskRow, type DeskView, OrdersDesk } from "@/components/admin/orders-desk";
+import { getCustomer } from "@/server/admin/customers";
 import { getDb } from "@/server/db";
 import { getSkipCashConfig } from "@/server/integrations";
-import { customerState, getOrderView, listOrders, orderPath, syncOrderPayments } from "@/server/payments/orders";
+import { customerState, getDeskCatalog, getOrderView, listOrders, orderPath, syncOrderPayments } from "@/server/payments/orders";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ view?: string; q?: string; id?: string }>;
+  searchParams: Promise<{ view?: string; q?: string; id?: string; new?: string; customer?: string }>;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -50,7 +52,19 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
     if (v) order = plain<DeskOrder>({ ...v, state: customerState(v), customerPath: orderPath(id) });
   }
 
-  const [rows, skipcash] = await Promise.all([listOrders(db, { view, q }), getSkipCashConfig(db)]);
+  // "New order" (?new=1), optionally for one customer (?customer=… from their profile).
+  let compose: { customer: DeskCustomer | null } | null = null;
+  if (sp.new === "1" && !order) {
+    let customer: DeskCustomer | null = null;
+    if (sp.customer && sp.customer.length <= 64) {
+      const c = await getCustomer(db, sp.customer).catch(() => null);
+      if (c && c.role === "customer") {
+        customer = { id: c.id, name: c.name, email: c.email, phone: c.phone, isWalkIn: c.isWalkIn, credits: c.stats.credits };
+      }
+    }
+    compose = { customer };
+  }
+  const [rows, skipcash, catalog] = await Promise.all([listOrders(db, { view, q }), getSkipCashConfig(db), getDeskCatalog(db)]);
 
   return (
     <OrdersDesk
@@ -59,6 +73,8 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
       initialQuery={q}
       initialOrder={order}
       qrReady={skipcash.ready}
+      catalog={plain(catalog)}
+      initialCompose={compose}
     />
   );
 }
