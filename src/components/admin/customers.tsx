@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { MessageIcon, PhoneIcon } from "@/components/brand/icons";
+import { MessageIcon, PhoneIcon, PlusIcon } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { fmtMoney, fmtNum, fmtShortDate, fmtTime, pick } from "@/lib/format";
@@ -286,6 +286,13 @@ function Profile({
       }
       actions={
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/orders?new=1&customer=${encodeURIComponent(c.id)}`}
+            className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-orange px-3.5 text-meta font-medium text-navy transition-colors hover:bg-[#FF7A4A]"
+          >
+            <PlusIcon size={15} />
+            {t("profile.sell")}
+          </Link>
           {c.phone && (
             <a
               href={`tel:${c.phone.replace(/[^\d+]/g, "")}`}
