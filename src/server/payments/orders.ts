@@ -54,6 +54,8 @@ export class CheckoutProblem extends Error {
 export type PayMethod = "online" | "at_studio";
 export type DeskMethod = "cash" | "card" | "other";
 const OPEN = ["pending", "awaiting_payment", "failed"] as const;
+/** Phone-only walk-ins registered at the desk get a placeholder address: never shown, printed or emailed. */
+const realEmail = (email: string | null | undefined) => (email && !email.endsWith("@walk-in.bungeefly.invalid") ? email : "");
 
 /* ── Signed order links (the customer's order page, also opened from the desk QR / emails) ── */
 
@@ -588,7 +590,7 @@ export async function markOrderPaid(
         userId: o.userId,
         branchId: o.branchId,
         locale: user?.locale ?? o.locale,
-        billTo: { name: user?.name ?? "", email: user?.email ?? "", phone: user?.phone ?? null },
+        billTo: { name: user?.name ?? "", email: realEmail(user?.email), phone: user?.phone ?? null },
         lines,
         subtotal: o.subtotal,
         discount: o.discount,
@@ -752,7 +754,7 @@ export async function getOrderView(db: Database, orderId: string) {
   ]);
   return {
     ...o.order,
-    user: o.user,
+    user: { ...o.user, email: realEmail(o.user.email) },
     branch: o.branchEn ? { en: o.branchEn, ar: o.branchAr ?? o.branchEn } : null,
     items,
     payments: pays,
@@ -811,6 +813,7 @@ export async function listOrders(db: Database, filter: { view: "open" | "paid" |
     : [];
   return rows.map((r) => ({
     ...r,
+    email: realEmail(r.email),
     items: items.filter((i) => i.orderId === r.id).map((i) => ({ en: i.nameEn, ar: i.nameAr })),
   }));
 }
