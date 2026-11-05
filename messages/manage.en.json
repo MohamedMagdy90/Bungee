@@ -480,7 +480,8 @@
         "age": "{count, plural, one {# year} other {# years}}",
         "ledger": "Session history",
         "noLedger": "No session activity yet.",
-        "saved": "Details saved."
+        "saved": "Details saved.",
+        "sell": "New order"
       },
       "walkIn": {
         "title": "Register a walk-in",

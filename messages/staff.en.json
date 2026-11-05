@@ -150,7 +150,65 @@
         "already_paid": "This order is already paid.",
         "not_payable": "This order can’t take payment any more.",
         "not_cancellable": "Paid orders can’t be cancelled here.",
-        "not_found": "Order not found. It may have been removed."
+        "not_found": "Order not found. It may have been removed.",
+        "limit_reached": "This customer has already used this offer.",
+        "sold_out": "Out of stock at this studio.",
+        "unavailable": "Not for sale at this studio.",
+        "branch_required": "Pick a studio first."
+      },
+      "new": {
+        "button": "New order",
+        "kicker": "New order",
+        "title": "Sell at the desk",
+        "lede": "Pick the customer, the studio and what they're buying. Then take payment: SkipCash QR or cash / card.",
+        "close": "Close",
+        "steps": {
+          "customer": "Customer",
+          "studio": "Studio",
+          "item": "What are they buying?"
+        },
+        "searchLabel": "Find a customer",
+        "search": "Name, phone or email",
+        "searchHint": "Type at least 2 characters.",
+        "searching": "Searching…",
+        "noMatch": "No customer matches “{q}”.",
+        "credits": "{count, plural, =0 {No sessions} one {# session left} other {# sessions left}}",
+        "walkInTag": "Walk-in",
+        "change": "Change",
+        "walkIn": {
+          "open": "New here? Register a walk-in",
+          "title": "Register a walk-in",
+          "hint": "A phone number is enough, no email needed. They can add one later.",
+          "name": "Full name",
+          "phone": "Phone",
+          "save": "Register and continue",
+          "cancel": "Back to search",
+          "phone_taken": "This phone already belongs to a customer. Search for them instead."
+        },
+        "phone": {
+          "label": "Phone for the SkipCash QR",
+          "hint": "This customer has no phone yet. Add one so they can pay by QR, or take cash / card."
+        },
+        "groups": {
+          "class_pack": "Class packs",
+          "service": "Services",
+          "retail": "Shop"
+        },
+        "sessions": "{count, plural, one {session} other {sessions}}",
+        "valid": "{count, plural, one {Valid # day} other {Valid # days}}",
+        "service": "Service",
+        "shop": "Shop item",
+        "inStock": "{count} in stock",
+        "soldOut": "Sold out here",
+        "notHere": "Not sold here",
+        "intro": "Intro · once",
+        "kids": "Kids",
+        "total": "Total",
+        "pickAll": "Pick a customer and an item to continue.",
+        "next": "Next: SkipCash QR or cash / card.",
+        "create": "Create order",
+        "creating": "Creating…",
+        "created": "Order #{number} created. Take payment below."
       }
     },
     "integrations": {
