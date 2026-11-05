@@ -40,7 +40,12 @@
   - Access: staffGate(area) per page (signed out -> sign-in?next=…; customer/coach -> <Denied/>); layout only shows the rail
   - Preview owner: PREVIEW_ADMIN_EMAIL / PREVIEW_ADMIN_PASSWORD in .env.local (seeded on boot)
 - [x] GitHub backup: AmrDNAERP has write access; source pushed as real files (commit e0e4b7b on main)
-  - Push after EVERY batch: git add --ignore-removal . && git commit && git -c credential.helper='!gh auth git-credential' push origin main
+  - Push after EVERY batch: git add --ignore-removal . && git commit, then push with the token in the URL (the credential
+    helper can hang on a Username prompt): T=$(gh auth token); GIT_TERMINAL_PROMPT=0 timeout 70 git push -q
+    "https://x-access-token:$T@github.com/MohamedMagdy90/Bungee.git" main   (never echo $T)
+  - Restarts can also log gh out (~/.config/gh gone): ask the user to reconnect; GitHub MCP may be down too
+  - A restart rolls files back to the last VERSION and deletes ~150 tracked files: after reattaching .git run
+    git ls-files -dz | xargs -0 -r git checkout --   then re-apply anything not yet pushed
   - Restore after a wipe: git clone https://github.com/MohamedMagdy90/Bungee.git bungee-fly && cd bungee-fly && bun install,
     then recreate .env.local (never committed). Archive.zip in the repo is the user's upload: leave it alone.
     .env.local recovery: git show 1a068f7^:bungee-fly.zip > /tmp/o.zip && unzip -p /tmp/o.zip bungee-fly/.env.local > .env.local
@@ -88,7 +93,14 @@
 - [x] Images & videos (media_files bytea table, /api/media?id= with ranges), picker used by every editor
 - [x] Locations, Classes & coaches, Homepage & FAQs (+ public FAQ section 07), Timetable, Customers
 - [x] /admin overview (today band + section cards); Overview link in the menu
-- [ ] Runtime test every section in EN + AR, then version + deploy
+- [x] Runtime tests (Nov 5): timetable 11/11; customers real flow 25/25 (sign up -> verify -> credits -> book;
+      desk search/profile/adjust/cancel; studio cancels class -> refund + email with reason; AR pages);
+      homepage FAQ add -> shows on /en and /ar; pages EN+AR: overview, timetable, customers, website, locations
+  - Fixed: phone search compared digits to formatted phones (b9b61c6)
+- [ ] Re-check /admin/classes + /admin/media pages after the restarts (OOM at 3 GB dev server mid-run)
+- [ ] Version + deploy
+- [ ] GAP: desk cannot sell a pack to a customer (orders desk only acts on customer-made orders) -> walk-ins
+      can't get credits. Add "New order" at the desk (pick customer + product + branch, pay at studio / QR)
 - [ ] Media in production: DO Spaces driver (DB storage works everywhere but caps size; Netlify body limit 6 MB)
 - [ ] Session materialisation in the worker (today: seed + timetable page load + slot saves)
 - Gotcha: several string_replace calls on the SAME file back to back can silently drop earlier ones
