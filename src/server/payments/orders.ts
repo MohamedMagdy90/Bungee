@@ -188,9 +188,11 @@ export type CheckoutInput = {
 
 /** Creates the order (and, for "book & pay", holds the spot). Online payment is started separately. */
 export async function createCheckout(db: Database, input: CheckoutInput, now = new Date()) {
+  // Front desk ("New order"): staff can always take payment in person, whatever the customer-facing switches say.
+  const desk = input.source === "admin";
   const opts = await getPaymentOptions(db);
   if (input.method === "online" && !opts.online) throw new CheckoutProblem("method_unavailable");
-  if (input.method === "at_studio" && !opts.atStudio) throw new CheckoutProblem("method_unavailable");
+  if (input.method === "at_studio" && !opts.atStudio && !desk) throw new CheckoutProblem("method_unavailable");
   if (input.method === "online" && !(await getSkipCashConfig(db)).ready) throw new CheckoutProblem("payments_unavailable");
 
   const [user] = await db
@@ -290,7 +292,8 @@ export async function createCheckout(db: Database, input: CheckoutInput, now = n
             : new Date(startsAt.getTime() + 15 * 60_000),
       });
     }
-    if (input.method === "at_studio") {
+    // The customer is standing at the desk for desk orders: no "pay at the studio" email, the invoice follows payment.
+    if (input.method === "at_studio" && !desk) {
       await queueEmail(tx, {
         template: "order.awaiting",
         to: user.email,
@@ -812,3 +815,55 @@ export async function listOrders(db: Database, filter: { view: "open" | "paid" |
   }));
 }
 export type OrderListRow = Awaited<ReturnType<typeof listOrders>>[number];
+
+/* ── Front desk catalogue ──────────────────────────────────────────────── */
+
+/** Sold over the counter: packs, services and shop items. Extensions need a pack picker, so they stay online-only. */
+const DESK_TYPES = ["class_pack", "service", "retail"] as const;
+
+/** "New order" at the desk: what can be sold, its price at each studio and (shop items) the stock there. */
+export async function getDeskCatalog(db: Database) {
+  const [rows, prices, stock, studios] = await Promise.all([
+    db
+      .select({
+        id: products.id,
+        slug: products.slug,
+        type: products.type,
+        audience: products.audience,
+        nameEn: products.nameEn,
+        nameAr: products.nameAr,
+        credits: products.credits,
+        validityDays: products.validityDays,
+        isIntroOffer: products.isIntroOffer,
+        maxPerCustomer: products.maxPerCustomer,
+        trackStock: products.trackStock,
+      })
+      .from(products)
+      .where(and(eq(products.isActive, true), inArray(products.type, [...DESK_TYPES])))
+      .orderBy(asc(products.sortOrder), asc(products.nameEn)),
+    db.select({ productId: productPrices.productId, branchId: productPrices.branchId, amount: productPrices.amount }).from(productPrices),
+    db.select({ productId: branchStock.productId, branchId: branchStock.branchId, quantity: branchStock.quantity }).from(branchStock),
+    db
+      .select({ id: branches.id, slug: branches.slug, nameEn: branches.nameEn, nameAr: branches.nameAr })
+      .from(branches)
+      .where(eq(branches.isActive, true))
+      .orderBy(asc(branches.sortOrder), asc(branches.nameEn)),
+  ]);
+  const items = rows
+    .map((p) => {
+      const base = prices.find((x) => x.productId === p.id && x.branchId === null)?.amount;
+      const price: Record<string, number> = {};
+      const left: Record<string, number> = {};
+      for (const b of studios) {
+        const amount = prices.find((x) => x.productId === p.id && x.branchId === b.id)?.amount ?? base;
+        if (amount !== undefined) price[b.id] = amount;
+        if (p.type === "retail" && p.trackStock) {
+          left[b.id] = stock.find((x) => x.productId === p.id && x.branchId === b.id)?.quantity ?? 0;
+        }
+      }
+      return { ...p, price, stock: p.type === "retail" && p.trackStock ? left : null };
+    })
+    .filter((p) => Object.keys(p.price).length > 0);
+  return { branches: studios, products: items };
+}
+export type DeskCatalog = Awaited<ReturnType<typeof getDeskCatalog>>;
