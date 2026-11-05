@@ -49,7 +49,10 @@ export async function searchCustomers(
   if (term) {
     const like = `%${term.replace(/[%_]/g, "")}%`;
     const match = [ilike(users.name, like), ilike(users.email, like)];
-    if (digits.length >= 3) match.push(ilike(users.phone, `%${digits}%`));
+    // Phones are stored as typed ("+974 5000 1234"), so compare digits to digits.
+    if (digits.length >= 3) {
+      match.push(sql`regexp_replace(coalesce(${users.phone}, ''), '[^0-9]', '', 'g') like ${`%${digits}%`}`);
+    }
     where.push(or(...match)!);
   }
   if (filter === "walkin") where.push(eq(users.isWalkIn, true));
