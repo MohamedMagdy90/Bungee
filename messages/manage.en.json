@@ -517,39 +517,152 @@
       }
     },
     "overview": {
-      "kicker": "Studio desk",
-      "greeting": "Hello, {name}",
-      "lede": "Everything the studio runs on, in one place. Pick a section to get started.",
-      "today": "Today",
-      "stats": {
-        "classes": "Classes today",
-        "booked": "Places booked today",
-        "awaiting": "Orders to collect",
-        "newCustomers": "New customers this week"
+      "greeting": {
+        "morning": "Good morning, {name}",
+        "afternoon": "Good afternoon, {name}",
+        "evening": "Good evening, {name}"
       },
-      "items": {
-        "orders": "Take payments at the desk, check online payments and refunds.",
-        "customers": "Find a customer, see their packs and bookings, register walk-ins.",
-        "locations": "Studios, addresses, opening hours, contact details and photos.",
-        "classes": "What you teach and who teaches it: classes and coach profiles.",
-        "timetable": "Each studio's weekly plan, and the classes of the next two weeks.",
-        "homepage": "The main banner, the first-flight photo and the questions list.",
-        "media": "Every image and video on the site, with descriptions in both languages.",
-        "integrations": "Payment gateway and email settings.",
-        "products": "Class packs, services and shop items, prices for each studio, and shop stock."
+      "everyStudio": "every studio",
+      "noStudio": "no studio yet",
+      "periodLabel": "Period",
+      "periods": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
       },
-      "meta": {
-        "orders": "{count, plural, =0 {Nothing to collect} other {# to collect}}",
-        "customers": "{count, plural, =0 {No customers yet} one {# customer} other {# customers}}",
-        "locations": "{count, plural, =0 {No studios open} one {# studio open} other {# studios open}}",
-        "classes": "{classes} classes · {coaches} coaches",
-        "timetable": "{count, plural, =0 {No classes today} one {# class today} other {# classes today}}",
-        "homepage": "{count, plural, =0 {No questions yet} one {# question} other {# questions}}",
-        "media": "{count, plural, =0 {No files yet} one {# file} other {# files}}",
-        "products": "{count, plural, =0 {Nothing on sale} one {# on sale} other {# on sale}}",
-        "lowStock": "{count, plural, one {# shop item running low} other {# shop items running low}}"
+      "studioLabel": "Studio",
+      "allStudios": "All studios",
+      "myStudios": "All my studios",
+      "vs": {
+        "7d": "vs previous 7 days",
+        "30d": "vs previous 30 days",
+        "90d": "vs previous 90 days"
       },
-      "open": "Open"
+      "lede": {
+        "business": "How the business is doing across {scope}, and what needs you today.",
+        "studio": "How {scope} is doing, and what needs you today.",
+        "desk": "Today at {scope}: classes, check-ins and payments to take.",
+        "coach": "Your day, your next class and how your classes are going."
+      },
+      "performance": "Performance · {period}",
+      "new": "New",
+      "pts": "pts",
+      "kpi": {
+        "revenue": "Revenue",
+        "orders": "Paid orders",
+        "avgOrder": "Avg. {amount}",
+        "booked": "Places booked",
+        "inClasses": "{count, plural, one {in # class} other {in # classes}}",
+        "fill": "Fill rate",
+        "fillSub": "of places taken",
+        "attendance": "Attendance",
+        "noShows": "{count, plural, =0 {No no-shows} one {# no-show} other {# no-shows}}",
+        "newCustomers": "New customers",
+        "active": "{count, plural, one {# came to class} other {# came to class}}"
+      },
+      "ordersCount": "{count, plural, =0 {no orders} one {# order} other {# orders}}",
+      "bookedOf": "{booked} of {capacity} places booked",
+      "placesShort": "{count, plural, one {# place} other {# places}}",
+      "fullShort": "full",
+      "unitsSold": "{count, plural, one {# sold} other {# sold}}",
+      "charts": {
+        "revenue": "Revenue by day",
+        "revenueHint": "Paid orders only. {total} in this period.",
+        "noSales": "No sales in this period yet.",
+        "bookings": "Places booked by day",
+        "bookingsHint": "Booked places against the places on offer (light).",
+        "noClasses": "No classes in this period yet.",
+        "heat": "When classes fill up",
+        "heatHint": "Average fill by day and start time. Darker means fuller; use it to plan new classes.",
+        "quiet": "Quiet",
+        "full": "Full",
+        "heatTip": "{hour}:00 · {fill}% full · {count, plural, one {# class} other {# classes}}",
+        "topClasses": "Most booked classes",
+        "topClassesHint": "Places booked, and how full they ran.",
+        "bestSellers": "Best sellers",
+        "bestSellersHint": "Packs, services and shop items by revenue.",
+        "mix": "Sales mix",
+        "mixHint": "Where the revenue comes from."
+      },
+      "mix": {
+        "class_pack": "Class packs",
+        "retail": "Shop",
+        "service": "Services",
+        "extension": "Extensions"
+      },
+      "studios": {
+        "title": "Studios side by side",
+        "hint": "Classes held, how full they ran, and revenue.",
+        "studio": "Studio",
+        "classes": "Classes",
+        "fill": "Fill",
+        "revenue": "Revenue"
+      },
+      "coaches": {
+        "title": "Coaches",
+        "hint": "Classes taught in this period and the week ahead.",
+        "coach": "Coach",
+        "classes": "Classes",
+        "fill": "Fill",
+        "attendance": "Showed up",
+        "next7": "Next 7 days"
+      },
+      "today": {
+        "title": "Today",
+        "open": "Open the schedule",
+        "classes": "Classes",
+        "booked": "Places booked",
+        "ofPlaces": "of {count}",
+        "checkedIn": "Checked in",
+        "awaiting": "Payments to take",
+        "waitlist": "{count, plural, one {# person on a waitlist today} other {# people on waitlists today}}"
+      },
+      "attention": {
+        "title": "Needs attention",
+        "clear": "All clear. Nothing needs you right now.",
+        "awaitingPayment": "{count, plural, one {order waiting for payment} other {orders waiting for payment}}",
+        "toCollect": "{count, plural, one {shop item paid, not collected yet} other {shop items paid, not collected yet}}",
+        "waitlists": "{count, plural, one {class in the next 2 days has a waitlist} other {classes in the next 2 days have waitlists}}",
+        "noCoach": "{count, plural, one {class this week has no coach} other {classes this week have no coach}}",
+        "lowStock": "{count, plural, one {shop item running low} other {shop items running low}}",
+        "expiringPacks": "{count, plural, one {pack ends this week with sessions left} other {packs end this week with sessions left}}"
+      },
+      "upNext": {
+        "title": "Up next today",
+        "done": "{count, plural, =0 {None finished yet} one {# class finished} other {# classes finished}}",
+        "none": "That's all for today. Every class has finished.",
+        "live": "On now",
+        "inMinutes": "in {minutes} min",
+        "inHours": "in {hours} h {minutes} min",
+        "checked": "{checked}/{booked} in"
+      },
+      "coach": {
+        "notLinked": "Your login isn't linked to a coach profile yet. Ask an owner or administrator to link it in Team & access, and your classes will appear here.",
+        "liveNow": "Happening now",
+        "inMinutes": "Starts in {minutes} min",
+        "inHours": "Starts in {hours} h {minutes} min",
+        "onDay": "{day}",
+        "next": "Your next class",
+        "booked": "Booked",
+        "waiting": "+{count} waiting",
+        "openRoster": "Open the roster",
+        "nothingSoon": "No classes in the next 7 days. Enjoy the break.",
+        "today": "Today",
+        "fullSchedule": "Full schedule",
+        "freeToday": "You're not teaching today.",
+        "cameOf": "{came}/{booked} came",
+        "weekAhead": "Next 7 days: {classes, plural, =0 {no classes} one {# class} other {# classes}} · {booked, plural, =0 {no one booked yet} one {# person booked} other {# people booked}}",
+        "yourNumbers": "Your classes · {period}",
+        "kpi": {
+          "classes": "Classes taught",
+          "people": "People coached",
+          "peopleSub": "checked in"
+        },
+        "regulars": "Your regulars",
+        "regularsHint": "Who came to your classes most.",
+        "noRegulars": "Regulars appear once people check in to your classes.",
+        "visits": "{count, plural, one {# visit} other {# visits}}"
+      }
     },
     "products": {
       "kicker": "Studio",
