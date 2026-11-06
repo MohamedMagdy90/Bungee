@@ -104,6 +104,9 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
   if (!quote.session && quote.credits) {
     rows.push({ icon: <TicketIcon size={16} />, label: t("sessions"), value: fmtNum(quote.credits, locale) });
   }
+  // Shop items (R9) are collected at the chosen studio, never delivered.
+  if (quote.type === "retail") rows.push({ icon: <TicketIcon size={16} />, label: t("pickup"), value: t("pickupValue") });
+  const backLink = quote.type === "retail" ? { href: "/#shop", label: t("backShop") } : back;
   if (!quote.session && quote.validityDays) {
     rows.push({ icon: <CalendarIcon size={16} />, label: t("valid"), value: t("days", { n: fmtNum(quote.validityDays, locale) }) });
   }
@@ -145,10 +148,10 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
             </div>
           </article>
           <Link
-            href={back.href}
+            href={backLink.href}
             className="mt-4 inline-block text-meta text-steel underline underline-offset-4 hover:text-navy print:hidden"
           >
-            {back.label}
+            {backLink.label}
           </Link>
         </aside>
 

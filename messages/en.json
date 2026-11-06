@@ -17,7 +17,8 @@
     "closeMenu": "Close menu",
     "studio": "Studio",
     "chooseStudio": "Choose a studio",
-    "yourStudio": "Your studio"
+    "yourStudio": "Your studio",
+    "shop": "Shop"
   },
   "common": {
     "spotsLeft": "{count, plural, =0 {Full} one {{n} spot left} other {{n} spots left}}",
@@ -194,5 +195,20 @@
     "kicker": "Questions",
     "title": "Before you fly",
     "more": "Still unsure? Message your studio and we'll help."
+  },
+  "shop": {
+    "label": "Shop",
+    "title": "Kit for the cord.",
+    "intro": "Buy online or at the desk, then pick it up at {studio} on your next visit. Prices and stock are for the studio you choose.",
+    "collectAt": "Collect at",
+    "buy": "Buy",
+    "buyLabel": "Buy {name}, collect at {studio}",
+    "inStockAt": "In stock at {studio}",
+    "onlyLeft": "{count, plural, one {Only {n} left} other {Only {n} left}}",
+    "soldOutHere": "Sold out here",
+    "availableAt": "In stock at {studio}",
+    "switchTo": "Collect at {studio}",
+    "soldOutEverywhere": "Sold out for now",
+    "note": "Shop items are collected at the studio and aren't delivered. Show your order at the desk; it's in your account and in the confirmation email."
   }
 }

@@ -63,7 +63,10 @@
       "verify_email": "Verify your email first.",
       "bad_request": "Something was missing. Please try again.",
       "generic": "Something went wrong. Please try again."
-    }
+    },
+    "pickup": "Pick-up",
+    "pickupValue": "At the studio, on your next visit",
+    "backShop": "Back to the shop"
   },
   "order": {
     "kicker": "Order {number}",
