@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CalendarIcon, PinIcon, ProfileIcon, TicketIcon } from "@/components/brand/icons";
 import { CheckoutForm } from "@/components/member/checkout-form";
 import { Notice } from "@/components/member/field";
 import { buttonVariants } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
-import { STUDIO_TZ } from "@/lib/constants";
+import { BRANCH_COOKIE, STUDIO_TZ } from "@/lib/constants";
 import { fmtLongDate, fmtMoney, fmtNum, fmtTime, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getDb } from "@/server/db";
 import { getPaymentOptions, getSkipCashConfig } from "@/server/integrations";
 import { getCheckoutQuote } from "@/server/payments/orders";
 import { getCurrentUser } from "@/server/session";
+import { CART_COOKIE, getCartView, resolveCart } from "@/server/shop/cart";
 
 export const dynamic = "force-dynamic";
 
-type Search = { product?: string; branch?: string; session?: string; for?: string };
+type Search = { product?: string; branch?: string; session?: string; for?: string; cart?: string };
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<Search> };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -42,14 +44,19 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
   const sessionId = sp.session && UUID.test(sp.session) ? sp.session : null;
   const dependentId = sp.for && UUID.test(sp.for) ? sp.for : null;
   const isClass = !!sessionId;
-  const back = isClass ? { href: "/#timetable", label: t("backClass") } : { href: "/#packages", label: t("back") };
+  const isCart = sp.cart === "1";
+  const back = isCart
+    ? { href: "/cart", label: t("backCart") }
+    : isClass
+      ? { href: "/#timetable", label: t("backClass") }
+      : { href: "/#packages", label: t("back") };
 
   const query = new URLSearchParams(
     Object.entries({ product: productSlug, branch: branchSlug, session: sessionId, for: dependentId }).filter(
       (e): e is [string, string] => !!e[1],
     ),
   ).toString();
-  const here = `/checkout${query ? `?${query}` : ""}`;
+  const here = isCart ? "/checkout?cart=1" : `/checkout${query ? `?${query}` : ""}`;
 
   const user = await getCurrentUser();
   if (!user) {
@@ -70,6 +77,7 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
   if (!user.emailVerified) return redirect({ href: `/sign-in?next=${encodeURIComponent(here)}`, locale });
 
   const db = await getDb();
+  if (isCart) return <CartCheckout locale={locale} userId={user.id} phone={user.phone ?? null} />;
   const [quote, options, skipcash] = await Promise.all([
     getCheckoutQuote(db, { userId: user.id, productSlug, branchSlug, sessionId, dependentId }),
     getPaymentOptions(db),
@@ -194,5 +202,97 @@ function Shell({
         <div className="mt-8 md:mt-10">{children}</div>
       </div>
     </div>
+  );
+}
+
+/** Checkout for the whole shop cart: one order, one line per item, collected at the cart's studio. */
+async function CartCheckout({ locale, userId, phone }: { locale: string; userId: string; phone: string | null }) {
+  const t = await getTranslations("checkout");
+  const db = await getDb();
+  const jar = await cookies();
+  const ref = await resolveCart(db, { userId, cookieId: jar.get(CART_COOKIE)?.value }, false);
+  const [cart, options, skipcash] = await Promise.all([
+    getCartView(db, ref.id, jar.get(BRANCH_COOKIE)?.value ?? null),
+    getPaymentOptions(db),
+    getSkipCashConfig(db),
+  ]);
+  const online = options.online && skipcash.ready;
+  const atStudio = options.atStudio;
+  if (!cart.ready || (!online && !atStudio)) {
+    return (
+      <Shell kicker={t("kicker")} title={t("title")}>
+        <Notice tone="error">{!cart.lines.length ? t("errors.cart_empty") : !cart.ready ? t("cartChanged") : t("errors.method_unavailable")}</Notice>
+        <Link href="/cart" className={cn(buttonVariants({ variant: "ghost" }), "mt-6")}>
+          {t("backCart")}
+        </Link>
+      </Shell>
+    );
+  }
+  const amountLabel = fmtMoney(cart.subtotal, locale);
+  const studio = cart.branch ? pick(locale, cart.branch.nameEn, cart.branch.nameAr) : "";
+  return (
+    <Shell kicker={t("kicker")} title={t("title")} wide>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-14">
+        <aside className="lift lg:sticky lg:top-24 lg:self-start">
+          <article className="overflow-hidden rounded-xl bg-white shadow-[0_24px_60px_-28px_rgb(11_31_51/0.45)]">
+            <header className="relative isolate overflow-hidden bg-navy px-6 pb-6 pt-5 text-ice">
+              <span aria-hidden="true" className="absolute -end-10 -top-10 -z-10 size-40 rounded-pill border-[18px] border-orange/20" />
+              <p className="label-caps text-aqua">{t("summary")}</p>
+              <h2 className="mt-3 text-h3 font-semibold text-balance">{t("cartTitle", { count: cart.count, n: fmtNum(cart.count, locale) })}</h2>
+            </header>
+            <div className="relative border-b border-dashed border-navy/20">
+              <span className="absolute -start-2.5 -top-2.5 size-5 rounded-pill bg-ice" aria-hidden="true" />
+              <span className="absolute -end-2.5 -top-2.5 size-5 rounded-pill bg-ice" aria-hidden="true" />
+            </div>
+            <ul className="divide-y divide-navy/10">
+              {cart.lines.map((l) => (
+                <li key={l.productId} className="flex items-baseline justify-between gap-3 px-6 py-3 text-meta">
+                  <span className="min-w-0">
+                    <span className="font-medium">{pick(locale, l.nameEn, l.nameAr)}</span>
+                    <span className="tabular text-steel"> &times; {fmtNum(l.quantity, locale)}</span>
+                  </span>
+                  <span className="tabular shrink-0 font-medium">{fmtMoney(l.lineTotal, locale)}</span>
+                </li>
+              ))}
+            </ul>
+            <dl className="divide-y divide-navy/10 border-t border-navy/10">
+              <div className="flex items-start gap-3 px-6 py-3.5">
+                <span className="mt-0.5 text-steel">
+                  <PinIcon size={16} />
+                </span>
+                <dt className="sr-only">{t("pickup")}</dt>
+                <dd className="min-w-0 flex-1">
+                  <span className="block text-caption uppercase tracking-[0.14em] text-steel rtl:tracking-normal">{t("pickup")}</span>
+                  <span className="mt-0.5 block text-meta font-medium">{t("pickupAt", { studio })}</span>
+                </dd>
+              </div>
+            </dl>
+            <div className="flex items-baseline justify-between gap-4 border-t border-navy/15 bg-ice/60 px-6 py-5">
+              <span className="text-meta font-medium text-steel">{t("total")}</span>
+              <span className="tabular text-h3 font-semibold">{amountLabel}</span>
+            </div>
+          </article>
+          <Link href="/cart" className="mt-4 inline-block text-meta text-steel underline underline-offset-4 hover:text-navy print:hidden">
+            {t("backCart")}
+          </Link>
+        </aside>
+        <section className="lift" style={{ "--lift-delay": "120ms" } as React.CSSProperties}>
+          <CheckoutForm
+            locale={locale}
+            productSlug={null}
+            branchSlug={null}
+            sessionId={null}
+            dependentId={null}
+            amountLabel={amountLabel}
+            online={online}
+            atStudio={atStudio}
+            isClass={false}
+            holdMinutes={options.holdMinutes}
+            phone={phone}
+            cart
+          />
+        </section>
+      </div>
+    </Shell>
   );
 }

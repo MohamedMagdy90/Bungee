@@ -22,6 +22,7 @@ export function CheckoutForm({
   isClass,
   holdMinutes,
   phone,
+  cart,
 }: {
   locale: string;
   productSlug: string | null;
@@ -34,6 +35,8 @@ export function CheckoutForm({
   isClass: boolean;
   holdMinutes: number;
   phone: string | null;
+  /** Pay for the whole shop cart. */
+  cart?: boolean;
 }) {
   const t = useTranslations("checkout");
   const [method, setMethod] = useState<Method>(online ? "online" : "at_studio");
@@ -59,7 +62,11 @@ export function CheckoutForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ method, productSlug, branchSlug, sessionId, dependentId, phone: mobile || null, locale }),
+        body: JSON.stringify(
+          cart
+            ? { method, cart: true, phone: mobile || null, locale }
+            : { method, productSlug, branchSlug, sessionId, dependentId, phone: mobile || null, locale },
+        ),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.next) {
