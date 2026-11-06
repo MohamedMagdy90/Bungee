@@ -85,7 +85,8 @@
       "lateHold": "The spot hold ended before your payment arrived, so the session is in your account. Book again from the timetable.",
       "collect": "Collect your shop items at {studio}. Show this page at the desk.",
       "collected": "Your shop items have been collected.",
-      "collectQrHint": "The desk scans this to hand over your items"
+      "collectQrHint": "The desk scans this to hand over your items",
+      "partlyRefunded": "{amount} of this order has been refunded."
     },
     "pending": {
       "title": "Confirming your payment…",
@@ -151,6 +152,21 @@
       "not_payable": "This order can no longer be paid.",
       "not_cancellable": "This order can't be cancelled.",
       "generic": "Something went wrong. Please try again."
+    },
+    "refunded": {
+      "title": "Order refunded.",
+      "body": "We've refunded {amount} on this order."
+    },
+    "refunds": {
+      "title": "Refunds",
+      "to": {
+        "skipcash": "Back to your card",
+        "cash": "In cash at the studio",
+        "card": "To your card at the studio",
+        "other": "At the studio"
+      },
+      "processing": "On its way",
+      "net": "Net paid"
     }
   }
 }

@@ -94,7 +94,14 @@
         "handOver": "Mark handed over",
         "handedOver": "Handed over {date}",
         "toCollect": "To collect at the desk",
-        "collectAfterPayment": "Collected at the studio once paid"
+        "collectAfterPayment": "Collected at the studio once paid",
+        "partlyRefunded": "{amount} refunded so far.",
+        "refundedAll": "Refunded in full ({amount}). This order is closed.",
+        "lineRefundedAll": "Refunded",
+        "lineRefundedSome": "{count} of {total} refunded",
+        "refundedRow": "Refunded",
+        "netRow": "Net paid",
+        "refunds": "Refunds"
       },
       "take": {
         "title": "Take payment",
@@ -149,7 +156,9 @@
         "cancelled": "Order cancelled.",
         "synced": "Checked with SkipCash. Nothing new yet.",
         "skipcashPaid": "SkipCash confirmed the payment.",
-        "handedOver": "Marked as handed over."
+        "handedOver": "Marked as handed over.",
+        "refunded": "Refunded {amount} ({method}). The customer gets an email.",
+        "refundedSkipcash": "SkipCash accepted the refund of {amount}. It reaches their card in 5 to 10 working days."
       },
       "errors": {
         "phone_required": "This customer has no mobile number on file, and SkipCash needs one. Record the payment at the desk instead.",
@@ -164,7 +173,12 @@
         "sold_out": "Out of stock at this studio.",
         "unavailable": "Not for sale at this studio.",
         "branch_required": "Pick a studio first.",
-        "not_paid": "Take the payment first, then hand the item over."
+        "not_paid": "Take the payment first, then hand the item over.",
+        "not_refundable": "This order can't be refunded: it isn't paid, or nothing is left to give back.",
+        "refund_too_much": "That's more than is left to refund. The order has been refreshed, check it and try again.",
+        "refund_in_progress": "A SkipCash refund on this order is still being processed.",
+        "refund_failed": "SkipCash didn't accept the refund, so nothing has changed. Try again, or give it back in cash.",
+        "item_refunded": "This item was refunded, so there's nothing to hand over."
       },
       "new": {
         "button": "New order",
@@ -232,6 +246,50 @@
           "title": "In this order",
           "remove": "Remove {name}"
         }
+      },
+      "refund": {
+        "open": "Refund",
+        "title": "Refund",
+        "lede": "Pick what's coming back and how many. The amount follows what was paid for it.",
+        "close": "Close the refund",
+        "handedOver": "Already handed over",
+        "notHandedOver": "Not handed over yet: goes back on the shelf",
+        "sessions": "{left} of {total} sessions unused",
+        "sessionsUsed": "{left} of {total} sessions unused. Only unused ones come off; used ones stay used.",
+        "leftOf": "{left} of {total} left",
+        "less": "One fewer {name}",
+        "more": "One more {name}",
+        "restock": "Put returned items back in stock",
+        "restockHint": "Untick if they came back damaged or can't be sold again.",
+        "bookingNote": "The class booked with this order stays booked. Cancel it from the timetable if needed.",
+        "method": "Give the money back",
+        "methods": {
+          "skipcash": "To their card (SkipCash)",
+          "cash": "Cash",
+          "card": "Card machine",
+          "other": "Other"
+        },
+        "methodHint": {
+          "skipcash": "SkipCash sends it back to the card they paid with. Banks take 5 to 10 working days.",
+          "desk": "Hand the money back at the desk now."
+        },
+        "reason": "Reason",
+        "reasonPlaceholder": "e.g. wrong size, class cancelled",
+        "reasonHint": "For the team only. The customer doesn't see it.",
+        "pickLines": "Pick at least one line.",
+        "needReason": "Add a short reason.",
+        "summary": "{count, plural, one {# item} other {# items}} coming back",
+        "submit": "Refund {amount}",
+        "confirm": "Give {name} back {amount}? Method: {method}.",
+        "confirmYes": "Yes, refund",
+        "working": "Refunding…",
+        "status": {
+          "processing": "Processing",
+          "succeeded": "Done",
+          "failed": "Failed"
+        },
+        "failedSaid": "SkipCash said: {message}",
+        "processingHint": "Sent to SkipCash, waiting for the result. Check in SkipCash before trying again."
       }
     },
     "integrations": {
