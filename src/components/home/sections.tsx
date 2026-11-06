@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import type { HomeData, MediaDTO } from "@/server/queries/home";
 import { InstallPanel } from "./install-panel";
 import { PackagesBoard } from "./packages-board";
+import { ShopBoard } from "./shop-board";
 import { StudioSelectButton } from "./studio-select-button";
 import { TimetableBoard } from "./timetable-board";
 
@@ -222,7 +223,29 @@ export async function Packages({ data }: { data: HomeData }) {
   );
 }
 
-/* ── 05 Studios ───────────────────────────────────────────────────────────────── */
+/* ── 05 Shop ───────────────────────────────────────────────────────────────────── */
+export async function Shop({ data }: { data: HomeData }) {
+  if (!data.shop.length) return null;
+  const t = await getTranslations("shop");
+  return (
+    <section id="shop" className="relative isolate scroll-mt-16 overflow-hidden bg-navy py-24 text-ice md:py-32">
+      <GhostMark className="-start-[22%] -bottom-[30%] -z-10 w-[min(60rem,110vw)] text-ice/[0.035]" />
+      <div className="frame">
+        <div className="grid-12 gap-y-6">
+          <div className="col-span-12 lg:col-span-3">
+            <SectionLabel index="05">{t("label")}</SectionLabel>
+          </div>
+          <h2 className="col-span-12 text-h1 font-semibold text-balance lg:col-span-8">{t("title")}</h2>
+        </div>
+        <div className="mt-10 lg:ms-[calc((100%+var(--gutter))*3/12)]">
+          <ShopBoard items={data.shop} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── 06 Studios ───────────────────────────────────────────────────────────────── */
 export async function Studios({ data, locale, now }: { data: HomeData; locale: string; now: number }) {
   const t = await getTranslations("studios");
   const tc = await getTranslations("common");
@@ -233,7 +256,7 @@ export async function Studios({ data, locale, now }: { data: HomeData; locale: s
       <div className="frame">
         <div className="grid-12 gap-y-6">
           <div className="col-span-12 lg:col-span-3">
-            <SectionLabel index="05" tone="light">
+            <SectionLabel index="06" tone="light">
               {t("label")}
             </SectionLabel>
           </div>
@@ -309,7 +332,7 @@ export async function Studios({ data, locale, now }: { data: HomeData; locale: s
   );
 }
 
-/* ── 06 First flight ──────────────────────────────────────────────────────────── */
+/* ── 07 First flight ──────────────────────────────────────────────────────────── */
 export async function FirstFlight({ data, locale }: { data: HomeData; locale: string }) {
   const t = await getTranslations("firstFlight");
   const steps = t.raw("steps") as { title: string; body: string }[];
@@ -321,7 +344,7 @@ export async function FirstFlight({ data, locale }: { data: HomeData; locale: st
     <section id="first-flight" className="scroll-mt-16 bg-navy py-24 text-ice md:py-32">
       <div className="frame grid-12 gap-y-14">
         <div className="col-span-12 lg:col-span-5">
-          <SectionLabel index="06">{t("label")}</SectionLabel>
+          <SectionLabel index="07">{t("label")}</SectionLabel>
           <h2 className="mt-8 text-h1 font-semibold text-balance">{t("title")}</h2>
           <div className="relative mt-10 overflow-hidden rounded-sm">
             <Media media={image} className="aspect-[4/3] w-full lg:aspect-[5/4]" />
@@ -358,7 +381,7 @@ export async function FirstFlight({ data, locale }: { data: HomeData; locale: st
   );
 }
 
-/* ── 07 Questions ─────────────────────────────────────────────────────────────── */
+/* ── 08 Questions ─────────────────────────────────────────────────────────────── */
 /** Edited by staff in Website › Homepage & FAQs. Native <details> rows, so they open before JS loads. */
 export async function Faqs({ data }: { data: HomeData }) {
   if (data.faqs.length === 0) return null;
@@ -367,7 +390,7 @@ export async function Faqs({ data }: { data: HomeData }) {
     <section id="faq" className="scroll-mt-16 border-b border-navy/10 bg-ice py-24 text-navy md:py-32">
       <div className="frame grid-12 gap-y-12">
         <div className="col-span-12 lg:col-span-4">
-          <SectionLabel index="07" tone="light">
+          <SectionLabel index="08" tone="light">
             {t("kicker")}
           </SectionLabel>
           <h2 className="mt-8 text-h1 font-semibold text-balance">{t("title")}</h2>

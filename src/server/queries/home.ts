@@ -8,6 +8,7 @@ import {
   banners,
   branchHours,
   branches,
+  branchStock,
   classSessions,
   classTypes,
   coaches,
@@ -48,6 +49,8 @@ async function loadHomeData(locale: string) {
     priceRows,
     pctRows,
     faqRows,
+    shopRows,
+    stockRows,
   ] = await Promise.all([
       db.select().from(media),
       db
@@ -88,6 +91,12 @@ async function loadHomeData(locale: string) {
       db.select().from(productPrices),
       db.select().from(productClassTypes),
       db.select().from(faqs).where(eq(faqs.isActive, true)).orderBy(asc(faqs.sortOrder), asc(faqs.createdAt)),
+      db
+        .select()
+        .from(products)
+        .where(and(eq(products.isActive, true), eq(products.type, "retail")))
+        .orderBy(asc(products.sortOrder), asc(products.nameEn)),
+      db.select().from(branchStock),
     ]);
 
   const mediaById = new Map(mediaRows.map((m) => [m.id, m]));
@@ -172,6 +181,26 @@ async function loadHomeData(locale: string) {
         .map((x): PriceRow => ({ branchId: x.branchId, amount: x.amount, compareAt: x.compareAt })),
       classTypeIds: pctRows.filter((x) => x.productId === p.id).map((x) => x.classTypeId),
     })),
+    /** Shop items (R9), collected at the chosen studio. `stock` per branch: null = not counted (always available). */
+    shop: shopRows
+      .map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        name: pick(locale, p.nameEn, p.nameAr),
+        description: pick(locale, p.descriptionEn, p.descriptionAr),
+        image: toMedia(p.imageMediaId),
+        prices: priceRows
+          .filter((x) => x.productId === p.id)
+          .map((x): PriceRow => ({ branchId: x.branchId, amount: x.amount, compareAt: x.compareAt })),
+        stock: Object.fromEntries(
+          branchRows.map((b) => {
+            if (!p.trackStock) return [b.id, null];
+            const s = stockRows.find((x) => x.productId === p.id && x.branchId === b.id);
+            return [b.id, { left: s?.quantity ?? 0, low: s?.lowStockThreshold ?? 3 }];
+          }),
+        ) as Record<string, { left: number; low: number } | null>,
+      }))
+      .filter((p) => p.prices.length > 0),
     faqs: faqRows.map((f) => ({
       id: f.id,
       question: pick(locale, f.questionEn, f.questionAr),

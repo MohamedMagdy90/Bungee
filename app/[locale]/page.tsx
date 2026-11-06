@@ -8,6 +8,7 @@ import {
   Manifesto,
   Packages,
   Programmes,
+  Shop,
   Studios,
   Timetable,
 } from "@/components/home/sections";
@@ -42,6 +43,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <Programmes data={data} locale={locale} />
           <Timetable data={data} now={now} />
           <Packages data={data} />
+          <Shop data={data} />
           <Studios data={data} locale={locale} now={now} />
           <FirstFlight data={data} locale={locale} />
           <Faqs data={data} />
