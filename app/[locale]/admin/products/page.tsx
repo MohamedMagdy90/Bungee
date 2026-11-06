@@ -70,6 +70,7 @@ export default async function AdminProductsPage({ params, searchParams }: Props)
       media={media}
       initialTab={tab}
       initialId={initialId}
+      editable={staff.branchIds}
     />
   );
 }

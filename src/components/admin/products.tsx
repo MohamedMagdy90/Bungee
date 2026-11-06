@@ -40,7 +40,7 @@ import { Segmented } from "./orders-desk";
 type ProductType = ProductView["type"];
 type Audience = ProductView["audience"];
 type StockCell = { quantity: number; low: number };
-type StockState = "ok" | "low" | "out";
+export type StockState = "ok" | "low" | "out";
 export type StudioOption = { id: string; slug: string; nameEn: string; nameAr: string; isActive: boolean };
 export type ClassTypeOption = { id: string; nameEn: string; nameAr: string; audience: string; format: string; isActive: boolean };
 type Tab = "packs" | "shop" | "aisles";
@@ -51,13 +51,13 @@ type StockMode = (typeof STOCK_MODES)[number];
 
 const toMajor = (minor: number | null | undefined) => (minor === null || minor === undefined ? null : minor / 100);
 const toMinor = (major: number | null) => (major === null || !Number.isFinite(major) ? null : Math.round(major * 100));
-const stockState = (c: StockCell | undefined): StockState => {
+export const stockState = (c: StockCell | undefined): StockState => {
   const q = c?.quantity ?? 0;
   if (q <= 0) return "out";
   return q <= (c?.low ?? 3) ? "low" : "ok";
 };
 
-function StockChip({ state }: { state: StockState }) {
+export function StockChip({ state }: { state: StockState }) {
   const t = useTranslations("manage.products.stockState");
   return (
     <span
@@ -625,21 +625,32 @@ function ThresholdField({
   );
 }
 
-function StockPanel({
+/**
+ * Stock at every studio, the stock form (received / returned / remove / count / move) and the history.
+ * `editable` = the studios this person may change (null = all); the other studios' cards are view only.
+ * Used by Packs & shop and by the front desk Stock screen (which passes its own `heading`).
+ */
+export function StockPanel({
   item,
   studios,
   onChanged,
+  editable = null,
+  heading,
 }: {
   item: ProductView;
   studios: StudioOption[];
   onChanged: (product: ProductView) => void;
+  editable?: readonly string[] | null;
+  heading?: React.ReactNode;
 }) {
   const t = useTranslations("manage.products.stock");
   const errorText = useErrorText();
   const locale = useLocale();
+  const canEdit = (id: string) => editable === null || editable.includes(id);
+  const mine = studios.filter((s) => canEdit(s.id));
   const [movements, setMovements] = useState<StockMovementView[] | null>(null);
   const [mode, setMode] = useState<StockMode>("received");
-  const [branchId, setBranchId] = useState(studios.find((s) => s.isActive)?.id ?? studios[0]?.id ?? "");
+  const [branchId, setBranchId] = useState(mine.find((s) => s.isActive)?.id ?? mine[0]?.id ?? "");
   const [toBranchId, setToBranchId] = useState("");
   const [quantity, setQuantity] = useState<number | null>(null);
   const [note, setNote] = useState("");
@@ -709,10 +720,14 @@ function StockPanel({
   return (
     <section className="lift overflow-hidden rounded-xl border border-navy/10 bg-white" aria-labelledby="stock-title">
       <header className="border-b border-navy/[0.08] px-5 py-4 sm:px-7 sm:py-5">
-        <h2 id="stock-title" className="text-h3 font-semibold">
-          {t("title")}
-        </h2>
-        <p className="mt-1 text-meta text-steel text-pretty">{t("lede")}</p>
+        {heading ?? (
+          <>
+            <h2 id="stock-title" className="text-h3 font-semibold">
+              {t("title")}
+            </h2>
+            <p className="mt-1 text-meta text-steel text-pretty">{t("lede")}</p>
+          </>
+        )}
       </header>
 
       <div className="space-y-6 px-5 py-6 sm:px-7">
@@ -722,25 +737,28 @@ function StockPanel({
             const st = stockState(c);
             const on = s.id === branchId;
             const qty = c?.quantity ?? 0;
+            const own = canEdit(s.id);
             return (
               <div
                 key={s.id}
                 className={cn(
                   "relative rounded-lg border p-4 transition-[border-color,box-shadow]",
-                  on ? "border-navy shadow-[0_0_0_1px_#0B1F33]" : "border-navy/[0.12] hover:border-navy/30",
+                  on ? "border-navy shadow-[0_0_0_1px_#0B1F33]" : own ? "border-navy/[0.12] hover:border-navy/30" : "border-dashed border-navy/[0.14] bg-mist/50",
                   !s.isActive && "opacity-60",
                 )}
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBranchId(s.id);
-                    setFlash(null);
-                  }}
-                  aria-pressed={on}
-                  aria-label={studioName(s.id)}
-                  className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-aqua/40"
-                />
+                {own && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBranchId(s.id);
+                      setFlash(null);
+                    }}
+                    aria-pressed={on}
+                    aria-label={studioName(s.id)}
+                    className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-aqua/40"
+                  />
+                )}
                 <div className="flex items-start justify-between gap-2">
                   <p className="min-w-0 truncate text-meta font-medium">{studioName(s.id)}</p>
                   <StockChip state={st} />
@@ -757,12 +775,23 @@ function StockPanel({
                     style={{ width: `${Math.max(qty > 0 ? 6 : 0, (qty / most) * 100)}%` }}
                   />
                 </div>
-                <ThresholdField productId={item.id} branchId={s.id} value={c?.low ?? 3} onSaved={onChanged} />
+                {own ? (
+                  <ThresholdField productId={item.id} branchId={s.id} value={c?.low ?? 3} onSaved={onChanged} />
+                ) : (
+                  <p className="mt-3 flex h-8 items-center gap-2 text-meta text-steel">
+                    <span>{t("warnAtValue", { count: c?.low ?? 3 })}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{t("viewOnly")}</span>
+                  </p>
+                )}
               </div>
             );
           })}
         </div>
 
+        {mine.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-navy/15 px-4 py-5 text-meta text-steel text-pretty">{t("noStudio")}</p>
+        ) : (
         <div className="space-y-4 rounded-xl border border-navy/10 bg-mist/60 p-4 sm:p-5">
           <div role="radiogroup" aria-label={t("title")} className="flex flex-wrap gap-1.5">
             {STOCK_MODES.map((m) => (
@@ -793,7 +822,7 @@ function StockPanel({
                 setBranchId(v);
                 setFlash(null);
               }}
-              options={studios.map((s) => ({ value: s.id, label: studioName(s.id) }))}
+              options={mine.map((s) => ({ value: s.id, label: studioName(s.id) }))}
             />
             {mode === "move" && (
               <SelectInput
@@ -860,6 +889,7 @@ function StockPanel({
             </p>
           )}
         </div>
+        )}
 
         <div>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -1317,6 +1347,7 @@ function Manager({
   classTypes,
   initialTab,
   initialId,
+  editable,
 }: {
   initialPacks: ProductView[];
   initialShop: ShopAdminPage;
@@ -1325,6 +1356,7 @@ function Manager({
   classTypes: ClassTypeOption[];
   initialTab: Tab;
   initialId: string | null;
+  editable: string[] | null;
 }) {
   const t = useTranslations("manage.products");
   const tc = useTranslations("manage.common");
@@ -1620,7 +1652,7 @@ function Manager({
         />
         {tab === "shop" &&
           (item?.stock ? (
-            <StockPanel key={`stock-${item.id}`} item={item} studios={studios} onChanged={upsert} />
+            <StockPanel key={`stock-${item.id}`} item={item} studios={studios} editable={editable} onChanged={upsert} />
           ) : (
             <p className="rounded-xl border border-dashed border-navy/15 px-5 py-6 text-center text-meta text-steel">
               {item ? t("stock.notTracked") : t("stock.saveFirst")}
@@ -1680,6 +1712,7 @@ export function ProductsManager({
   media,
   initialTab,
   initialId,
+  editable = null,
 }: {
   packs: ProductView[];
   shop: ShopAdminPage;
@@ -1689,6 +1722,8 @@ export function ProductsManager({
   media: MediaItem[];
   initialTab: Tab;
   initialId: string | null;
+  /** Studios this person may change stock at (null = all). */
+  editable?: string[] | null;
 }) {
   return (
     <MediaProvider initial={media}>
@@ -1700,6 +1735,7 @@ export function ProductsManager({
         classTypes={classTypes}
         initialTab={initialTab}
         initialId={initialId}
+        editable={editable}
       />
     </MediaProvider>
   );
