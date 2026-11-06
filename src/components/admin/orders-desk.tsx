@@ -18,7 +18,7 @@ import { type DeskCustomer, NewOrder } from "./new-order";
 type OrderStatus = "pending" | "awaiting_payment" | "paid" | "failed" | "cancelled" | "refunded" | "partially_refunded";
 type DeskState = "paid" | "pending" | "failed" | "at_studio" | "cancelled";
 type DeskMethod = "cash" | "card" | "other";
-export type DeskView = "open" | "paid" | "all";
+export type DeskView = "open" | "collect" | "paid" | "all";
 
 export type DeskRow = {
   id: string;
@@ -216,8 +216,7 @@ export function Segmented<T extends string>({
     <div
       role={role}
       aria-label={label}
-      className="grid gap-1 rounded-pill bg-navy/[0.06] p-1"
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      className="flex gap-1 rounded-pill bg-navy/[0.06] p-1"
     >
       {options.map((o) => {
         const on = o.value === value;
@@ -230,12 +229,12 @@ export function Segmented<T extends string>({
             aria-checked={role === "radiogroup" ? on : undefined}
             onClick={() => onChange(o.value)}
             className={cn(
-              "relative h-9 rounded-pill px-3 text-meta font-medium transition-colors duration-200",
+              "relative h-9 min-w-0 flex-auto whitespace-nowrap rounded-pill px-2.5 text-meta font-medium transition-colors duration-200",
               on ? "text-ice" : "text-steel hover:text-navy",
             )}
           >
             {on && <motion.span layoutId={`seg-${id}`} transition={CORD} className="absolute inset-0 rounded-pill bg-navy" />}
-            <span className="relative">{o.label}</span>
+            <span className="relative block truncate">{o.label}</span>
           </button>
         );
       })}
@@ -362,7 +361,7 @@ export function OrdersDesk({
     setOrder(o);
     setOrderError(null);
     setIntro({ id: o.id, text: t("orders.new.created", { number: String(o.number) }) });
-    if (view !== "paid") {
+    if (view === "open" || view === "all") {
       const row: DeskRow = {
         id: o.id,
         number: o.number,
@@ -401,7 +400,7 @@ export function OrdersDesk({
         </Button>
       </header>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(21rem,25rem)_minmax(0,1fr)] xl:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(21rem,25rem)_minmax(0,1fr)] xl:items-start">
         {/* List */}
         <section
           aria-label={t("orders.title")}
@@ -417,7 +416,7 @@ export function OrdersDesk({
               label={t("orders.title")}
               value={view}
               onChange={setView}
-              options={(["open", "paid", "all"] as const).map((v) => ({ value: v, label: t(`orders.views.${v}`) }))}
+              options={(["open", "collect", "paid", "all"] as const).map((v) => ({ value: v, label: t(`orders.views.${v}`) }))}
             />
             <label htmlFor="desk-search" className="sr-only">
               {t("orders.searchLabel")}
@@ -470,7 +469,7 @@ export function OrdersDesk({
                     onClick={() => openOrder(r.id)}
                     aria-current={on ? "true" : undefined}
                     className={cn(
-                      "relative flex w-full flex-col gap-1 px-5 py-4 text-start transition-colors duration-200",
+                      "relative grid w-full grid-cols-[minmax(0,1fr)] gap-1 px-5 py-4 text-start transition-colors duration-200",
                       on ? "bg-ice/70" : "hover:bg-mist",
                     )}
                   >
@@ -489,7 +488,7 @@ export function OrdersDesk({
                       <span className="tabular text-body font-semibold">{fmtMoney(r.total, locale)}</span>
                     </span>
                     <span className="flex items-center justify-between gap-3">
-                      <span className="truncate text-body font-medium">{r.name}</span>
+                      <span className="min-w-0 truncate text-body font-medium">{r.name}</span>
                       <StatusChip status={r.status} method={r.paymentMethod} />
                     </span>
                     <span className="truncate text-meta text-steel">

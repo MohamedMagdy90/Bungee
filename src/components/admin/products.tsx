@@ -487,7 +487,7 @@ function ProductEditor({
                       placeholder={form.price !== null ? String(form.price) : ""}
                       onChange={(e) => setStudioPrice(b.id, e.target.value === "" ? null : Number(e.target.value))}
                       aria-invalid={isBad("branchPrices") && own ? true : undefined}
-                      className={cn(inputClass, "tabular h-10 pe-12")}
+                      className={cn(inputClass, "tabular h-10 pr-12 rtl:pl-12 rtl:pr-3.5 rtl:text-right")}
                     />
                     <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-meta text-steel">
                       {t("fields.currency")}
@@ -1496,7 +1496,7 @@ function Manager({
   let list: React.ReactNode;
   if (tab === "packs") {
     list = (
-      <ListCard title={t("packList")} count={packs.length} onAdd={() => select("new")} addLabel={t("addPack")} search={q} onSearch={setQ} toolbar={tabs}>
+      <ListCard title={t("packList")} count={packs.length} countLabel={tc("counts.packs", { count: packs.length })} onAdd={() => select("new")} addLabel={t("addPack")} search={q} onSearch={setQ} toolbar={tabs}>
         {packRows.length ? (
           packRows.map((p) => (
             <ListRow key={p.id} selected={p.id === selected} onClick={() => select(p.id)} title={pick(locale, p.nameEn, p.nameAr)} meta={meta(p)} active={p.isActive} />
@@ -1508,7 +1508,7 @@ function Manager({
     );
   } else if (tab === "aisles") {
     list = (
-      <ListCard title={t("aisles.list")} count={cats.length} onAdd={() => select("new")} addLabel={t("aisles.add")} search={q} onSearch={setQ} toolbar={tabs}>
+      <ListCard title={t("aisles.list")} count={cats.length} countLabel={tc("counts.aisles", { count: cats.length })} onAdd={() => select("new")} addLabel={t("aisles.add")} search={q} onSearch={setQ} toolbar={tabs}>
         {catRows.length ? (
           catRows.map((c) => (
             <ListRow
@@ -1528,7 +1528,7 @@ function Manager({
     );
   } else {
     list = (
-      <ListCard title={t("shopList")} count={shop.total} onAdd={() => select("new")} addLabel={t("addItem")} search={q} onSearch={setQ} toolbar={shopTools}>
+      <ListCard title={t("shopList")} count={shop.total} countLabel={tc("counts.shop", { count: shop.total })} onAdd={() => select("new")} addLabel={t("addItem")} search={q} onSearch={setQ} toolbar={shopTools}>
         {loading && shop.items.length === 0 ? (
           <ListEmpty text={t("list.loading")} />
         ) : shop.items.length ? (
@@ -1540,16 +1540,17 @@ function Manager({
                 selected={p.id === selected}
                 onClick={() => select(p.id)}
                 title={pick(locale, p.nameEn, p.nameAr)}
-                meta={meta(p)}
+                meta={
+                  low > 0 ? (
+                    <>
+                      <span className="font-semibold text-orange-ember">{t("lowBadge", { count: low })}</span> · {meta(p)}
+                    </>
+                  ) : (
+                    meta(p)
+                  )
+                }
                 thumb={thumbOf(p.imageMediaId ? byId.get(p.imageMediaId) : null)}
                 active={p.isActive}
-                aside={
-                  low > 0 ? (
-                    <span className="tabular inline-flex h-6 shrink-0 items-center rounded-pill bg-orange/[0.14] px-2 text-[0.6875rem] font-semibold text-orange-ember">
-                      {t("lowBadge", { count: low })}
-                    </span>
-                  ) : undefined
-                }
               />
             );
           })

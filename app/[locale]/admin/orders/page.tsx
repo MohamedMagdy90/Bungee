@@ -38,7 +38,7 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
   const staff = await staffGate("orders", locale, id ? `/admin/orders?id=${id}` : "/admin/orders");
   if (!staff) return <Denied />;
 
-  const view: DeskView = sp.view === "paid" || sp.view === "all" ? sp.view : "open";
+  const view: DeskView = sp.view === "paid" || sp.view === "all" || sp.view === "collect" ? sp.view : "open";
   const q = (sp.q ?? "").slice(0, 80);
   const db = await getDb();
 

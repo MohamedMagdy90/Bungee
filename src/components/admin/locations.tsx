@@ -419,7 +419,7 @@ function Manager({ initial, initialId, canAdd }: { initial: LocationView[]; init
       <MasterDetail
         showDetail={selected !== null}
         list={
-          <ListCard title={t("list")} count={locations.length} onAdd={canAdd ? () => select("new") : undefined} addLabel={t("add")} search={q} onSearch={setQ}>
+          <ListCard title={t("list")} count={locations.length} countLabel={tc("counts.studios", { count: locations.length })} onAdd={canAdd ? () => select("new") : undefined} addLabel={t("add")} search={q} onSearch={setQ}>
             {shown.length ? (
               shown.map((l) => (
                 <ListRow

@@ -34,6 +34,8 @@ import {
   SaveBar,
   Section,
   Switch,
+  selectClass,
+  selectStyle,
   syncQuery,
   TextInput,
   useErrorText,
@@ -534,7 +536,8 @@ function MemberEditor({
             value={form.coachId ?? ""}
             onChange={(e) => set("coachId", e.target.value || null)}
             aria-invalid={has("coachId") ? true : undefined}
-            className={cn(inputClass, "appearance-none")}
+            className={selectClass}
+            style={selectStyle}
           >
             <option value="">{form.role === "coach" ? t("coach.choose") : t("coach.none")}</option>
             {coachOptions.map((c) => {

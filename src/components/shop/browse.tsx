@@ -67,11 +67,10 @@ export function ShopSort({ params }: { params: Params }) {
             ),
           )
         }
-        className="h-10 appearance-none rounded-pill border border-navy/15 bg-white bg-[length:11px] bg-no-repeat pe-9 ps-4 text-meta font-medium text-navy focus:border-navy focus:outline-none"
+        className="h-10 appearance-none rounded-pill border border-navy/15 bg-white bg-[length:11px] bg-[position:right_0.9rem_center] bg-no-repeat pe-9 ps-4 rtl:bg-[position:left_0.9rem_center] text-meta font-medium text-navy focus:border-navy focus:outline-none"
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%230B1F33' stroke-width='1.6'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E\")",
-          backgroundPosition: "calc(100% - 0.9rem) center",
         }}
       >
         {SHOP_SORTS.map((s) => (

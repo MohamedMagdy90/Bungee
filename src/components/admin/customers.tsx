@@ -173,6 +173,7 @@ export function CustomersDesk({
           <ListCard
             title={t("listTitle")}
             count={rows.length}
+            countLabel={t("count", { count: rows.length })}
             onAdd={() => setSelection({ kind: "new" })}
             addLabel={t("add")}
             search={q}
@@ -323,7 +324,7 @@ function Profile({
         <Stat label={t("profile.stats.spent")} value={fmtMoney(c.stats.spent, locale)} />
       </div>
 
-      <Section title={t("profile.packs")} hint={t("profile.packsHint")}>
+      <Section stack title={t("profile.packs")} hint={t("profile.packsHint")}>
         {c.packs.length === 0 ? (
           <p className="text-meta text-steel">{t("profile.noPacks")}</p>
         ) : (
@@ -335,7 +336,7 @@ function Profile({
         )}
       </Section>
 
-      <Section title={t("profile.bookings")} hint={t("profile.bookingsHint")}>
+      <Section stack title={t("profile.bookings")} hint={t("profile.bookingsHint")}>
         {c.bookings.length === 0 ? (
           <p className="text-meta text-steel">{t("profile.noBookings")}</p>
         ) : (
@@ -348,11 +349,11 @@ function Profile({
         )}
       </Section>
 
-      <Section title={t("profile.orders")} hint={t("profile.ordersHint")}>
+      <Section stack title={t("profile.orders")} hint={t("profile.ordersHint")}>
         <OrderList orders={c.orders} />
       </Section>
 
-      <Section title={t("profile.children")}>
+      <Section stack title={t("profile.children")}>
         {c.children.length === 0 ? (
           <p className="text-meta text-steel">{t("profile.noChildren")}</p>
         ) : (
@@ -371,7 +372,7 @@ function Profile({
         )}
       </Section>
 
-      <Section title={t("profile.ledger")}>
+      <Section stack title={t("profile.ledger")}>
         <Ledger items={c.ledger} />
       </Section>
 
@@ -491,6 +492,9 @@ function PackRow({
   );
 }
 
+/** Bookings shown before "Show all": regulars have dozens. */
+const BOOKINGS_SHOWN = 5;
+
 function BookingList({
   title,
   items,
@@ -508,6 +512,8 @@ function BookingList({
   const errText = useErrorText();
   const [busy, setBusy] = useState<string | null>(null);
   const [flash, setFlash] = useState<Flash>(null);
+  const [all, setAll] = useState(false);
+  const shown = all ? items : items.slice(0, BOOKINGS_SHOWN);
 
   async function cancel(bookingId: string) {
     if (!onChange) return;
@@ -537,25 +543,30 @@ function BookingList({
 
   return (
     <div>
-      <p className="mb-2 label-caps text-steel">{title}</p>
+      <p className="mb-2 flex items-baseline justify-between gap-3 label-caps text-steel">
+        <span>{title}</span>
+        <span className="tabular">{fmtNum(items.length, locale)}</span>
+      </p>
       <ul className="divide-y divide-navy/[0.07] rounded-lg border border-navy/10">
-        {items.map((b) => (
-          <li key={b.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-            <div className="tabular w-[6.5rem] shrink-0 text-meta">
+        {shown.map((b) => (
+          <li
+            key={b.id}
+            className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-[6rem_minmax(0,1fr)_auto]"
+          >
+            <div className="tabular text-meta">
               <p className="font-semibold">{fmtShortDate(b.startsAt, locale)}</p>
               <p className="text-steel" dir="ltr">
                 {fmtTime(b.startsAt, locale)}
               </p>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-body font-medium">
-                {pick(locale, b.classEn, b.classAr)}
-                {b.child && <span className="font-normal text-steel"> · {t("profile.forChild", { name: b.child })}</span>}
-              </p>
-              <p className="text-meta text-steel">
+            <div className="min-w-0">
+              <p className="truncate text-body font-medium">{pick(locale, b.classEn, b.classAr)}</p>
+              <p className="truncate text-meta text-steel">
+                {b.child && <>{t("profile.forChild", { name: b.child })} · </>}
                 {pick(locale, b.branchEn, b.branchAr)} · <span dir="ltr">{b.code}</span>
               </p>
             </div>
+            <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-auto sm:justify-end">
             <Tag
               tone={
                 b.status === "booked" || b.status === "attended"
@@ -577,9 +588,20 @@ function BookingList({
                 busy={busy === b.id}
               />
             )}
+            </div>
           </li>
         ))}
       </ul>
+      {items.length > BOOKINGS_SHOWN && (
+        <button
+          type="button"
+          onClick={() => setAll((a) => !a)}
+          aria-expanded={all}
+          className="mt-2 text-meta font-medium text-navy underline-offset-4 hover:underline"
+        >
+          {all ? t("profile.showLess") : t("profile.showAll", { count: items.length })}
+        </button>
+      )}
       {flash && (
         <div className="mt-2">
           <FlashLine flash={flash} />

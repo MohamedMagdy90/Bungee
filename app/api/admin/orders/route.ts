@@ -45,7 +45,7 @@ async function detail(orderId: string, sync: boolean) {
   return { ...view, state: customerState(view), customerPath: orderPath(orderId) };
 }
 
-/** GET /api/admin/orders?view=open|paid|all&q=… (list) or ?id=… (one order, re-checked with SkipCash). */
+/** GET /api/admin/orders?view=open|collect|paid|all&q=… (list) or ?id=… (one order, re-checked with SkipCash). */
 export async function GET(request: Request) {
   try {
     const staff = await requireStaff("orders");
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       await assertOrderInScope(staff, parsed.data);
       return NextResponse.json({ order: await detail(parsed.data, true) }, { headers: noStore });
     }
-    const view = z.enum(["open", "paid", "all"]).catch("open").parse(url.searchParams.get("view"));
+    const view = z.enum(["open", "collect", "paid", "all"]).catch("open").parse(url.searchParams.get("view"));
     const q = (url.searchParams.get("q") ?? "").slice(0, 80);
     const rows = await listOrders(await getDb(), { view, q, branchIds: staff.branchIds });
     return NextResponse.json({ orders: rows }, { headers: noStore });

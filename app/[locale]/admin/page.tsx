@@ -470,7 +470,7 @@ async function TodayBand({
 /** "Needs attention" items, each shown only to people who can act on it. */
 const ATTENTION: { key: keyof Awaited<ReturnType<typeof attentionFor>>; perm: Permission; href: string }[] = [
   { key: "awaitingPayment", perm: "orders", href: "/admin/orders" },
-  { key: "toCollect", perm: "orders", href: "/admin/orders?view=paid" },
+  { key: "toCollect", perm: "orders", href: "/admin/orders?view=collect" },
   { key: "waitlists", perm: "schedule", href: "/admin/schedule" },
   { key: "noCoach", perm: "timetable", href: "/admin/timetable?tab=upcoming" },
   { key: "lowStock", perm: "catalog", href: "/admin/products?tab=shop" },

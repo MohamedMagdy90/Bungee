@@ -247,7 +247,7 @@ function ClassEditor({
       </Section>
 
       <Section title={t("sections.format.title")} hint={t("sections.format.hint")}>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
           <SelectInput
             label={t("fields.audience")}
             value={form.audience}
@@ -511,7 +511,7 @@ function Manager({
         showDetail={selected !== null}
         list={
           tab === "classes" ? (
-            <ListCard title={t("classList")} count={lists.classTypes.length} onAdd={() => select("new")} addLabel={t("addClass")} search={q} onSearch={setQ} toolbar={tabs}>
+            <ListCard title={t("classList")} count={lists.classTypes.length} countLabel={tc("counts.classes", { count: lists.classTypes.length })} onAdd={() => select("new")} addLabel={t("addClass")} search={q} onSearch={setQ} toolbar={tabs}>
               {classes.length ? (
                 classes.map((c) => (
                   <ListRow
@@ -529,7 +529,7 @@ function Manager({
               )}
             </ListCard>
           ) : (
-            <ListCard title={t("coachList")} count={lists.coaches.length} onAdd={() => select("new")} addLabel={t("addCoach")} search={q} onSearch={setQ} toolbar={tabs}>
+            <ListCard title={t("coachList")} count={lists.coaches.length} countLabel={tc("counts.coaches", { count: lists.coaches.length })} onAdd={() => select("new")} addLabel={t("addCoach")} search={q} onSearch={setQ} toolbar={tabs}>
               {coachRows.length ? (
                 coachRows.map((c) => (
                   <ListRow

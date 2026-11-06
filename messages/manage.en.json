@@ -46,7 +46,7 @@
       "orderHint": "Lower numbers appear first.",
       "webAddress": "Web address",
       "webAddressHint": "Lowercase letters, numbers and dashes, e.g. {example}.",
-      "count": "{count, plural, =0 {None} one {# item} other {# items}}",
+      "count": "{count, plural, =0 {Nothing yet} one {# item} other {# items}}",
       "pickOne": "Pick one from the list to edit it, or add a new one.",
       "noMatches": "Nothing matches that search.",
       "cover": "Cover image",
@@ -54,7 +54,16 @@
       "choose": "Choose",
       "change": "Change",
       "clear": "Clear",
-      "savedPlain": "Saved."
+      "savedPlain": "Saved.",
+      "counts": {
+        "classes": "{count, plural, =0 {No classes yet} one {# class} other {# classes}}",
+        "coaches": "{count, plural, =0 {No coaches yet} one {# coach} other {# coaches}}",
+        "studios": "{count, plural, =0 {No studios yet} one {# studio} other {# studios}}",
+        "packs": "{count, plural, =0 {Nothing for sale yet} one {# pack or service} other {# packs and services}}",
+        "aisles": "{count, plural, =0 {No aisles yet} one {# aisle} other {# aisles}}",
+        "shop": "{count, plural, =0 {No shop items yet} one {# shop item} other {# shop items}}",
+        "faqs": "{count, plural, =0 {No questions yet} one {# question} other {# questions}}"
+      }
     },
     "errors": {
       "generic": "Something went wrong. Please try again.",
@@ -502,7 +511,9 @@
         "ledger": "Session history",
         "noLedger": "No session activity yet.",
         "saved": "Details saved.",
-        "sell": "New order"
+        "sell": "New order",
+        "showAll": "Show all {count}",
+        "showLess": "Show fewer"
       },
       "walkIn": {
         "title": "Register a walk-in",

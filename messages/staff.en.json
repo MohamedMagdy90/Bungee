@@ -37,7 +37,8 @@
       "title": "Orders & payments",
       "lede": "Find an order by number, name, email or phone. Take payment at the desk, or show the customer a SkipCash QR to pay on their phone.",
       "views": {
-        "open": "To collect",
+        "open": "Unpaid",
+        "collect": "Hand over",
         "paid": "Paid",
         "all": "All"
       },
@@ -46,10 +47,11 @@
       "refresh": "Refresh",
       "count": "{count, plural, =0 {No orders} one {# order} other {# orders}}",
       "empty": {
-        "open": "Nothing to collect. Every order is settled.",
+        "open": "Nothing unpaid. Every order is settled.",
         "paid": "No paid orders yet.",
         "all": "No orders yet.",
-        "search": "No orders match “{q}”."
+        "search": "No orders match “{q}”.",
+        "collect": "Nothing waiting to be handed over."
       },
       "pick": "Pick an order to see the customer, what they bought and how to take payment.",
       "status": {

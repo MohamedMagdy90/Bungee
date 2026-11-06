@@ -894,14 +894,25 @@ export function customerState(o: Pick<OrderView, "status" | "paymentMethod">) {
 /** Front desk list: open orders first, searchable by order number, name, email or phone. */
 export async function listOrders(
   db: Database,
-  filter: { view: "open" | "paid" | "all"; q?: string; limit?: number; branchIds?: string[] | null },
+  filter: { view: "open" | "collect" | "paid" | "all"; q?: string; limit?: number; branchIds?: string[] | null },
 ) {
   const q = filter.q?.trim();
   const scoped = filter.branchIds ?? null;
   const where = and(
     // Studio-scoped staff: their studios' orders, plus orders with no studio (online packs any desk can collect for).
     scoped ? (scoped.length ? or(isNull(orders.branchId), inArray(orders.branchId, scoped)) : isNull(orders.branchId)) : undefined,
-    filter.view === "open" ? inArray(orders.status, [...OPEN]) : filter.view === "paid" ? eq(orders.status, "paid") : undefined,
+    filter.view === "open"
+      ? inArray(orders.status, [...OPEN])
+      : filter.view === "paid"
+        ? eq(orders.status, "paid")
+        : filter.view === "collect"
+          ? // Paid, with a shop item still waiting at the desk.
+            and(
+              eq(orders.status, "paid"),
+              sql`exists (select 1 from order_items oi join products p on p.id = oi.product_id
+                where oi.order_id = ${orders.id} and p.type = 'retail' and oi.fulfilled_at is null)`,
+            )
+          : undefined,
     q
       ? /^\d+$/.test(q)
         ? or(eq(orders.number, Number(q)), ilike(users.phone, `%${q}%`))

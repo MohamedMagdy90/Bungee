@@ -97,9 +97,10 @@ export function MasterDetail({
   showDetail: boolean;
 }) {
   return (
-    <div className="grid max-w-[84rem] gap-6 xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start">
-      <div className={cn(showDetail && "hidden xl:block")}>{list}</div>
-      <div className={cn(!showDetail && "hidden xl:block")}>{detail}</div>
+    // minmax(0,1fr) on phones too: an auto column grows to fit long one-line text and pushes the card off-screen.
+    <div className="grid max-w-[84rem] grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start">
+      <div className={cn("min-w-0", showDetail && "hidden xl:block")}>{list}</div>
+      <div className={cn("min-w-0", !showDetail && "hidden xl:block")}>{detail}</div>
     </div>
   );
 }
@@ -195,7 +196,13 @@ export function ListRow({
         {selected && <span className="absolute inset-y-2 start-0 w-1 rounded-e-pill bg-orange" aria-hidden="true" />}
         {thumb !== undefined && (
           <span className="size-11 shrink-0 overflow-hidden rounded-md bg-navy/[0.06]">
-            {thumb && <img src={thumb} alt="" className="size-full object-cover" loading="lazy" />}
+            {thumb ? (
+              <img src={thumb} alt="" className="size-full object-cover" loading="lazy" />
+            ) : (
+              <span className="grid size-full place-items-center text-meta font-semibold text-navy/45" aria-hidden="true">
+                {initials(title)}
+              </span>
+            )}
           </span>
         )}
         <span className="min-w-0 flex-1">
@@ -217,6 +224,17 @@ export function ListRow({
       </button>
     </li>
   );
+}
+
+/** "Maya Haddad" -> "MH", "Apparel" -> "A": stands in for a missing photo. */
+function initials(title: string) {
+  return title
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => Array.from(w)[0] ?? "")
+    .join("")
+    .toUpperCase();
 }
 
 export function ListEmpty({ text }: { text: string }) {
@@ -280,10 +298,21 @@ export function EditorCard({
 }
 
 /** One titled block inside an editor: label column on wide screens, fields beside it. */
-export function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+export function Section({
+  title,
+  hint,
+  children,
+  stack,
+}: {
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+  /** Title above the content instead of beside it: for lists that need the full width. */
+  stack?: boolean;
+}) {
   return (
-    <div className="grid gap-4 px-5 py-6 sm:px-7 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
-      <div>
+    <div className={cn("grid gap-4 px-5 py-6 sm:px-7", !stack && "lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8")}>
+      <div className={cn(stack && "max-w-2xl")}>
         <h3 className="text-body font-semibold">{title}</h3>
         {hint && <p className="mt-1 text-meta text-steel text-pretty">{hint}</p>}
       </div>
@@ -409,7 +438,7 @@ export function NumberInput({
           onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
           aria-invalid={error ? true : undefined}
           aria-describedby={hint || error ? `${id}-n` : undefined}
-          className={cn(inputClass, "tabular", suffix && "pe-16")}
+          className={cn(inputClass, "tabular rtl:text-right", suffix && "pr-16 rtl:pl-16 rtl:pr-3.5")}
         />
         {suffix && (
           <span className="pointer-events-none absolute inset-y-0 end-3.5 flex items-center text-meta text-steel">
@@ -421,6 +450,16 @@ export function NumberInput({
     </div>
   );
 }
+
+/** Native select with our chevron, on the end side in both languages (left in Arabic). */
+export const selectClass = cn(
+  inputClass,
+  "appearance-none bg-[length:12px] bg-no-repeat bg-[position:right_0.9rem_center] pe-9 rtl:bg-[position:left_0.9rem_center]",
+);
+export const selectStyle: React.CSSProperties = {
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%230B1F33' stroke-width='1.6'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E\")",
+};
 
 export function SelectInput<T extends string>({
   label,
@@ -445,12 +484,8 @@ export function SelectInput<T extends string>({
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className={cn(inputClass, "appearance-none bg-[length:12px] bg-no-repeat pe-9")}
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%230B1F33' stroke-width='1.6'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E\")",
-          backgroundPosition: "calc(100% - 0.9rem) center",
-        }}
+        className={selectClass}
+        style={selectStyle}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
