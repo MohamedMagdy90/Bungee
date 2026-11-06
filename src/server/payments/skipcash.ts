@@ -158,7 +158,10 @@ export async function getPayment(cfg: SkipCashConfig, id: string): Promise<SkipC
 
 /**
  * Refunds a paid SkipCash payment: in full, or part of it when `amount` (minor units) is given. SkipCash
- * processes it within about a day; the card sees it a few days later. Signature: Id,KeyId[,Amount].
+ * processes it within about a day; the card sees it a few days later.
+ * Signature: Id,KeyId only. Amount goes in the body but not in the signature (checked against the sandbox,
+ * Nov 2026: every signature that includes Amount gets "Signature does not match!"). SkipCash also refuses
+ * refunds in the first minutes after a payment ("try again in 5 minutes").
  */
 export async function refundPayment(cfg: SkipCashConfig, id: string, amount?: number | null) {
   const body: Record<string, string> = { Id: id, KeyId: cfg.keyId };
@@ -172,7 +175,6 @@ export async function refundPayment(cfg: SkipCashConfig, id: string, amount?: nu
           [
             ["Id", body.Id],
             ["KeyId", body.KeyId],
-            ["Amount", body.Amount],
           ],
           cfg.keySecret,
         ),
