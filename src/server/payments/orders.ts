@@ -892,9 +892,15 @@ export function customerState(o: Pick<OrderView, "status" | "paymentMethod">) {
 }
 
 /** Front desk list: open orders first, searchable by order number, name, email or phone. */
-export async function listOrders(db: Database, filter: { view: "open" | "paid" | "all"; q?: string; limit?: number }) {
+export async function listOrders(
+  db: Database,
+  filter: { view: "open" | "paid" | "all"; q?: string; limit?: number; branchIds?: string[] | null },
+) {
   const q = filter.q?.trim();
+  const scoped = filter.branchIds ?? null;
   const where = and(
+    // Studio-scoped staff: their studios' orders, plus orders with no studio (online packs any desk can collect for).
+    scoped ? (scoped.length ? or(isNull(orders.branchId), inArray(orders.branchId, scoped)) : isNull(orders.branchId)) : undefined,
     filter.view === "open" ? inArray(orders.status, [...OPEN]) : filter.view === "paid" ? eq(orders.status, "paid") : undefined,
     q
       ? /^\d+$/.test(q)
@@ -944,7 +950,8 @@ export type OrderListRow = Awaited<ReturnType<typeof listOrders>>[number];
 const DESK_TYPES = ["class_pack", "service", "retail"] as const;
 
 /** "New order" at the desk: what can be sold, its price at each studio and (shop items) the stock there. */
-export async function getDeskCatalog(db: Database) {
+/** `branchIds` (studio-scoped staff) limits the studios they can sell at; null = every studio. */
+export async function getDeskCatalog(db: Database, branchIds: string[] | null = null) {
   const [rows, prices, stock, studios] = await Promise.all([
     db
       .select({
@@ -968,7 +975,12 @@ export async function getDeskCatalog(db: Database) {
     db
       .select({ id: branches.id, slug: branches.slug, nameEn: branches.nameEn, nameAr: branches.nameAr })
       .from(branches)
-      .where(eq(branches.isActive, true))
+      .where(
+        and(
+          eq(branches.isActive, true),
+          branchIds ? inArray(branches.id, branchIds.length ? branchIds : ["00000000-0000-0000-0000-000000000000"]) : undefined,
+        ),
+      )
       .orderBy(asc(branches.sortOrder), asc(branches.nameEn)),
   ]);
   const items = rows

@@ -45,6 +45,8 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
   let order: DeskOrder | null = null;
   if (id) {
     let v = await getOrderView(db, id);
+    // Studio-scoped staff can't open another studio's order (the desk QR of a different studio).
+    if (v && staff.branchIds !== null && v.order.branchId && !staff.branchIds.includes(v.order.branchId)) v = null;
     if (v && v.status !== "paid") {
       await syncOrderPayments(db, id).catch((error) => console.warn("[desk] sync failed", error));
       v = (await getOrderView(db, id)) ?? v;
@@ -64,7 +66,7 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
     }
     compose = { customer };
   }
-  const [rows, skipcash, catalog] = await Promise.all([listOrders(db, { view, q }), getSkipCashConfig(db), getDeskCatalog(db)]);
+  const [rows, skipcash, catalog] = await Promise.all([listOrders(db, { view, q, branchIds: staff.branchIds }), getSkipCashConfig(db), getDeskCatalog(db, staff.branchIds)]);
 
   return (
     <OrdersDesk

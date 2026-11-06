@@ -5,7 +5,7 @@ import { z } from "zod";
 import { ticketQrSvg } from "@/server/booking/ticket";
 import { audit } from "@/server/admin/common";
 import { getDb } from "@/server/db";
-import { users } from "@/server/db/schema";
+import { branches, orders, users } from "@/server/db/schema";
 import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } from "@/server/http";
 import { rememberOrigin } from "@/server/mail/outbox";
 import {
@@ -21,8 +21,18 @@ import {
   syncOrderPayments,
 } from "@/server/payments/orders";
 import { publicOrigin } from "@/server/runtime";
+import { inScope, type StaffContext } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
+
+/** Studio-scoped staff only touch orders at their studios (or with no studio). Others get "not found". */
+async function assertOrderInScope(staff: StaffContext, orderId: string) {
+  if (staff.branchIds === null) return;
+  const db = await getDb();
+  const [o] = await db.select({ branchId: orders.branchId }).from(orders).where(eq(orders.id, orderId));
+  if (!o) throw new HttpError(404, "not_found");
+  if (o.branchId && !inScope(staff, o.branchId)) throw new HttpError(404, "not_found");
+}
 
 async function detail(orderId: string, sync: boolean) {
   const db = await getDb();
@@ -38,17 +48,18 @@ async function detail(orderId: string, sync: boolean) {
 /** GET /api/admin/orders?view=open|paid|all&q=… (list) or ?id=… (one order, re-checked with SkipCash). */
 export async function GET(request: Request) {
   try {
-    await requireStaff("orders");
+    const staff = await requireStaff("orders");
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (id) {
       const parsed = z.uuid().safeParse(id);
       if (!parsed.success) throw new HttpError(400, "bad_request");
+      await assertOrderInScope(staff, parsed.data);
       return NextResponse.json({ order: await detail(parsed.data, true) }, { headers: noStore });
     }
     const view = z.enum(["open", "paid", "all"]).catch("open").parse(url.searchParams.get("view"));
     const q = (url.searchParams.get("q") ?? "").slice(0, 80);
-    const rows = await listOrders(await getDb(), { view, q });
+    const rows = await listOrders(await getDb(), { view, q, branchIds: staff.branchIds });
     return NextResponse.json({ orders: rows }, { headers: noStore });
   } catch (error) {
     return errorResponse(error);
@@ -90,6 +101,8 @@ export async function POST(request: Request) {
     const db = await getDb();
 
     if (input.action === "create") {
+      const [studio] = await db.select({ id: branches.id }).from(branches).where(eq(branches.slug, input.branchSlug));
+      if (!studio || !inScope(staff, studio.id)) throw new HttpError(403, "forbidden");
       const [customer] = await db
         .select({ id: users.id, role: users.role, locale: users.locale })
         .from(users)
@@ -113,6 +126,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ order: await detail(created.orderId, false) }, { headers: noStore });
     }
 
+    await assertOrderInScope(staff, input.id);
     if (input.action === "skipcash_qr") {
       const origin = publicOrigin(request.headers);
       rememberOrigin(origin);
