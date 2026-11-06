@@ -15,7 +15,8 @@
       "homepage": "Homepage & FAQs",
       "media": "Images & videos",
       "integrations": "Integrations",
-      "overview": "Overview"
+      "overview": "Overview",
+      "products": "Packs & shop"
     },
     "common": {
       "save": "Save changes",
@@ -70,7 +71,11 @@
       "phone_taken": "Someone is already registered with that phone number. Search for them instead.",
       "email_taken": "That email already belongs to an account.",
       "below_zero": "A pack can't go below zero sessions.",
-      "not_cancellable": "This booking can't be cancelled any more."
+      "not_cancellable": "This booking can't be cancelled any more.",
+      "sku_taken": "That item code is already used by another item.",
+      "type_locked": "The kind can't change once it's created.",
+      "not_enough_stock": "There isn't that much in stock at this studio.",
+      "not_stocked": "Stock isn't counted for this item. Turn on “Count stock” first."
     },
     "media": {
       "kicker": "Website",
@@ -514,7 +519,8 @@
         "timetable": "Each studio's weekly plan, and the classes of the next two weeks.",
         "homepage": "The main banner, the first-flight photo and the questions list.",
         "media": "Every image and video on the site, with descriptions in both languages.",
-        "integrations": "Payment gateway and email settings."
+        "integrations": "Payment gateway and email settings.",
+        "products": "Class packs, services and shop items, prices for each studio, and shop stock."
       },
       "meta": {
         "orders": "{count, plural, =0 {Nothing to collect} other {# to collect}}",
@@ -523,9 +529,174 @@
         "classes": "{classes} classes · {coaches} coaches",
         "timetable": "{count, plural, =0 {No classes today} one {# class today} other {# classes today}}",
         "homepage": "{count, plural, =0 {No questions yet} one {# question} other {# questions}}",
-        "media": "{count, plural, =0 {No files yet} one {# file} other {# files}}"
+        "media": "{count, plural, =0 {No files yet} one {# file} other {# files}}",
+        "products": "{count, plural, =0 {Nothing on sale} one {# on sale} other {# on sale}}",
+        "lowStock": "{count, plural, one {# shop item running low} other {# shop items running low}}"
       },
       "open": "Open"
+    },
+    "products": {
+      "kicker": "Studio",
+      "title": "Packs & shop",
+      "lede": "Everything the studio sells: class packs, extensions, services and shop items. Set a price for each studio and keep shop stock up to date.",
+      "tabs": {
+        "packs": "Packs & services",
+        "shop": "Shop"
+      },
+      "packList": "Packs & services",
+      "shopList": "Shop items",
+      "addPack": "New",
+      "addItem": "New item",
+      "newPack": "New pack",
+      "newItem": "New shop item",
+      "types": {
+        "class_pack": "Class pack",
+        "extension": "Extension",
+        "service": "Service",
+        "retail": "Shop item"
+      },
+      "typeHints": {
+        "class_pack": "Sessions the customer spends on classes. Each booking uses one.",
+        "extension": "Adds days to a customer's active pack.",
+        "service": "Something done at the studio, like an assessment. No sessions.",
+        "retail": "A product collected at the studio. Stock is counted per studio."
+      },
+      "sold": "{count, plural, =0 {Not sold yet} other {# sold}}",
+      "sections": {
+        "kind": {
+          "title": "Kind",
+          "hint": "Decides what the customer gets after paying. It can't change later."
+        },
+        "about": {
+          "title": "Name & description",
+          "hint": "Shown on the website, at checkout, on invoices and in emails."
+        },
+        "contents": {
+          "title": "What's included",
+          "hint": "What the customer gets after paying."
+        },
+        "item": {
+          "title": "Item details",
+          "hint": "For your own records and stock counts."
+        },
+        "price": {
+          "title": "Price",
+          "hint": "The standard price applies at every studio unless a studio has its own."
+        },
+        "rules": {
+          "title": "Offer rules",
+          "hint": "Limits and highlights on the packages board."
+        },
+        "look": {
+          "title": "Photo & visibility",
+          "hint": "Hidden items stay on old orders but can't be bought."
+        }
+      },
+      "fields": {
+        "name": "Name",
+        "description": "Description",
+        "sku": "Item code (SKU)",
+        "skuHint": "Your own code for this item, e.g. BF-BOTTLE.",
+        "credits": "Sessions",
+        "validity": "Valid for",
+        "validityExtension": "Adds",
+        "days": "days",
+        "validityHint": "Counted from the day it's paid.",
+        "audience": "Who it's for",
+        "classTypes": "Can be used for",
+        "classTypesHint": "Tick every class this pack pays for.",
+        "classTypesError": "Tick at least one class.",
+        "price": "Standard price",
+        "compareAt": "Was price",
+        "compareAtHint": "Optional. Shown crossed out next to the price, so it must be higher.",
+        "perClass": "{amount} per session",
+        "studioPrices": "Price at each studio",
+        "studioPricesHint": "Leave empty to use the standard price.",
+        "usesStandard": "Standard price: {amount}",
+        "ownPrice": "Own price at this studio",
+        "intro": "First-timer offer",
+        "introHint": "Shown as an intro offer. Never picked automatically to pay for a single class.",
+        "maxPerCustomer": "Limit per customer",
+        "maxPerCustomerHint": "How many times one customer can buy it. Empty means no limit.",
+        "featured": "Highlight on the website",
+        "featuredHint": "Marked as a top pick on the packages board.",
+        "photo": "Photo",
+        "trackStock": "Count stock",
+        "trackStockHint": "Turn off for items you never run out of. They can then always be sold.",
+        "currency": "QAR"
+      },
+      "audiences": {
+        "adults": "Adults",
+        "kids": "Kids",
+        "all": "Everyone"
+      },
+      "meta": {
+        "credits": "{count, plural, one {# session} other {# sessions}}",
+        "days": "{count, plural, one {# day} other {# days}}",
+        "plusDays": "+{count} days",
+        "inStock": "{count} in stock",
+        "untracked": "Stock not counted",
+        "noPrice": "No price"
+      },
+      "stockState": {
+        "ok": "In stock",
+        "low": "Low",
+        "out": "Sold out"
+      },
+      "lowBadge": "{count, plural, one {Low at # studio} other {Low at # studios}}",
+      "hiddenItem": "Hidden: customers can't buy it and the desk can't sell it.",
+      "delete": "Delete",
+      "deleteConfirm": "Delete for good",
+      "deleted": "Deleted.",
+      "stock": {
+        "title": "Stock",
+        "lede": "Counted separately at each studio. Paid orders, online or at the desk, take stock automatically.",
+        "saveFirst": "Save the item first, then add its stock.",
+        "notTracked": "Stock isn't counted for this item.",
+        "warnAt": "Warn at",
+        "warnAtHint": "Marked low at or below this number.",
+        "modes": {
+          "received": "Received",
+          "returned": "Returned",
+          "remove": "Remove",
+          "count": "Count",
+          "move": "Move"
+        },
+        "modeHints": {
+          "received": "A delivery arrived. Adds to this studio's stock.",
+          "returned": "A customer brought an item back. Puts it back in stock. Refund the money from the order.",
+          "remove": "Damaged, lost or used at the studio. Takes it off the stock.",
+          "count": "You counted the shelf. Sets the stock to exactly that number.",
+          "move": "Sent to another studio. Takes it off here and adds it there."
+        },
+        "studio": "Studio",
+        "from": "From",
+        "to": "To",
+        "quantity": "How many",
+        "counted": "Counted on the shelf",
+        "note": "Note",
+        "notePlaceholder": "e.g. Supplier delivery, invoice 2231",
+        "apply": "Apply",
+        "applying": "Saving…",
+        "previewEmpty": "Enter how many to see the result.",
+        "preview": "{studio}: {before} → {after}",
+        "done": "Stock updated.",
+        "history": "Stock history",
+        "allStudios": "All studios",
+        "loading": "Loading…",
+        "empty": "No stock changes yet.",
+        "reasons": {
+          "restock": "Received",
+          "sale": "Sold",
+          "return": "Returned",
+          "adjustment": "Adjusted",
+          "transferOut": "Moved out",
+          "transferIn": "Moved in"
+        },
+        "order": "Order #{number}",
+        "by": "by {name}",
+        "after": "{count} left"
+      }
     }
   }
 }

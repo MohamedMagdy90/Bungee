@@ -9,7 +9,8 @@ import { STUDIO_TZ } from "@/lib/constants";
 import { fmtLongDate, fmtNum } from "@/lib/format";
 import { addDaysToKey, zonedDateKey, zonedToUtc } from "@/lib/time";
 import { getDb } from "@/server/db";
-import { branches, classSessions, classTypes, coaches, faqs, media, orders, users } from "@/server/db/schema";
+import { lowStockCount } from "@/server/admin/catalog";
+import { branches, classSessions, classTypes, coaches, faqs, media, orders, products, users } from "@/server/db/schema";
 import { areasFor } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export default async function AdminOverview({ params }: Props) {
   const dayEnd = zonedToUtc(addDaysToKey(today, 1), "00:00", STUDIO_TZ);
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
 
-  const [[todayRow], [awaiting], [customerRow], [studios], [classRow], [coachRow], [faqRow], [mediaRow]] = await Promise.all([
+  const [[todayRow], [awaiting], [customerRow], [studios], [classRow], [coachRow], [faqRow], [mediaRow], [productRow], lowStock] = await Promise.all([
     db
       .select({ classes: n, booked: sql<number>`coalesce(sum(${classSessions.bookedCount}), 0)::int` })
       .from(classSessions)
@@ -61,6 +62,8 @@ export default async function AdminOverview({ params }: Props) {
     db.select({ n }).from(coaches).where(eq(coaches.isActive, true)),
     db.select({ n }).from(faqs),
     db.select({ n }).from(media),
+    db.select({ n }).from(products).where(eq(products.isActive, true)),
+    lowStockCount(db),
   ]);
 
   const areas = areasFor(staff.role);
@@ -73,6 +76,7 @@ export default async function AdminOverview({ params }: Props) {
     timetable: t("meta.timetable", { count: num(todayRow?.classes) }),
     homepage: t("meta.homepage", { count: num(faqRow?.n) }),
     media: t("meta.media", { count: num(mediaRow?.n) }),
+    products: lowStock > 0 ? t("meta.lowStock", { count: lowStock }) : t("meta.products", { count: num(productRow?.n) }),
     integrations: null,
   };
   const stats = [

@@ -12,17 +12,18 @@ export type StaffRole = (typeof STAFF_ROLES)[number];
 /**
  * Sections of the studio desk, grouped the way the menu shows them:
  *   Front desk: desk (orders & payments), customers
- *   Studio:     studio (locations, classes & coaches, timetable)
+ *   Studio:     studio (locations, classes & coaches, timetable), catalog (packs, prices, shop items & stock)
  *   Website:    website (homepage, FAQs, images & videos)
  *   Settings:   settings (integrations, payment options)
  */
-export const STAFF_AREAS = ["desk", "customers", "studio", "website", "settings"] as const;
+export const STAFF_AREAS = ["desk", "customers", "studio", "catalog", "website", "settings"] as const;
 export type StaffArea = (typeof STAFF_AREAS)[number];
 
 const AREA_ROLES: Record<StaffArea, readonly StaffRole[]> = {
   desk: ["front_desk", "manager", "owner"],
   customers: ["front_desk", "manager", "owner"],
   studio: ["manager", "owner"],
+  catalog: ["manager", "owner"],
   website: ["manager", "owner"],
   settings: ["manager", "owner"],
 };
