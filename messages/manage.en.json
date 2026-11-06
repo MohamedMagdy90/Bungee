@@ -783,7 +783,7 @@
         },
         "columns": {
           "title": "Columns",
-          "hint": "Only the columns in your file are changed. Leave a cell empty to keep what's there.",
+          "hint": "Only the columns in your file are changed. An empty cell keeps what's there; write - to clear a was-price, studio price, description or aisle.",
           "names": {
             "sku": "sku",
             "slug": "slug",
@@ -804,7 +804,7 @@
             "slug": "Web address. Used to match when there's no code; made from the name if empty.",
             "name_en": "Name in English (required for new items).",
             "name_ar": "Name in Arabic (required for new items).",
-            "aisle": "Aisle name or web address. A new name creates the aisle.",
+            "aisle": "Aisle name or web address. A new name creates the aisle; - removes it.",
             "price": "Standard price in QAR, e.g. 85 or 85.50 (required for new items).",
             "compare_at": "Optional was-price in QAR, shown crossed out.",
             "active": "yes to sell it, no to hide it.",

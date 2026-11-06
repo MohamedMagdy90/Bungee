@@ -682,7 +682,8 @@ const toBool = (raw: string) => {
 
 /**
  * Adds or updates shop items from a spreadsheet. Rows match existing items by item code (SKU), else by web
- * address (slug); anything else is created. Only the columns present are changed. Unknown aisles are created.
+ * address (slug); anything else is created. Only the columns present are changed, and an empty cell keeps the
+ * current value ("-" clears a was-price, studio price, description or aisle). Unknown aisles are created.
  * A stock:<studio> cell sets that studio's stock to exactly that number (written to the stock history).
  * dryRun checks everything and reports, without writing.
  */
@@ -770,7 +771,8 @@ export async function importShopCsv(db: Database, actor: string, text: string, d
     if (!match && (price === null || price === undefined)) flag("price", "required");
     if (price !== undefined && price !== null && (Number.isNaN(price) || price < 0)) flag("price", "bad_number", priceRaw);
     const compareRaw = get("compare_at");
-    const compareAt = compareRaw === undefined ? undefined : toNumber(compareRaw);
+    // Empty keeps what's there; "-" clears it.
+    const compareAt = compareRaw === undefined || compareRaw === "" ? undefined : compareRaw === "-" ? null : toNumber(compareRaw);
     if (compareAt !== undefined && compareAt !== null && Number.isNaN(compareAt)) flag("compare_at", "bad_number", compareRaw);
     if (typeof compareAt === "number" && typeof price === "number" && !Number.isNaN(compareAt) && compareAt <= price) {
       flag("compare_at", "compare_below", compareRaw);
@@ -796,9 +798,12 @@ export async function importShopCsv(db: Database, actor: string, text: string, d
       }
       if (sc.price >= 0) {
         const raw = (cells[sc.price] ?? "").trim();
-        const v = toNumber(raw);
-        if (v !== null && (Number.isNaN(v) || v < 0)) flag(header[sc.price], "bad_number", raw);
-        else priceCells.push({ branchId: sc.id, amount: v === null ? null : Math.round(v * 100) });
+        if (raw === "-") priceCells.push({ branchId: sc.id, amount: null });
+        else if (raw !== "") {
+          const v = toNumber(raw);
+          if (v === null || Number.isNaN(v) || v < 0) flag(header[sc.price], "bad_number", raw);
+          else priceCells.push({ branchId: sc.id, amount: Math.round(v * 100) });
+        }
       }
     }
     const aisleRaw = get("aisle");
@@ -810,7 +815,7 @@ export async function importShopCsv(db: Database, actor: string, text: string, d
     }
     if (match) result.updated++;
     else result.created++;
-    if (aisleRaw && !aisleByKey.has(aisleRaw.toLowerCase())) {
+    if (aisleRaw && aisleRaw !== "-" && !aisleByKey.has(aisleRaw.toLowerCase())) {
       // Count it now so the dry run shows it; created for real below.
       if (!result.aislesCreated.includes(aisleRaw)) result.aislesCreated.push(aisleRaw);
       if (dryRun) aisleByKey.set(aisleRaw.toLowerCase(), "pending");
@@ -820,8 +825,8 @@ export async function importShopCsv(db: Database, actor: string, text: string, d
     await db.transaction(async (txRaw) => {
       const tx = txRaw as unknown as Database;
       let categoryId: string | null | undefined;
-      if (aisleRaw !== undefined) {
-        if (aisleRaw === "") categoryId = null;
+      if (aisleRaw) {
+        if (aisleRaw === "-") categoryId = null;
         else {
           let id = aisleByKey.get(aisleRaw.toLowerCase());
           if (!id) {
@@ -838,7 +843,8 @@ export async function importShopCsv(db: Database, actor: string, text: string, d
           categoryId = id;
         }
       }
-      const desc = { en: get("description_en"), ar: get("description_ar") };
+      const cell = (v: string | undefined) => (v === undefined || v === "" ? undefined : v === "-" ? "" : v);
+      const desc = { en: cell(get("description_en")), ar: cell(get("description_ar")) };
       let productId: string;
       if (match) {
         productId = match.id;

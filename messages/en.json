@@ -256,7 +256,8 @@
     "related": "You might also like",
     "moreIn": "More in {aisle}",
     "browseAll": "{count, plural, one {Browse the shop · # item} other {Browse the shop · # items}}",
-    "note": "Collected at the studio, never delivered. Your order is kept at the desk."
+    "note": "Collected at the studio, never delivered. Your order is kept at the desk.",
+    "onlyLeft": "{count, plural, one {Only {n} left} other {Only {n} left}}"
   },
   "cart": {
     "title": "Your cart",

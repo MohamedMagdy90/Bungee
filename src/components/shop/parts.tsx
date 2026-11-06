@@ -98,9 +98,13 @@ export function StockDot({ state }: { state: StockState }) {
   );
 }
 
-export function StockText({ state, left, studio }: { state: StockState; left: number; studio: string }) {
+export function StockText({ state, left, studio, short }: { state: StockState; left: number; studio: string; short?: boolean }) {
   const t = useTranslations("shop");
   const locale = useLocale();
+  if (short) {
+    if (state === "low") return <>{t("onlyLeft", { count: left, n: fmtNum(left, locale) })}</>;
+    return <>{t(`states.${state}`)}</>;
+  }
   if (state === "out") return <>{t("soldOutAt", { studio })}</>;
   if (state === "low") return <>{t("onlyLeftAt", { count: left, n: fmtNum(left, locale), studio })}</>;
   return <>{t("inStockAt", { studio })}</>;
@@ -325,7 +329,7 @@ export function ShopItemCard({ item, studio, priority }: { item: Card; studio: s
             <p className="flex min-w-0 items-center gap-1.5 text-meta text-steel">
               <StockDot state={item.state} />
               <span className="truncate">
-                <StockText state={item.state} left={item.left} studio={studio} />
+                <StockText state={item.state} left={item.left} studio={studio} short />
               </span>
             </p>
             <AddToCart productId={item.id} name={item.name} state={item.state} left={item.left} variant="compact" />

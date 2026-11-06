@@ -77,7 +77,7 @@ export function SiteHeader() {
           </Link>
           <AccountLink className="hidden md:inline-flex" />
           <CartButton />
-          <a href={navHref("#timetable", locale)} className={cn(buttonVariants({ size: "sm" }), "hidden sm:inline-flex")}>
+          <a href={navHref("#timetable", locale)} className={cn(buttonVariants({ size: "sm" }), "hidden sm:inline-flex lg:hidden xl:inline-flex")}>
             {t("book")}
             <ButtonArrow size={16} />
           </a>
