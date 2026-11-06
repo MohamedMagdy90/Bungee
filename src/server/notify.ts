@@ -6,6 +6,7 @@ import { isPreviewMode } from "./runtime";
 export type EmailTemplate =
   | "auth.verify_email"
   | "auth.reset_password"
+  | "staff.invite"
   | "booking.confirmed"
   | "booking.waitlisted"
   | "booking.promoted"

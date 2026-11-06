@@ -70,7 +70,11 @@
       "submit": "Save new password",
       "done": "Password changed. Sign in with your new password.",
       "invalid": "This reset link has expired or was already used.",
-      "requestNew": "Request a new link"
+      "requestNew": "Request a new link",
+      "inviteTitle": "Welcome to the studio desk.",
+      "inviteLede": "Choose a password for your staff account. You'll use it with your email to sign in.",
+      "inviteDone": "You're all set. Sign in to the studio desk with your email and new password.",
+      "inviteInvalid": "This invite link has expired or was already used. Ask whoever added you for a new one."
     },
     "errors": {
       "INVALID_EMAIL_OR_PASSWORD": "That email and password don't match.",

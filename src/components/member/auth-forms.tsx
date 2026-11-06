@@ -294,7 +294,8 @@ export function ForgotForm() {
   );
 }
 
-export function ResetForm({ token }: { token: string | null }) {
+/** `invite`: a studio-desk invite ("choose your password"), which ends at the staff sign-in. */
+export function ResetForm({ token, invite = false }: { token: string | null; invite?: boolean }) {
   const { t, errorText } = useAuthCopy();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -303,18 +304,20 @@ export function ResetForm({ token }: { token: string | null }) {
   if (!token)
     return (
       <div className="space-y-5">
-        <Notice tone="error">{t("reset.invalid")}</Notice>
-        <Link href="/forgot-password" className={buttonVariants({ variant: "navy" })}>
-          {t("reset.requestNew")}
-        </Link>
+        <Notice tone="error">{invite ? t("reset.inviteInvalid") : t("reset.invalid")}</Notice>
+        {!invite && (
+          <Link href="/forgot-password" className={buttonVariants({ variant: "navy" })}>
+            {t("reset.requestNew")}
+          </Link>
+        )}
       </div>
     );
 
   if (done)
     return (
       <div className="space-y-5">
-        <Notice tone="success">{t("reset.done")}</Notice>
-        <Link href="/sign-in" className={buttonVariants({ size: "lg" })}>
+        <Notice tone="success">{invite ? t("reset.inviteDone") : t("reset.done")}</Notice>
+        <Link href={invite ? "/admin/sign-in" : "/sign-in"} className={buttonVariants({ size: "lg" })}>
           {t("signIn.submit")}
           <ButtonArrow />
         </Link>

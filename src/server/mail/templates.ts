@@ -89,6 +89,25 @@ function content(template: EmailTemplate, p: Payload, ar: boolean, origin: strin
         ],
         action: { label: ar ? "اختر كلمة مرور جديدة" : "Choose a new password", url: str(p.url) },
       };
+    case "staff.invite": {
+      const inviter = str(p.inviter);
+      const role = str(p.role);
+      return {
+        subject: ar ? "دعوة إلى مكتب استوديو بانجي فلاي" : "You're invited to the Bungee Fly studio desk",
+        heading: ar ? "مرحبًا بك في الفريق." : "Welcome to the team.",
+        lines: [
+          hi,
+          ar
+            ? `${inviter || "فريق بانجي فلاي"} أضافك إلى مكتب الاستوديو${role ? ` بصفة ${role}` : ""}.`
+            : `${inviter || "The Bungee Fly team"} added you to the studio desk${role ? ` as ${role}` : ""}.`,
+          ar
+            ? "اختر كلمة مرور من الزر أدناه، ثم سجّل الدخول. الرابط صالح لمدة 7 أيام."
+            : "Choose a password with the button below, then sign in. The link works for 7 days.",
+          ar ? "إذا لم تكن تتوقع هذه الدعوة، تجاهل هذه الرسالة." : "If you weren't expecting this, ignore this email.",
+        ],
+        action: { label: ar ? "اختر كلمة المرور" : "Choose my password", url: str(p.url) },
+      };
+    }
     case "booking.confirmed":
       return {
         subject: ar ? `تم تأكيد حجزك · ${code}` : `You're booked · ${code}`,
