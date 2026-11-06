@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Denied, staffGate } from "@/components/admin/gate";
 import { ProductsManager } from "@/components/admin/products";
-import { listProducts } from "@/server/admin/catalog";
+import { getProduct, listCategoriesAdmin, listPacks, listShopAdmin } from "@/server/admin/catalog";
 import { listMedia } from "@/server/admin/media";
 import { getDb } from "@/server/db";
 import { branches, classTypes } from "@/server/db/schema";
@@ -23,13 +23,15 @@ export default async function AdminProductsPage({ params, searchParams }: Props)
   const { locale } = await params;
   const sp = await searchParams;
   setRequestLocale(locale);
-  const tab = sp.tab === "shop" ? "shop" : "packs";
-  const back = `/admin/products${tab === "shop" ? "?tab=shop" : ""}`;
+  const tab = sp.tab === "shop" ? "shop" : sp.tab === "aisles" ? "aisles" : "packs";
+  const back = `/admin/products${tab === "packs" ? "" : `?tab=${tab}`}`;
   const staff = await staffGate("catalog", locale, back);
   if (!staff) return <Denied />;
   const db = await getDb();
-  const [rows, media, branchRows, typeRows] = await Promise.all([
-    listProducts(db),
+  const [packs, shop, categories, media, branchRows, typeRows] = await Promise.all([
+    listPacks(db),
+    listShopAdmin(db, { q: "", cat: "", filter: "all", page: 1 }),
+    listCategoriesAdmin(db),
     listMedia(db),
     db
       .select({ id: branches.id, slug: branches.slug, nameEn: branches.nameEn, nameAr: branches.nameAr, isActive: branches.isActive })
@@ -47,11 +49,22 @@ export default async function AdminProductsPage({ params, searchParams }: Props)
       .from(classTypes)
       .orderBy(asc(classTypes.sortOrder), asc(classTypes.nameEn)),
   ]);
-  const inTab = rows.filter((r) => (tab === "shop") === (r.type === "retail"));
-  const initialId = sp.id === "new" || inTab.some((r) => r.id === sp.id) ? (sp.id ?? null) : null;
+  // Deep links: packs and aisles are loaded whole; a shop item may be on another page, so check it exists.
+  let initialId: string | null = null;
+  if (sp.id === "new" || sp.id === "import") initialId = sp.id;
+  else if (sp.id && tab === "packs" && packs.some((p) => p.id === sp.id)) initialId = sp.id;
+  else if (sp.id && tab === "aisles" && categories.some((c) => c.id === sp.id)) initialId = sp.id;
+  else if (sp.id && tab === "shop" && /^[0-9a-f-]{36}$/i.test(sp.id)) {
+    initialId = await getProduct(db, sp.id).then(
+      (p) => (p.type === "retail" ? p.id : null),
+      () => null,
+    );
+  }
   return (
     <ProductsManager
-      initial={rows}
+      packs={packs}
+      shop={shop}
+      categories={categories}
       branches={branchRows}
       classTypes={typeRows}
       media={media}

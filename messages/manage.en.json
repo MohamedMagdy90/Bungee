@@ -538,10 +538,11 @@
     "products": {
       "kicker": "Studio",
       "title": "Packs & shop",
-      "lede": "Everything the studio sells: class packs, extensions, services and shop items. Set a price for each studio and keep shop stock up to date.",
+      "lede": "Everything the studio sells: class packs, services and shop items. Set prices per studio, organise the shop into aisles, keep stock up to date, or bring in hundreds of items at once from a spreadsheet.",
       "tabs": {
         "packs": "Packs & services",
-        "shop": "Shop"
+        "shop": "Shop items",
+        "aisles": "Aisles"
       },
       "packList": "Packs & services",
       "shopList": "Shop items",
@@ -623,7 +624,17 @@
         "photo": "Photo",
         "trackStock": "Count stock",
         "trackStockHint": "Turn off for items you never run out of. They can then always be sold.",
-        "currency": "QAR"
+        "currency": "QAR",
+        "aisle": "Aisle",
+        "aisleHint": "Where customers find it in the shop.",
+        "noAisle": "No aisle",
+        "cover": "Main photo",
+        "gallery": "More photos",
+        "galleryHint": "Shown on the item's page after the main photo. Up to 12, in this order.",
+        "addPhoto": "Add a photo",
+        "moveEarlier": "Move earlier",
+        "moveLater": "Move later",
+        "removePhoto": "Remove photo"
       },
       "audiences": {
         "adults": "Adults",
@@ -696,6 +707,114 @@
         "order": "Order #{number}",
         "by": "by {name}",
         "after": "{count} left"
+      },
+      "list": {
+        "allAisles": "All aisles",
+        "filter": "Show",
+        "filters": {
+          "all": "All",
+          "low": "Running low",
+          "out": "Sold out",
+          "hidden": "Hidden",
+          "nocat": "No aisle"
+        },
+        "loading": "Loading…",
+        "prev": "Previous",
+        "next": "Next",
+        "page": "Page {page} of {pages}"
+      },
+      "aisles": {
+        "list": "Aisles",
+        "add": "New aisle",
+        "new": "New aisle",
+        "items": "{count, plural, =0 {No items yet} one {# item} other {# items}}",
+        "deleteConfirm": "Delete aisle",
+        "descriptionHint": "One line under the aisle name in the shop.",
+        "hidden": "Hidden: the aisle isn't shown in the shop. Its items can still be found by search.",
+        "sections": {
+          "about": "Name & description",
+          "aboutHint": "Shown in the shop's aisle list and at the top of the aisle page.",
+          "lookHint": "Aisles with no items on sale are never shown to customers."
+        }
+      },
+      "import": {
+        "button": "Import / export",
+        "title": "Spreadsheet import & export",
+        "subtitle": "Add or update hundreds of shop items at once with Excel, Numbers or Google Sheets (CSV).",
+        "export": {
+          "title": "Download",
+          "hint": "Edit the file and upload it again to change prices, stock or names in bulk.",
+          "all": "All shop items",
+          "template": "Blank template"
+        },
+        "upload": {
+          "title": "Upload",
+          "hint": "We check the file first and show what will change. Nothing is saved until you press Import.",
+          "choose": "Choose a CSV file or drop it here",
+          "formats": "CSV (comma separated), up to 5,000 rows. In Excel: File › Save As › CSV UTF-8.",
+          "checking": "Checking the file…"
+        },
+        "stats": {
+          "rows": "Rows",
+          "created": "New items",
+          "updated": "Updates",
+          "skipped": "Skipped (problems)"
+        },
+        "newAisles": "New aisles will be created: {names}",
+        "problemsTitle": "{count, plural, one {# problem} other {# problems}}: these rows are skipped",
+        "row": "Row {n}",
+        "importNow": "{count, plural, one {Import # item} other {Import # items}}",
+        "importing": "Importing…",
+        "skipNote": "{count, plural, one {# row with problems will be skipped. Fix it and upload again any time.} other {# rows with problems will be skipped. Fix them and upload again any time.}}",
+        "readyNote": "Everything checks out.",
+        "done": "Imported: {created} new, {updated} updated. The shop shows the changes now.",
+        "problems": {
+          "empty_file": "The file has no rows.",
+          "missing_columns": "No name_en, sku or slug column. Start from the template.",
+          "too_many_rows": "More than {value} rows. Split the file.",
+          "unknown_studio": "No studio with the web address “{value}”.",
+          "duplicate_row": "This item appears twice in the file ({value}).",
+          "not_shop_item": "{value} is a pack or service, not a shop item.",
+          "required": "Required for a new item.",
+          "too_long": "Too long.",
+          "bad_number": "“{value}” isn't a number.",
+          "compare_below": "The was-price must be higher than the price.",
+          "bad_yes_no": "Use yes or no (not “{value}”)."
+        },
+        "columns": {
+          "title": "Columns",
+          "hint": "Only the columns in your file are changed. Leave a cell empty to keep what's there.",
+          "names": {
+            "sku": "sku",
+            "slug": "slug",
+            "name_en": "name_en",
+            "name_ar": "name_ar",
+            "aisle": "aisle",
+            "price": "price",
+            "compare_at": "compare_at",
+            "active": "active",
+            "featured": "featured",
+            "track_stock": "track_stock",
+            "description_en": "description_en / _ar",
+            "stock": "stock:<studio>",
+            "studio_price": "price:<studio>"
+          },
+          "help": {
+            "sku": "Your item code. Rows are matched to existing items by this code.",
+            "slug": "Web address. Used to match when there's no code; made from the name if empty.",
+            "name_en": "Name in English (required for new items).",
+            "name_ar": "Name in Arabic (required for new items).",
+            "aisle": "Aisle name or web address. A new name creates the aisle.",
+            "price": "Standard price in QAR, e.g. 85 or 85.50 (required for new items).",
+            "compare_at": "Optional was-price in QAR, shown crossed out.",
+            "active": "yes to sell it, no to hide it.",
+            "featured": "yes to show it first in the shop and on the homepage.",
+            "track_stock": "no for items you never run out of.",
+            "description_en": "Descriptions in English and Arabic.",
+            "stock": "Stock at that studio, set to exactly this number (e.g. stock:west-bay).",
+            "studio_price": "That studio's own price. Empty uses the standard price."
+          }
+        }
       }
     }
   }
