@@ -74,7 +74,7 @@ function Desk({
     }
     const timer = setTimeout(() => void loadShop(1), q ? 280 : 0);
     return () => clearTimeout(timer);
-  }, [q, filter, loadShop]);
+  }, [q, loadShop]); // loadShop changes with the filter, so a filter change reloads too
 
   // The item being worked on: from the loaded page, else fetched (deep links, items on another page).
   useEffect(() => {
