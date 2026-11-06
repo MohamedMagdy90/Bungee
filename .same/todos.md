@@ -87,6 +87,25 @@
   - Next: variants (sizes/colours), desk "New order" with several items, refunds putting stock back
 - [ ] R10 Session inventory: each booking deducts from purchased sessions (credits + ledger, visible balance)
 - [ ] R11 Multiple branches (pricing, schedule, stock, staff scope)
+## Team, access, schedule, role overviews (Nov 6, after user request)
+- Roles: owner, admin (new enum value), manager (= Branch manager), front_desk, coach. Permission map in
+  src/lib/permissions.ts (PERMISSIONS, groups, ROLE_DEFAULTS, ALL_STUDIO_ROLES). staff_access table (migration 0004):
+  permissions[], all_branches, suspended_at, invited_at/by. getStaffContext() reads role/perms/studios/coach FRESH per
+  request (cookie cache ignored) -> suspend/role change applies at once. staffGate(perm|perm[]|null) / requireStaff(...)
+- Team & access (/admin/team, src/server/admin/team.ts, /api/admin/team): add/promote, role cards, coach link
+  (required for coach), studios, per-person access with live menu preview, invite link (7-day Better Auth reset token,
+  /reset-password?token=&invite=1 -> staff welcome -> /admin/sign-in), suspend/reactivate/remove; guards: owner-only for
+  owners, no self change, grant only what you hold, last owner stays. Audit: team.*
+- Schedule (/admin/schedule, /api/admin/schedule): week/day, studio + coach filters, roster (first visit, child of,
+  walk-in, pay pending), check-in / undo / no-show, waitlist, 60 s refresh. Coach = own classes only.
+- Overview by role (admin/page.tsx + src/server/admin/analytics.ts + components/admin/charts.tsx): business / studio /
+  desk / coach; period 7/30/90; studio chips; KPIs vs previous period; revenue+bookings per day; fill heatmap;
+  top classes / items; sales mix; studios + coaches tables; needs-attention (gated per permission). No menu cards.
+- seed-history.ts (once, sample data only, marker in settings): 48 customers, real bookings 6 weeks back + 2 ahead,
+  check-ins, no-shows, waitlists, pack + shop orders; booked_count recomputed from real rows
+- [ ] Deploy + test each role live (create admin/manager/desk/coach via Team), screenshots EN/AR/phone
+- [ ] Studio scope for orders list / new order / timetable / locations / stock actions (overview + schedule done)
+- [ ] Audit fixes found: timetable "1 places" plural, hero button /timetable 404, "Pick one on the left" in RTL
 ## Open questions for client
 - Email provider (Resend / Postmark / SES / SMTP)? SkipCash sandbox credentials? "Stackable" = stockable retail (assumed)
 ## Phase 2 — Customer app (in progress)

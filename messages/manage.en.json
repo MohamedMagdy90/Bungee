@@ -47,7 +47,7 @@
       "webAddress": "Web address",
       "webAddressHint": "Lowercase letters, numbers and dashes, e.g. {example}.",
       "count": "{count, plural, =0 {None} one {# item} other {# items}}",
-      "pickOne": "Pick one on the left to edit it, or add a new one.",
+      "pickOne": "Pick one from the list to edit it, or add a new one.",
       "noMatches": "Nothing matches that search.",
       "cover": "Cover image",
       "coverNone": "No image",
@@ -343,7 +343,7 @@
       "group": "Group",
       "paused": "Paused",
       "noCoach": "No coach set",
-      "places": "{count} places",
+      "places": "{count, plural, one {# place} other {# places}}",
       "minutes": "{count} min",
       "upcomingN": "{count, plural, =0 {No upcoming classes} one {# upcoming class} other {# upcoming classes}}",
       "editor": {
@@ -630,11 +630,15 @@
       "upNext": {
         "title": "Up next today",
         "done": "{count, plural, =0 {None finished yet} one {# class finished} other {# classes finished}}",
-        "none": "That's all for today. Every class has finished.",
+        "none": "No classes today or tomorrow.",
         "live": "On now",
         "inMinutes": "in {minutes} min",
         "inHours": "in {hours} h {minutes} min",
-        "checked": "{checked}/{booked} in"
+        "checked": "{checked}/{booked} in",
+        "tomorrowTitle": "First up tomorrow",
+        "allDone": "{count, plural, one {Today's class is done} other {All # of today's classes are done}}",
+        "noneToday": "No classes today",
+        "tomorrow": "Tomorrow"
       },
       "coach": {
         "notLinked": "Your login isn't linked to a coach profile yet. Ask an owner or administrator to link it in Team & access, and your classes will appear here.",
@@ -956,7 +960,7 @@
       "filters": {
         "all": "All",
         "leads": "Managers",
-        "desk": "Front desk",
+        "desk": "Desk",
         "coaches": "Coaches"
       },
       "noMatches": "Nobody matches that search.",
@@ -1155,7 +1159,8 @@
         "media": "Images & videos",
         "team": "Team & access",
         "integrations": "Integrations"
-      }
+      },
+      "count": "{count, plural, one {# person} other {# people}}"
     },
     "schedule": {
       "kicker": "Studio desk",

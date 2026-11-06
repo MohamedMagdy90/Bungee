@@ -38,12 +38,15 @@ export type Delta = { text: string; tone: "up" | "down" | "flat" } | null;
 export function Kpi({
   label,
   value,
+  unit,
   sub,
   delta,
   good = "up",
 }: {
   label: string;
   value: string;
+  /** Small currency / unit shown beside the number, so big amounts never get cut off. */
+  unit?: string;
   sub?: string;
   delta?: Delta;
   good?: "up" | "down";
@@ -52,7 +55,10 @@ export function Kpi({
   return (
     <div className="lift min-w-0 rounded-xl border border-navy/10 bg-white p-4 sm:p-5">
       <p className="truncate text-meta text-steel">{label}</p>
-      <p className="tabular mt-1.5 truncate text-[1.75rem] font-semibold leading-none tracking-tight sm:text-[2rem]">{value}</p>
+      <p className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 leading-none">
+        <span className="tabular whitespace-nowrap text-[1.75rem] font-semibold tracking-tight sm:text-[2rem]">{value}</span>
+        {unit && <span className="text-meta font-semibold text-steel">{unit}</span>}
+      </p>
       <div className="mt-2 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem]">
         {delta && (
           <span
@@ -144,10 +150,10 @@ export function Heatmap({
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[30rem] border-separate border-spacing-[3px] text-[0.6875rem]">
+        <table className="w-full min-w-[30rem] table-fixed border-separate border-spacing-[3px] text-[0.6875rem]">
           <thead>
             <tr>
-              <th className="w-10" />
+              <th className="w-11" />
               {span.map((h) => (
                 <th key={h} scope="col" className="tabular font-normal text-steel">
                   {h % 2 === lo % 2 ? hourLabel(h) : ""}
@@ -234,12 +240,13 @@ export function MixBar({ parts, empty }: { parts: { key: string; label: string; 
             <span key={p.key} style={{ width: `${(p.value / total) * 100}%`, backgroundColor: p.color }} title={`${p.label} · ${p.display}`} />
           ))}
       </div>
-      <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-meta">
+      <ul className="mt-4 divide-y divide-navy/[0.06] text-meta">
         {parts.map((p) => (
-          <li key={p.key} className="flex min-w-0 items-center gap-2">
+          <li key={p.key} className={cn("flex min-w-0 items-center gap-3 py-2.5", p.value === 0 && "text-steel")}>
             <span className="size-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: p.color }} aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate text-steel">{p.label}</span>
-            <span className="tabular shrink-0 font-medium">{Math.round((p.value / total) * 100)}%</span>
+            <span className="min-w-0 flex-1 truncate">{p.label}</span>
+            <span className="tabular shrink-0 font-semibold">{p.display}</span>
+            <span className="tabular w-11 shrink-0 text-end text-steel">{Math.round((p.value / total) * 100)}%</span>
           </li>
         ))}
       </ul>

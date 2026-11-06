@@ -22,6 +22,8 @@ export async function staffGate(perms: Permission | readonly Permission[] | null
 
 export async function Denied() {
   const t = await getTranslations("admin.denied");
+  // Staff who just lack this one section go back to their overview; everyone else to their account.
+  const staff = await getStaffContext();
   return (
     <div className="flex flex-1 items-center justify-center px-5 py-16">
       <div className="lift w-full max-w-md rounded-xl border border-navy/10 bg-white p-7 shadow-[0_24px_60px_-34px_rgb(11_31_51/0.45)]">
@@ -31,8 +33,8 @@ export async function Denied() {
         <h1 className="mt-5 text-h3 font-semibold text-balance">{t("title")}</h1>
         <p className="mt-2 text-body text-steel text-pretty">{t("body")}</p>
         <div className="mt-6 flex flex-wrap gap-2">
-          <Link href="/account" className={buttonVariants({ variant: "navy", size: "sm" })}>
-            {t("account")}
+          <Link href={staff ? "/admin" : "/account"} className={buttonVariants({ variant: "navy", size: "sm" })}>
+            {staff ? t("overview") : t("account")}
           </Link>
           <Link href="/" className={buttonVariants({ variant: "ghost", size: "sm" })}>
             {t("home")}

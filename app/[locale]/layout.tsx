@@ -71,8 +71,13 @@ export default async function LocaleLayout({ children, params }: Params & { chil
             <link rel="preload" href="/fonts/plex-arabic-600.v1.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
           </>
         )}
-        <Script crossOrigin="anonymous" src="//unpkg.com/react-grab/dist/index.global.js" />
-        <Script crossOrigin="anonymous" src="//unpkg.com/same-runtime/dist/index.global.js" />
+        {/* Editor helpers for the Same preview only: never shipped to the live site. */}
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script crossOrigin="anonymous" src="//unpkg.com/react-grab/dist/index.global.js" />
+            <Script crossOrigin="anonymous" src="//unpkg.com/same-runtime/dist/index.global.js" />
+          </>
+        )}
       </head>
       <body suppressHydrationWarning>
         <NextIntlClientProvider>{children}</NextIntlClientProvider>

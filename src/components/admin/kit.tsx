@@ -115,9 +115,12 @@ export function ListCard({
   onSearch,
   children,
   toolbar,
+  countLabel,
 }: {
   title: string;
   count: number;
+  /** Replaces the generic "N items" (e.g. "3 people"). */
+  countLabel?: string;
   onAdd?: () => void;
   addLabel?: string;
   search?: string;
@@ -131,7 +134,7 @@ export function ListCard({
       <header className="flex items-center gap-3 border-b border-navy/[0.08] px-5 py-4">
         <div className="min-w-0 flex-1">
           <h2 className="text-body-lg font-semibold">{title}</h2>
-          <p className="text-meta text-steel">{t("count", { count })}</p>
+          <p className="text-meta text-steel">{countLabel ?? t("count", { count })}</p>
         </div>
         {onAdd && (
           <Button size="sm" variant="primary" onClick={onAdd}>

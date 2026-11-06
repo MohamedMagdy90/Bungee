@@ -123,12 +123,17 @@ export default async function AdminOverview({ params, searchParams }: Props) {
   const analytics = kind !== "desk" || showSales;
   const range = rangeFor(period, now);
   const dayStart = zonedToUtc(zonedDateKey(now, STUDIO_TZ), "00:00", STUDIO_TZ);
-  const dayEnd = zonedToUtc(addDaysToKey(zonedDateKey(now, STUDIO_TZ), 1), "00:00", STUDIO_TZ);
+  const todayKey = zonedDateKey(now, STUDIO_TZ);
+  const dayEnd = zonedToUtc(addDaysToKey(todayKey, 1), "00:00", STUDIO_TZ);
+  const hasAttention = ATTENTION.some((i) => can(staff, i.perm));
 
   const [today, attention, upNext, classes, sales, people, studios, coaches] = await Promise.all([
     todayFor(db, scope, now),
     attentionFor(db, scope, now),
-    can(staff, "schedule") ? listCalendar(db, { from: dayStart, to: dayEnd }, scope) : Promise.resolve([] as CalendarSession[]),
+    // Today and tomorrow: once today's classes are over, the desk sees what opens tomorrow.
+    can(staff, "schedule")
+      ? listCalendar(db, { from: dayStart, to: zonedToUtc(addDaysToKey(todayKey, 2), "00:00", STUDIO_TZ) }, scope)
+      : Promise.resolve([] as CalendarSession[]),
     analytics && showClasses ? classesFor(db, scope, range, now) : Promise.resolve(null),
     analytics && showSales ? salesFor(db, scope, range) : Promise.resolve(null),
     analytics && showPeople ? peopleFor(db, scope, range, now) : Promise.resolve(null),
@@ -143,12 +148,15 @@ export default async function AdminOverview({ params, searchParams }: Props) {
     <div className="flex-1 px-5 py-7 md:px-8 md:py-10 xl:px-10">
       {header(lede, analytics)}
 
-      <div className="mt-8 grid max-w-[84rem] gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <TodayBand staff={staff} today={today} awaiting={attention.awaitingPayment} locale={locale} />
-        <AttentionList staff={staff} attention={attention} locale={locale} />
+      <div className={cn("mt-8 grid max-w-[84rem] items-start gap-4", hasAttention && "xl:grid-cols-[minmax(0,1fr)_22rem]")}>
+        <div className="grid min-w-0 gap-4">
+          <TodayBand staff={staff} today={today} awaiting={attention.awaitingPayment} locale={locale} />
+          {can(staff, "schedule") && (
+            <UpNext sessions={upNext} now={now} dayEnd={dayEnd} locale={locale} showStudio={studioRows.length > 1 && !studio} />
+          )}
+        </div>
+        {hasAttention && <AttentionList staff={staff} attention={attention} locale={locale} />}
       </div>
-
-      {upNext.length > 0 && <UpNext sessions={upNext} now={now} locale={locale} showStudio={studioRows.length > 1 && !studio} />}
 
       {analytics && (
         <>
@@ -156,10 +164,16 @@ export default async function AdminOverview({ params, searchParams }: Props) {
             {t("performance", { period: t(`periods.${period}`) })}
             <span className="h-px flex-1 bg-navy/10" aria-hidden="true" />
           </h2>
-          <div className="mt-4 grid max-w-[84rem] grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="mt-4 grid max-w-[84rem] grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
             {sales && (
               <>
-                <Kpi label={t("kpi.revenue")} value={fmtMoney(sales.revenue, locale)} delta={change(sales.revenue, sales.prevRevenue, locale, t("new"))} sub={periodHint} />
+                <Kpi
+                  label={t("kpi.revenue")}
+                  value={fmtNum(Math.round(sales.revenue / 100), locale)}
+                  unit={locale === "ar" ? "ر.ق" : "QAR"}
+                  delta={change(sales.revenue, sales.prevRevenue, locale, t("new"))}
+                  sub={periodHint}
+                />
                 <Kpi
                   label={t("kpi.orders")}
                   value={fmtNum(sales.orders, locale)}
@@ -290,7 +304,7 @@ export default async function AdminOverview({ params, searchParams }: Props) {
           </div>
 
           {(studios.length > 0 || coaches.length > 0) && (
-            <div className="mt-4 grid max-w-[84rem] gap-4 lg:grid-cols-2">
+            <div className={cn("mt-4 grid max-w-[84rem] gap-4", studios.length > 0 && coaches.length > 0 && "lg:grid-cols-2")}>
               {studios.length > 0 && (
                 <Card title={t("studios.title")} hint={t("studios.hint")}>
                   <Table
@@ -453,17 +467,19 @@ async function TodayBand({
   );
 }
 
+/** "Needs attention" items, each shown only to people who can act on it. */
+const ATTENTION: { key: keyof Awaited<ReturnType<typeof attentionFor>>; perm: Permission; href: string }[] = [
+  { key: "awaitingPayment", perm: "orders", href: "/admin/orders" },
+  { key: "toCollect", perm: "orders", href: "/admin/orders?view=paid" },
+  { key: "waitlists", perm: "schedule", href: "/admin/schedule" },
+  { key: "noCoach", perm: "timetable", href: "/admin/timetable?tab=upcoming" },
+  { key: "lowStock", perm: "catalog", href: "/admin/products?tab=shop" },
+  { key: "expiringPacks", perm: "customers", href: "/admin/customers?filter=active" },
+];
+
 async function AttentionList({ staff, attention, locale }: { staff: StaffContext; attention: Awaited<ReturnType<typeof attentionFor>>; locale: string }) {
   const t = await getTranslations("manage.overview.attention");
-  const items: { key: keyof typeof attention; perm: Permission; href: string }[] = [
-    { key: "awaitingPayment", perm: "orders", href: "/admin/orders" },
-    { key: "toCollect", perm: "orders", href: "/admin/orders?view=paid" },
-    { key: "waitlists", perm: "schedule", href: "/admin/schedule" },
-    { key: "noCoach", perm: "timetable", href: "/admin/timetable?tab=upcoming" },
-    { key: "lowStock", perm: "catalog", href: "/admin/products?tab=shop" },
-    { key: "expiringPacks", perm: "customers", href: "/admin/customers?filter=active" },
-  ];
-  const visible = items.filter((i) => can(staff, i.perm));
+  const visible = ATTENTION.filter((i) => can(staff, i.perm));
   const open = visible.filter((i) => attention[i.key] > 0);
   if (visible.length === 0) return null;
   return (
@@ -495,28 +511,46 @@ async function AttentionList({ staff, attention, locale }: { staff: StaffContext
   );
 }
 
-async function UpNext({ sessions, now, locale, showStudio }: { sessions: CalendarSession[]; now: Date; locale: string; showStudio: boolean }) {
+async function UpNext({
+  sessions,
+  now,
+  dayEnd,
+  locale,
+  showStudio,
+}: {
+  sessions: CalendarSession[];
+  now: Date;
+  dayEnd: Date;
+  locale: string;
+  showStudio: boolean;
+}) {
   const t = await getTranslations("manage.overview");
-  const upcoming = sessions.filter((s) => s.status !== "cancelled" && new Date(s.endsAt) >= now).slice(0, 6);
+  const live = sessions.filter((s) => s.status !== "cancelled");
+  const todays = live.filter((s) => new Date(s.startsAt) < dayEnd);
+  const left = todays.filter((s) => new Date(s.endsAt) >= now);
+  const tomorrow = left.length === 0;
+  const upcoming = (tomorrow ? live.filter((s) => new Date(s.startsAt) >= dayEnd) : left).slice(0, 6);
   const startsIn = (ms: number) => {
     const m = Math.max(1, Math.round(ms / 60000));
     return m < 60 ? t("upNext.inMinutes", { minutes: m }) : t("upNext.inHours", { hours: Math.floor(m / 60), minutes: m % 60 });
   };
-  const done = sessions.filter((s) => s.status !== "cancelled" && new Date(s.endsAt) < now).length;
+  const done = todays.length - left.length;
   return (
-    <section aria-labelledby="upnext-title" className="lift mt-4 max-w-[84rem] rounded-xl border border-navy/10 bg-white p-5 sm:p-6">
+    <section aria-labelledby="upnext-title" className="lift min-w-0 rounded-xl border border-navy/10 bg-white p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="upnext-title" className="text-body-lg font-semibold">
-          {t("upNext.title")}
+          {t(tomorrow ? "upNext.tomorrowTitle" : "upNext.title")}
         </h2>
-        <p className="text-meta text-steel">{t("upNext.done", { count: done })}</p>
+        <p className="text-meta text-steel">
+          {tomorrow ? (todays.length ? t("upNext.allDone", { count: todays.length }) : t("upNext.noneToday")) : t("upNext.done", { count: done })}
+        </p>
       </div>
       {upcoming.length === 0 ? (
         <p className="rounded-lg bg-navy/[0.03] px-4 py-6 text-center text-meta text-steel">{t("upNext.none")}</p>
       ) : (
-        <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
           {upcoming.map((s) => {
-            const live = new Date(s.startsAt) <= now;
+            const live = !tomorrow && new Date(s.startsAt) <= now;
             return (
               <li key={s.id}>
                 <Link
@@ -530,6 +564,8 @@ async function UpNext({ sessions, now, locale, showStudio }: { sessions: Calenda
                         <span className="size-1.5 animate-pulse rounded-pill bg-[#0E8A8A]" aria-hidden="true" />
                         {t("upNext.live")}
                       </span>
+                    ) : tomorrow ? (
+                      <span className="text-[0.75rem] text-steel">{t("upNext.tomorrow")}</span>
                     ) : (
                       <span className="text-[0.75rem] text-steel">{startsIn(new Date(s.startsAt).getTime() - now.getTime())}</span>
                     )}
@@ -540,9 +576,15 @@ async function UpNext({ sessions, now, locale, showStudio }: { sessions: Calenda
                   </span>
                   <span className="mt-3 flex items-center gap-2 text-[0.75rem]">
                     <span className="flex-1">
-                      <Meter value={s.checkedIn} max={Math.max(1, s.booked)} tone="green" />
+                      {tomorrow ? (
+                        <Meter value={s.booked} max={Math.max(1, s.capacity)} tone={s.booked >= s.capacity ? "orange" : "navy"} />
+                      ) : (
+                        <Meter value={s.checkedIn} max={Math.max(1, s.booked)} tone="green" />
+                      )}
                     </span>
-                    <span className="tabular shrink-0 text-steel">{t("upNext.checked", { checked: s.checkedIn, booked: s.booked })}</span>
+                    <span className="tabular shrink-0 text-steel">
+                      {tomorrow ? t("bookedOf", { booked: s.booked, capacity: s.capacity }) : t("upNext.checked", { checked: s.checkedIn, booked: s.booked })}
+                    </span>
                   </span>
                 </Link>
               </li>

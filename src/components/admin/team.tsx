@@ -196,6 +196,7 @@ export function TeamManager({
           <ListCard
             title={t("listTitle")}
             count={team.length}
+            countLabel={t("count", { count: team.length })}
             onAdd={() => select("new")}
             addLabel={t("add")}
             search={q}
