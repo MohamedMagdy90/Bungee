@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { ArrowIcon, CheckIcon, CloseIcon, PlusIcon } from "@/components/brand/icons";
+import { ArrowIcon, CheckIcon, CloseIcon, MinusIcon, PlusIcon } from "@/components/brand/icons";
 import { Notice } from "@/components/member/field";
 import { Button } from "@/components/ui/button";
 import { fmtMoney, fmtNum, pick } from "@/lib/format";
@@ -21,8 +21,9 @@ type Availability = "ok" | "soldOut" | "notHere";
 type Result<T> = { ok: true; data: T } | { ok: false; code: string };
 
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
-const GROUPS = ["class_pack", "service", "retail"] as const;
 const STUDIO_KEY = "bf.desk.studio";
+/** Most of one item in a desk order: packs and services 1, shop items the stock here (if counted), at most 20. */
+const MAX_QTY = 20;
 
 async function call<T>(url: string, body?: unknown): Promise<Result<T>> {
   try {
@@ -45,6 +46,11 @@ function availabilityOf(p: Product, branchId: string): Availability {
   if (!branchId || p.price[branchId] === undefined) return "notHere";
   if (p.stock && (p.stock[branchId] ?? 0) < 1) return "soldOut";
   return "ok";
+}
+
+function maxQty(p: Product, branchId: string) {
+  if (p.type !== "retail") return 1;
+  return Math.max(0, Math.min(MAX_QTY, p.stock ? (p.stock[branchId] ?? 0) : MAX_QTY));
 }
 
 function useDeskError() {
@@ -75,7 +81,8 @@ function initials(name: string) {
 /* ── Composer ───────────────────────────────────────────────────────────── */
 
 /**
- * Front desk "New order": customer (search or register a walk-in) -> studio -> item -> create.
+ * Front desk "New order": customer (search or register a walk-in) -> studio -> items (packs, services, shop items
+ * with a quantity) -> one order.
  * The new order opens in the normal order panel, where staff take payment (SkipCash QR or cash / card).
  */
 export function NewOrder({
@@ -96,7 +103,8 @@ export function NewOrder({
   const locale = useLocale();
   const [customer, setCustomer] = useState<DeskCustomer | null>(initialCustomer);
   const [branchId, setBranchId] = useState(catalog.branches[0]?.id ?? "");
-  const [productId, setProductId] = useState<string | null>(null);
+  // The basket: product id -> quantity (packs and services are 1; shop items up to the stock here, max 20).
+  const [basket, setBasket] = useState<Record<string, number>>({});
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,26 +127,50 @@ export function NewOrder({
     } catch {
       /* ignore */
     }
-    // The picked item may not be sold (or be out of stock) at the other studio.
-    const current = catalog.products.find((p) => p.id === productId);
-    if (current && availabilityOf(current, id) !== "ok") setProductId(null);
+    // Items not sold (or out of stock) at the other studio leave the basket; quantities shrink to the stock there.
+    setBasket((b) => {
+      const next: Record<string, number> = {};
+      for (const [pid, qty] of Object.entries(b)) {
+        const p = catalog.products.find((x) => x.id === pid);
+        if (!p || availabilityOf(p, id) !== "ok") continue;
+        next[pid] = Math.min(qty, maxQty(p, id));
+      }
+      return next;
+    });
+  }
+
+  function setQty(p: Product, qty: number) {
+    setError(null);
+    setBasket((b) => {
+      const next = { ...b };
+      if (qty <= 0) delete next[p.id];
+      else next[p.id] = Math.min(qty, maxQty(p, branchId));
+      return next;
+    });
   }
 
   const branch = catalog.branches.find((b) => b.id === branchId) ?? null;
-  const product = catalog.products.find((p) => p.id === productId) ?? null;
-  const amount = product && branch ? product.price[branch.id] : undefined;
+  const lines = Object.entries(basket)
+    .map(([pid, quantity]) => {
+      const p = catalog.products.find((x) => x.id === pid);
+      const unit = p && branch ? p.price[branch.id] : undefined;
+      return p && unit !== undefined ? { product: p, quantity, lineTotal: unit * quantity } : null;
+    })
+    .filter((l): l is { product: Product; quantity: number; lineTotal: number } => l !== null);
+  const total = lines.reduce((n, l) => n + l.lineTotal, 0);
+  const count = lines.reduce((n, l) => n + l.quantity, 0);
   const needsPhone = !!customer && !customer.phone;
-  const ready = !!customer && !!branch && !!product && amount !== undefined && availabilityOf(product, branchId) === "ok";
+  const ready = !!customer && !!branch && lines.length > 0 && lines.every((l) => availabilityOf(l.product, branchId) === "ok");
 
   async function create() {
-    if (!ready || !customer || !branch || !product) return;
+    if (!ready || !customer || !branch) return;
     setBusy(true);
     setError(null);
     const res = await call<{ order: DeskOrder }>("/api/admin/orders", {
       action: "create",
       customerId: customer.id,
-      productSlug: product.slug,
       branchSlug: branch.slug,
+      items: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
       phone: needsPhone && phone.trim() ? phone.trim() : null,
     });
     setBusy(false);
@@ -230,31 +262,71 @@ export function NewOrder({
           </div>
         </Step>
 
-        <Step n={3} done={!!product} title={t("steps.item")}>
-          {GROUPS.map((g) => {
+        <Step n={3} done={lines.length > 0} title={t("steps.item")}>
+          {(["class_pack", "service"] as const).map((g) => {
             const items = catalog.products.filter((p) => p.type === g);
             if (!items.length) return null;
             return (
               <div key={g}>
                 <p className="label-caps mb-2.5 text-steel">{t(`groups.${g}`)}</p>
-                <div role="radiogroup" aria-label={t(`groups.${g}`)} className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
+                <div className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
                   {items.map((p) => (
                     <ProductTile
                       key={p.id}
                       product={p}
                       branchId={branchId}
-                      selected={p.id === productId}
-                      onSelect={() => {
-                        setProductId(p.id);
-                        setError(null);
-                      }}
+                      selected={!!basket[p.id]}
+                      onToggle={() => setQty(p, basket[p.id] ? 0 : 1)}
                     />
                   ))}
                 </div>
               </div>
             );
           })}
+          <ShopPicker products={catalog.products.filter((p) => p.type === "retail")} branchId={branchId} basket={basket} onQty={setQty} />
         </Step>
+
+        <AnimatePresence initial={false}>
+          {lines.length > 0 && (
+            <motion.section
+              key="basket"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22 }}
+              className="overflow-hidden border-t border-navy/10"
+              aria-labelledby="basket-title"
+            >
+              <div className="px-5 py-5 sm:px-6">
+                <p id="basket-title" className="label-caps text-steel sm:ps-11">
+                  {t("basket.title")}
+                </p>
+                <ul className="mt-2.5 divide-y divide-navy/[0.07] sm:ms-11">
+                  {lines.map((l) => {
+                    const name = pick(locale, l.product.nameEn, l.product.nameAr);
+                    return (
+                      <li key={l.product.id} className="flex items-center gap-3 py-2.5">
+                        <span className="min-w-0 flex-1 truncate text-body">
+                          {name}
+                          {l.quantity > 1 && <span className="tabular text-steel"> &times; {fmtNum(l.quantity, locale)}</span>}
+                        </span>
+                        <span className="tabular shrink-0 text-body font-semibold">{fmtMoney(l.lineTotal, locale)}</span>
+                        <button
+                          type="button"
+                          onClick={() => setQty(l.product, 0)}
+                          aria-label={t("basket.remove", { name })}
+                          className="grid size-8 shrink-0 place-items-center rounded-pill text-steel transition-colors hover:bg-navy/[0.06] hover:text-navy"
+                        >
+                          <CloseIcon size={14} />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         {error && (
           <div className="px-5 pb-5 sm:px-6">
@@ -265,11 +337,9 @@ export function NewOrder({
         <footer className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 bg-navy px-5 py-4 text-ice sm:px-6">
           <div className="min-w-0">
             <p className="label-caps text-ice/60">{t("total")}</p>
-            <p className="tabular text-h3 font-semibold leading-tight">{amount !== undefined ? fmtMoney(amount, locale) : "—"}</p>
+            <p className="tabular text-h3 font-semibold leading-tight">{lines.length ? fmtMoney(total, locale) : "—"}</p>
             <p className="max-w-md truncate text-meta text-ice/70">
-              {ready && product && branch
-                ? `${pick(locale, product.nameEn, product.nameAr)} · ${pick(locale, branch.nameEn, branch.nameAr)} · ${t("next")}`
-                : t("pickAll")}
+              {ready && branch ? `${t("itemsCount", { count })} · ${pick(locale, branch.nameEn, branch.nameAr)} · ${t("next")}` : t("pickAll")}
             </p>
           </div>
           <Button size="lg" onClick={create} disabled={!ready || busy} className="w-full sm:w-auto">
@@ -281,7 +351,6 @@ export function NewOrder({
     </div>
   );
 }
-
 /* ── Pieces ─────────────────────────────────────────────────────────────── */
 
 function Step({ n, title, done, children }: { n: number; title: string; done: boolean; children: React.ReactNode }) {
@@ -542,12 +611,12 @@ function ProductTile({
   product: p,
   branchId,
   selected,
-  onSelect,
+  onToggle,
 }: {
   product: Product;
   branchId: string;
   selected: boolean;
-  onSelect: () => void;
+  onToggle: () => void;
 }) {
   const t = useTranslations("admin.orders.new");
   const locale = useLocale();
@@ -557,31 +626,25 @@ function ProductTile({
   const meta =
     avail === "notHere"
       ? t("notHere")
-      : avail === "soldOut"
-        ? t("soldOut")
-        : p.type === "class_pack"
-          ? p.validityDays
-            ? t("valid", { count: p.validityDays })
-            : ""
-          : p.type === "service"
-            ? t("service")
-            : p.stock
-              ? t("inStock", { count: p.stock[branchId] ?? 0 })
-              : t("shop");
+      : p.type === "class_pack"
+        ? p.validityDays
+          ? t("valid", { count: p.validityDays })
+          : ""
+        : t("service");
 
   return (
     <button
       type="button"
-      role="radio"
+      role="checkbox"
       aria-checked={selected}
-      disabled={off}
-      onClick={onSelect}
+      disabled={off && !selected}
+      onClick={onToggle}
       className={cn(
         "relative flex min-h-[6.25rem] items-stretch gap-3.5 rounded-lg border p-3.5 text-start transition-[border-color,background-color,box-shadow,color] duration-200",
         selected
           ? "border-navy bg-navy text-ice shadow-[0_18px_40px_-24px_rgb(11_31_51/0.75)]"
           : "border-navy/15 bg-white text-navy hover:border-navy/40",
-        off && "cursor-not-allowed opacity-50 hover:border-navy/15",
+        off && !selected && "cursor-not-allowed opacity-50 hover:border-navy/15",
       )}
     >
       {p.type === "class_pack" && p.credits ? (
@@ -600,16 +663,15 @@ function ProductTile({
       <span className="flex min-w-0 flex-1 flex-col justify-between gap-2">
         <span className="flex items-start justify-between gap-2">
           <span className="text-body font-semibold leading-snug">{pick(locale, p.nameEn, p.nameAr)}</span>
-          {selected && (
-            <motion.span
-              layoutId="new-order-pick"
-              transition={SPRING}
-              className="grid size-5 shrink-0 place-items-center rounded-pill bg-orange text-navy"
-              aria-hidden="true"
-            >
-              <CheckIcon size={12} />
-            </motion.span>
-          )}
+          <span
+            className={cn(
+              "grid size-5 shrink-0 place-items-center rounded-pill border transition-colors duration-200",
+              selected ? "border-orange bg-orange text-navy" : "border-navy/25 text-transparent",
+            )}
+            aria-hidden="true"
+          >
+            <CheckIcon size={12} />
+          </span>
         </span>
         {(p.isIntroOffer || p.audience === "kids") && (
           <span className="flex flex-wrap items-center gap-1.5">
@@ -636,10 +698,151 @@ function ProductTile({
           </span>
         )}
         <span className="flex items-end justify-between gap-2">
-          <span className={cn("text-meta", selected ? "text-ice/70" : avail === "soldOut" ? "text-orange-ember" : "text-steel")}>{meta}</span>
+          <span className={cn("text-meta", selected ? "text-ice/70" : "text-steel")}>{meta}</span>
           {amount !== undefined && <span className="tabular text-body-lg font-semibold">{fmtMoney(amount, locale)}</span>}
         </span>
       </span>
     </button>
+  );
+}
+
+const SHOP_PREVIEW = 8;
+
+/** Shop items with a quantity each: searchable (name in either language or SKU), sold-out / not-sold-here last. */
+function ShopPicker({
+  products,
+  branchId,
+  basket,
+  onQty,
+}: {
+  products: Product[];
+  branchId: string;
+  basket: Record<string, number>;
+  onQty: (p: Product, qty: number) => void;
+}) {
+  const t = useTranslations("admin.orders.new");
+  const id = useId();
+  const [q, setQ] = useState("");
+  const [all, setAll] = useState(false);
+  if (!products.length) return null;
+  const needle = q.trim().toLowerCase();
+  const rank = (p: Product) => (availabilityOf(p, branchId) === "ok" ? 0 : 1);
+  const matches = products
+    .filter((p) => !needle || `${p.nameEn} ${p.nameAr} ${p.sku ?? ""}`.toLowerCase().includes(needle))
+    .sort((a, b) => rank(a) - rank(b));
+  const shown = needle || all ? matches : matches.slice(0, SHOP_PREVIEW);
+
+  return (
+    <div>
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3">
+        <p className="label-caps text-steel">{t("groups.retail")}</p>
+        {products.length > SHOP_PREVIEW && (
+          <div className="w-full sm:w-72">
+            <label htmlFor={id} className="sr-only">
+              {t("shopSearch")}
+            </label>
+            <input
+              id={id}
+              type="search"
+              autoComplete="off"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t("shopSearch")}
+              className={cn(inputClass, "h-10 bg-mist text-meta focus:bg-white")}
+            />
+          </div>
+        )}
+      </div>
+      {shown.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-navy/15 px-4 py-5 text-center text-meta text-steel">{t("noShopMatch", { q: q.trim() })}</p>
+      ) : (
+        <ul className="divide-y divide-navy/[0.07] overflow-hidden rounded-lg border border-navy/10">
+          {shown.map((p) => (
+            <ShopRow key={p.id} product={p} branchId={branchId} qty={basket[p.id] ?? 0} onQty={(n) => onQty(p, n)} />
+          ))}
+        </ul>
+      )}
+      {!needle && !all && matches.length > SHOP_PREVIEW && (
+        <button
+          type="button"
+          onClick={() => setAll(true)}
+          className="mt-2.5 text-meta font-medium text-navy underline-offset-4 hover:underline"
+        >
+          {t("showAllShop", { count: matches.length })}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ShopRow({ product: p, branchId, qty, onQty }: { product: Product; branchId: string; qty: number; onQty: (n: number) => void }) {
+  const t = useTranslations("admin.orders.new");
+  const locale = useLocale();
+  const avail = availabilityOf(p, branchId);
+  const amount = p.price[branchId];
+  const max = maxQty(p, branchId);
+  const name = pick(locale, p.nameEn, p.nameAr);
+  const status =
+    avail === "notHere"
+      ? t("notHere")
+      : avail === "soldOut"
+        ? t("soldOut")
+        : p.stock
+          ? t("inStock", { count: p.stock[branchId] ?? 0 })
+          : t("shop");
+  return (
+    <li className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition-colors duration-200", qty > 0 && "bg-ice/60")}>
+      <span className="min-w-0 flex-[1_1_12rem]">
+        <span className={cn("block truncate text-body font-medium", avail !== "ok" && "text-steel")}>{name}</span>
+        <span className={cn("block truncate text-meta", avail === "soldOut" ? "text-orange-ember" : "text-steel")}>
+          {p.sku && (
+            <>
+              <bdi dir="ltr">{p.sku}</bdi>
+              {" · "}
+            </>
+          )}
+          {status}
+        </span>
+      </span>
+      <span className="ms-auto flex shrink-0 items-center gap-3">
+        {amount !== undefined && <span className="tabular text-body font-semibold">{fmtMoney(amount, locale)}</span>}
+        {qty === 0 ? (
+          <button
+            type="button"
+            onClick={() => onQty(1)}
+            disabled={avail !== "ok"}
+            aria-label={t("addNamed", { name })}
+            className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-navy/20 px-3.5 text-meta font-medium text-navy transition-colors hover:border-navy hover:bg-navy hover:text-ice disabled:pointer-events-none disabled:opacity-40"
+          >
+            <PlusIcon size={14} />
+            {t("add")}
+          </button>
+        ) : (
+          <span className="inline-flex h-9 items-center rounded-pill bg-navy text-ice" role="group" aria-label={name}>
+            <button
+              type="button"
+              onClick={() => onQty(qty - 1)}
+              aria-label={t("less", { name })}
+              className="grid size-9 place-items-center rounded-pill transition-colors hover:bg-ice/10"
+            >
+              <MinusIcon size={14} />
+            </button>
+            <span className="tabular min-w-6 text-center text-meta font-semibold" aria-live="polite">
+              {fmtNum(qty, locale)}
+            </span>
+            <button
+              type="button"
+              onClick={() => onQty(qty + 1)}
+              disabled={qty >= max}
+              aria-label={t("more", { name })}
+              title={qty >= max ? t("maxReached") : undefined}
+              className="grid size-9 place-items-center rounded-pill transition-colors hover:bg-ice/10 disabled:opacity-35"
+            >
+              <PlusIcon size={14} />
+            </button>
+          </span>
+        )}
+      </span>
+    </li>
   );
 }

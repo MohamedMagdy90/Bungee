@@ -170,7 +170,7 @@
         "button": "New order",
         "kicker": "New order",
         "title": "Sell at the desk",
-        "lede": "Pick the customer, the studio and what they're buying. Then take payment: SkipCash QR or cash / card.",
+        "lede": "Pick the customer, the studio and everything they're buying. Then take payment: SkipCash QR or cash / card.",
         "close": "Close",
         "steps": {
           "customer": "Customer",
@@ -214,11 +214,24 @@
         "intro": "Intro · once",
         "kids": "Kids",
         "total": "Total",
-        "pickAll": "Pick a customer and an item to continue.",
+        "pickAll": "Pick a customer and at least one item to continue.",
         "next": "Next: SkipCash QR or cash / card.",
         "create": "Create order",
         "creating": "Creating…",
-        "created": "Order #{number} created. Take payment below."
+        "created": "Order #{number} created. Take payment below.",
+        "shopSearch": "Search by name or SKU",
+        "noShopMatch": "No shop item matches “{q}”.",
+        "showAllShop": "Show all {count} shop items",
+        "add": "Add",
+        "addNamed": "Add {name}",
+        "less": "One fewer {name}",
+        "more": "One more {name}",
+        "maxReached": "That's all the stock at this studio.",
+        "itemsCount": "{count, plural, one {# item} other {# items}}",
+        "basket": {
+          "title": "In this order",
+          "remove": "Remove {name}"
+        }
       }
     },
     "integrations": {
