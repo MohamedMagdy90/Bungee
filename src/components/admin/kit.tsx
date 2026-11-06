@@ -285,7 +285,7 @@ export function EditorCard({
           </button>
         )}
         <div className="flex flex-wrap items-start gap-3">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-[1_1_14rem]">
             <h2 className="text-h3 font-semibold text-balance">{title}</h2>
             {subtitle && <p className="mt-1 text-meta text-steel">{subtitle}</p>}
           </div>

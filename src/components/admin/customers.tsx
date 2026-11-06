@@ -566,7 +566,12 @@ function BookingList({
                 {pick(locale, b.branchEn, b.branchAr)} · <span dir="ltr">{b.code}</span>
               </p>
             </div>
-            <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-auto sm:justify-end">
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-2 sm:col-span-1 sm:col-start-auto sm:justify-end",
+                onChange && b.upcoming ? "col-span-2 justify-between" : "col-start-2",
+              )}
+            >
             <Tag
               tone={
                 b.status === "booked" || b.status === "attended"
@@ -622,17 +627,19 @@ function OrderList({ orders }: { orders: CustomerProfile["orders"] }) {
         <li key={o.id}>
           <Link
             href={`/admin/orders?id=${o.id}`}
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-navy/[0.025]"
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 transition-colors hover:bg-navy/[0.025]"
           >
-            <span className="min-w-0 flex-1">
-              <span className="tabular block text-body font-medium">{t("profile.order", { number: o.number })}</span>
-              <span className="block text-meta text-steel">{fmtShortDate(o.createdAt, locale)}</span>
+            <span className="min-w-0">
+              <span className="tabular block truncate text-body font-medium">{t("profile.order", { number: o.number })}</span>
+              <span className="block truncate text-meta text-steel">{fmtShortDate(o.createdAt, locale)}</span>
             </span>
-            <Tag tone={o.status === "paid" ? "green" : o.status === "awaiting_payment" || o.status === "pending" ? "orange" : "plain"}>
-              {ts(o.status)}
-            </Tag>
-            <span className="tabular w-24 text-end text-body font-semibold">{fmtMoney(o.total, locale)}</span>
-            <span className="text-meta font-medium text-orange-ember">{t("profile.open")}</span>
+            <span className="flex items-center gap-3">
+              <Tag tone={o.status === "paid" ? "green" : o.status === "awaiting_payment" || o.status === "pending" ? "orange" : "plain"}>
+                {ts(o.status)}
+              </Tag>
+              <span className="tabular whitespace-nowrap text-end text-body font-semibold sm:w-24">{fmtMoney(o.total, locale)}</span>
+              <span className="hidden text-meta font-medium text-orange-ember sm:inline">{t("profile.open")}</span>
+            </span>
           </Link>
         </li>
       ))}
@@ -765,7 +772,7 @@ function DetailsForm({
         </div>
         <div>
           <p className="mb-1.5 text-meta font-medium">{t("profile.email")}</p>
-          <p dir="ltr" className="rounded-md bg-mist/70 px-3.5 py-2.5 text-body text-steel">
+          <p dir="ltr" className="break-all rounded-md bg-mist/70 px-3.5 py-2.5 text-body text-steel">
             {c.email || "—"}
           </p>
           <p className="mt-1.5 text-meta text-steel">{t("profile.emailHint")}</p>

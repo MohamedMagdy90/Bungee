@@ -179,6 +179,18 @@
   the droplet (bash deploy/push.sh, then python tests against https://142-93-222-165.sslip.io); version after every batch.
   Git backup of local commits: git bundle -> /root/bungee-fly.bundle on the droplet (restore: git clone /root/... or scp back)
 
+## Admin screen review (Nov 6 evening) — per role, EN/AR, phone (shots: /opt/shots, audit.sh / audit2.sh)
+- [x] Orders: views Unpaid / Hand over (paid + retail item not handed over) / Paid / All; rows truncate; overview
+      "shop items to hand over" links ?view=collect
+- [x] Customers: profile lists full width (Section stack), 5 bookings + "Show all N"; list counts in customers
+- [x] kit: MasterDetail grid-cols-[minmax(0,1fr)] (phone overflow), initials for missing photos, selectClass/selectStyle
+      (chevron on the left in Arabic), NumberInput unit opposite the number in Arabic, Segmented tabs content-sized
+- [x] Per-list counts (classes, coaches, studios, packs, aisles, shop items, questions); low stock in the shop row meta
+- [ ] Verify retakes (audit2.sh) after deploy; full-page shots faded = entry animation (shot.js now freezes animations)
+- Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo
+  (https://github.com/MohamedMagdy90/Bungee.git); commit with GIT_AUTHOR_*/GIT_COMMITTER_* env (AmrDNAERP), never
+  git config. Push needs the user to re-auth gh. Backup: git bundle -> /root/bungee-fly.bundle on the droplet.
+- A dev server auto-started after the restart: kill it (pkill -f "next dev") before tsc/builds.
 ## Phase 3 — Admin
 - [ ] Walk-in registration (R8), QR check-in (R3), branches/schedule/products/stock (R9, R11)
 - [ ] Branches (locations, hours, map, gallery), media library uploads (Spaces presigned)

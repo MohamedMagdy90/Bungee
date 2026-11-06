@@ -17,6 +17,8 @@ import {
   type Flash,
   inputClass,
   ListCard,
+  selectClass,
+  selectStyle,
   ListEmpty,
   ListRow,
   MasterDetail,
@@ -1463,7 +1465,8 @@ function Manager({
         value={cat}
         onChange={(e) => setCat(e.target.value)}
         aria-label={t("fields.aisle")}
-        className={cn(inputClass, "h-10 text-meta")}
+        className={cn(selectClass, "h-10 text-meta")}
+        style={selectStyle}
       >
         <option value="">{t("list.allAisles")}</option>
         {cats.map((c) => (
