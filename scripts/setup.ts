@@ -15,6 +15,7 @@ import { Pool } from "pg";
 import type { Database } from "../src/server/db";
 import * as schema from "../src/server/db/schema";
 import { seedIfEmpty } from "../src/server/db/seed";
+import { seedHistoryIfEmpty } from "../src/server/db/seed-history";
 import { seedShopIfEmpty } from "../src/server/db/seed-shop";
 
 async function ensureOwner(db: Database) {
@@ -60,6 +61,7 @@ async function main() {
     console.log(`[setup] migrations up to date in ${Date.now() - started}ms`);
     await seedIfEmpty(db);
     await seedShopIfEmpty(db);
+    await seedHistoryIfEmpty(db);
     await ensureOwner(db);
     console.log("[setup] done");
   } finally {

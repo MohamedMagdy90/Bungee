@@ -82,6 +82,8 @@ async function createDb(): Promise<Database> {
   await seedIfEmpty(db as unknown as Database);
   const { seedShopIfEmpty } = await import("./seed-shop");
   await seedShopIfEmpty(db as unknown as Database);
+  const { seedHistoryIfEmpty } = await import("./seed-history");
+  await seedHistoryIfEmpty(db as unknown as Database).catch((error) => console.warn("[seed] history", error));
   // Embedded DB = local dev or hosted preview: add the preview owner account (only if configured).
   const { ensurePreviewAdmin } = await import("../staff");
   await ensurePreviewAdmin(db as unknown as Database).catch((error) => console.warn("[admin] preview owner", error));
