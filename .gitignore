@@ -43,3 +43,5 @@ next-env.d.ts
 # local embedded database (PGlite) + build artefacts
 /.data/
 /dist/
+# deploy access (never commit)
+/.deploy/

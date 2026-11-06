@@ -99,6 +99,26 @@
   - Fixed: phone search compared digits to formatted phones (b9b61c6)
 - [ ] Re-check /admin/classes + /admin/media pages after the restarts (OOM at 3 GB dev server mid-run)
 - [ ] Version + deploy
+## Deploy (Nov 6) — self-hosted on the user's Droplet, NO DigitalOcean services
+- Droplet 142.93.222.165 (2 vCPU / 2 GB), rebuilt to Ubuntu 24.04 (old Zentra test server wiped on user's order)
+- Server ID (pinned in .deploy/known_hosts): SHA256:e+xSWCk//TUHHQZqhd2j/AU3eMsgUNFyl5hz55LHRTo
+- Access: key in bungee-fly/.deploy/ (gitignored; snapshotted by versions). If lost: new key + user pastes line in
+  Web Console (sed -i '/same-deploy-bungeefly/d' first, so dead keys don't pile up)
+- Workspace is aarch64, server x86_64 -> build ON the server (deploy/push.sh uploads tar over ssh; no git needed)
+- deploy/server-setup.sh <host> <ip> (once): swap 4G, ufw, fail2ban, Node 22, Bun, PostgreSQL 16 local only,
+  /etc/bungee-fly/env (secrets generated on the server), systemd bungee-fly, nginx + certbot, daily pg_dump
+- deploy/release.sh: bun install -> dist/setup.mjs (migrate + SEED_SAMPLE_DATA + OWNER_EMAIL/PASSWORD) ->
+  next build (env sourced: NEXT_PUBLIC_SITE_URL is inlined) -> releases/<ts> -> current symlink -> health/rollback
+- No domain yet: https://142-93-222-165.sslip.io (fallback http). No Resend yet: emails queue in the outbox.
+  Owner login owner@bungeefly.local (password printed once by server-setup). Wipe sample data before launch.
+- [x] LIVE (Nov 6): https://142-93-222-165.sslip.io — setup + release done, HTTPS OK, sample data, owner login,
+      SkipCash sandbox keys in /etc/bungee-fly/env. Smoke test: owner sign-in + 18 staff pages EN/AR all 200.
+  - Deploy again: bash deploy/push.sh (background; poll `bash deploy/push.sh run 'tail /root/release.log'`,
+    sleeps <= 80 s per call: the bash tool times out at 90 s without output). Build ~4 min on the droplet.
+  - Owner password: /root/.owner-pass on the server (root only) until the user changes it; then delete that file
+  - Fixed: Next standalone sees localhost:3000 as its origin -> middleware rewrites locale redirects to the
+    public host; nginx also sends X-Forwarded-Host/Port. No `bunx` on the server: use ./node_modules/.bin
+- [ ] Rotate SkipCash sandbox keys + make repo private; then domain, Resend, live SkipCash, webhook URL
 - [x] Desk "New order" (Nov 5): Orders > New order (or Customer profile > New order = ?new=1&customer=):
       find customer or register walk-in -> studio (remembered per device) -> pack / service / shop item ->
       order opens in the normal panel (SkipCash QR or cash / card). createCheckout source:"admin" skips the
