@@ -34,6 +34,25 @@ import { branches, classTypes, media } from "./studio";
 
 /* ── Catalogue ─────────────────────────────────────────────────────────────── */
 
+/** Shop aisles ("Apparel", "Grip & socks"…). Shop items belong to at most one; packs never do. */
+export const productCategories = pgTable(
+  "product_categories",
+  {
+    id: pk(),
+    slug: text("slug").notNull().unique(),
+    nameEn: text("name_en").notNull(),
+    nameAr: text("name_ar").notNull(),
+    descriptionEn: text("description_en").notNull().default(""),
+    descriptionAr: text("description_ar").notNull().default(""),
+    imageMediaId: uuid("image_media_id").references(() => media.id, { onDelete: "set null" }),
+    isActive: boolean("is_active").notNull().default(true),
+    sortOrder: smallint("sort_order").notNull().default(0),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("product_categories_active_sort_idx").on(t.isActive, t.sortOrder)],
+);
+
 export const products = pgTable(
   "products",
   {
@@ -54,6 +73,7 @@ export const products = pgTable(
     maxPerCustomer: smallint("max_per_customer"),
     isFeatured: boolean("is_featured").notNull().default(false),
     imageMediaId: uuid("image_media_id").references(() => media.id, { onDelete: "set null" }),
+    categoryId: uuid("category_id").references(() => productCategories.id, { onDelete: "set null" }),
     isActive: boolean("is_active").notNull().default(true),
     sortOrder: smallint("sort_order").notNull().default(0),
     createdAt: createdAt(),
@@ -62,7 +82,23 @@ export const products = pgTable(
   (t) => [
     check("products_credits", sql`${t.credits} is null or ${t.credits} > 0`),
     index("products_type_active_idx").on(t.type, t.isActive, t.sortOrder),
+    index("products_category_idx").on(t.categoryId, t.isActive),
   ],
+);
+
+/** Extra photos for a shop item's page, in order (the cover stays on products.image_media_id). */
+export const productMedia = pgTable(
+  "product_media",
+  {
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    mediaId: uuid("media_id")
+      .notNull()
+      .references(() => media.id, { onDelete: "cascade" }),
+    sortOrder: smallint("sort_order").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.productId, t.mediaId] }), index("product_media_product_idx").on(t.productId, t.sortOrder)],
 );
 
 /** Default price (branch_id null) plus optional per-branch overrides. Minor units (dirhams). */

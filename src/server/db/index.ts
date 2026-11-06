@@ -80,6 +80,8 @@ async function createDb(): Promise<Database> {
   await migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
   const { seedIfEmpty } = await import("./seed");
   await seedIfEmpty(db as unknown as Database);
+  const { seedShopIfEmpty } = await import("./seed-shop");
+  await seedShopIfEmpty(db as unknown as Database);
   // Embedded DB = local dev or hosted preview: add the preview owner account (only if configured).
   const { ensurePreviewAdmin } = await import("../staff");
   await ensurePreviewAdmin(db as unknown as Database).catch((error) => console.warn("[admin] preview owner", error));

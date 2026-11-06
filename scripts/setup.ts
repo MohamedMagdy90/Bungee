@@ -15,6 +15,7 @@ import { Pool } from "pg";
 import type { Database } from "../src/server/db";
 import * as schema from "../src/server/db/schema";
 import { seedIfEmpty } from "../src/server/db/seed";
+import { seedShopIfEmpty } from "../src/server/db/seed-shop";
 
 async function ensureOwner(db: Database) {
   const email = process.env.OWNER_EMAIL?.trim().toLowerCase();
@@ -58,6 +59,7 @@ async function main() {
     await migrate(drizzle(pool), { migrationsFolder: path.resolve(process.cwd(), "drizzle") });
     console.log(`[setup] migrations up to date in ${Date.now() - started}ms`);
     await seedIfEmpty(db);
+    await seedShopIfEmpty(db);
     await ensureOwner(db);
     console.log("[setup] done");
   } finally {
