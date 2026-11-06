@@ -252,10 +252,10 @@ export async function createCheckout(db: Database, input: CheckoutInput, now = n
 
   if (item.maxPerCustomer) {
     const [{ n }] = await db
-      .select({ n: sql<number>`count(*)::int` })
+      .select({ n: sql<number>`coalesce(sum(${orderItems.quantity} - ${orderItems.refundedQuantity}), 0)::int` })
       .from(orderItems)
       .innerJoin(orders, eq(orders.id, orderItems.orderId))
-      .where(and(eq(orders.userId, user.id), eq(orderItems.productId, item.productId), eq(orders.status, "paid")));
+      .where(and(eq(orders.userId, user.id), eq(orderItems.productId, item.productId), inArray(orders.status, [...SETTLED])));
     if (n >= item.maxPerCustomer) throw new CheckoutProblem("limit_reached");
   }
   if (item.type === "retail" && item.trackStock && branchId) {
@@ -368,10 +368,10 @@ export async function createCartCheckout(
   for (const p of limited) {
     const line = cart.lines.find((l) => l.productId === p.id);
     const [{ n }] = await db
-      .select({ n: sql<number>`coalesce(sum(${orderItems.quantity}), 0)::int` })
+      .select({ n: sql<number>`coalesce(sum(${orderItems.quantity} - ${orderItems.refundedQuantity}), 0)::int` })
       .from(orderItems)
       .innerJoin(orders, eq(orders.id, orderItems.orderId))
-      .where(and(eq(orders.userId, user.id), eq(orderItems.productId, p.id), eq(orders.status, "paid")));
+      .where(and(eq(orders.userId, user.id), eq(orderItems.productId, p.id), inArray(orders.status, [...SETTLED])));
     if (line && Number(n) + line.quantity > (p.max ?? 0)) throw new CheckoutProblem("limit_reached", line.slug);
   }
 
@@ -694,9 +694,12 @@ export async function markOrderPaid(
             ? { statusCode: String(input.remote.statusId), raw: input.remote, providerTransactionId: input.remote.visaId ?? input.remote.transactionId }
             : {}),
         })
-        .where(eq(payments.id, input.paymentId));
+        .where(and(eq(payments.id, input.paymentId), sql`${payments.status} <> 'refunded'`));
     }
-    if (o.status === "paid") return { alreadyPaid: true as const, invoiceNumber: null, booking: null };
+    // Already settled (paid, part refunded or refunded): a late webhook or second click fulfils nothing twice.
+    if (o.status === "paid" || o.status === "partially_refunded" || o.status === "refunded") {
+      return { alreadyPaid: true as const, invoiceNumber: null, booking: null };
+    }
 
     if (!input.paymentId) {
       await tx.insert(payments).values({
