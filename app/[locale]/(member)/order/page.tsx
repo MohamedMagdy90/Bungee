@@ -113,10 +113,17 @@ export default async function OrderPage({ params, searchParams }: Props) {
     else if (booking) notes.push(t("paid.lateHold"));
     else if (credits > 0) notes.push(t("paid.sessions"));
   }
+  // Shop items (R9): collected at the order's studio; the desk QR below lets staff open the order and hand them over.
+  const toCollect = state === "paid" ? view.items.filter((i) => i.type === "retail" && !i.fulfilledAt) : [];
+  const collected = state === "paid" && view.items.some((i) => i.type === "retail") && toCollect.length === 0;
+  const studioName = view.branch ? pick(locale, view.branch.en, view.branch.ar) : "";
+  if (toCollect.length) notes.push(t("paid.collect", { studio: studioName }));
+  else if (collected) notes.push(t("paid.collected"));
   if (state === "failed" && heldUntil) notes.push(t("failed.held", { time: heldUntil }));
   if (state === "at_studio" && booking?.status === "pending_payment") notes.push(t("atStudio.held"));
 
-  const deskQr = state === "at_studio" ? await ticketQrSvg(`${origin}/${locale}/admin/orders?id=${id}`) : null;
+  const deskQr =
+    state === "at_studio" || toCollect.length > 0 ? await ticketQrSvg(`${origin}/${locale}/admin/orders?id=${id}`) : null;
   const ticketHref = booking && (booking.status === "booked" || booking.status === "attended") ? ticketUrl(origin, locale, booking.code) : null;
   const inv = state === "paid" ? view.invoice : null;
 
@@ -161,7 +168,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
                 <p className="tabular text-h3 font-semibold tracking-[0.08em]" dir="ltr">
                   #{view.number}
                 </p>
-                <p className="mt-1 text-meta text-steel">{t("atStudio.qrHint")}</p>
+                <p className="mt-1 text-meta text-steel">{toCollect.length ? t("paid.collectQrHint") : t("atStudio.qrHint")}</p>
               </div>
             </div>
           )}

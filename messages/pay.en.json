@@ -76,7 +76,10 @@
       "body": "Thank you. Your invoice is on its way to {email}.",
       "sessions": "Your sessions are in your account.",
       "booked": "Your class is booked.",
-      "lateHold": "The spot hold ended before your payment arrived, so the session is in your account. Book again from the timetable."
+      "lateHold": "The spot hold ended before your payment arrived, so the session is in your account. Book again from the timetable.",
+      "collect": "Collect your shop items at {studio}. Show this page at the desk.",
+      "collected": "Your shop items have been collected.",
+      "collectQrHint": "The desk scans this to hand over your items"
     },
     "pending": {
       "title": "Confirming your payment…",
