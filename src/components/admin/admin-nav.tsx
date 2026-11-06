@@ -5,18 +5,35 @@ import { Logo } from "@/components/brand/logo";
 import { SignOutButton } from "@/components/member/account-client";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { deskGroupsFor } from "./sections";
+import { DESK_PINNED, deskGroupsFor } from "@/lib/permissions";
 
-/** Admin rail (desktop) / top bar with scrolling tabs (mobile). Only the sections this role can open are listed. */
-export function AdminNav({ name, role, areas }: { name: string; role: string; areas: string[] }) {
+/**
+ * Admin rail (desktop) / top bar with scrolling tabs (mobile). Only the sections this person can open are listed:
+ * Overview, then Schedule ("My schedule" for coaches), then the groups.
+ */
+export function AdminNav({
+  name,
+  role,
+  perms,
+  coach,
+  studios,
+}: {
+  name: string;
+  role: string;
+  perms: string[];
+  coach: boolean;
+  studios: string | null;
+}) {
   const t = useTranslations("admin");
   const tm = useTranslations("manage.nav");
   const tn = useTranslations("nav");
   const locale = useLocale();
   const pathname = usePathname();
   const other = locale === "ar" ? "en" : "ar";
-  const groups = deskGroupsFor(areas);
+  const groups = deskGroupsFor(perms);
+  const pinned = DESK_PINNED.filter((i) => perms.includes(i.perm));
   const home = pathname === "/admin";
+  const label = (key: string) => (key === "schedule" && coach ? tm("mySchedule") : tm(key));
 
   const itemClass = (on: boolean) =>
     cn(
@@ -46,6 +63,14 @@ export function AdminNav({ name, role, areas }: { name: string; role: string; ar
           <Link href="/admin" aria-current={home ? "page" : undefined} className={itemClass(home)}>
             {tm("overview")}
           </Link>
+          {pinned.map((i) => {
+            const on = pathname.startsWith(i.href);
+            return (
+              <Link key={i.href} href={i.href} aria-current={on ? "page" : undefined} className={itemClass(on)}>
+                {label(i.key)}
+              </Link>
+            );
+          })}
           {groups.map((g) => (
             <div key={g.key} className="flex shrink-0 items-center gap-1">
               <span className="mx-1 h-4 w-px bg-ice/15" aria-hidden="true" />
@@ -72,6 +97,15 @@ export function AdminNav({ name, role, areas }: { name: string; role: string; ar
             {home && <span className="absolute inset-y-2 start-0 w-0.5 rounded-pill bg-orange" />}
             {tm("overview")}
           </Link>
+          {pinned.map((i) => {
+            const on = pathname.startsWith(i.href);
+            return (
+              <Link key={i.href} href={i.href} aria-current={on ? "page" : undefined} className={cn(itemClass(on), "mt-0.5")}>
+                {on && <span className="absolute inset-y-2 start-0 w-0.5 rounded-pill bg-orange" />}
+                {label(i.key)}
+              </Link>
+            );
+          })}
           <div className="mt-4 space-y-5">
             {groups.map((g) => (
               <div key={g.key}>
@@ -100,6 +134,11 @@ export function AdminNav({ name, role, areas }: { name: string; role: string; ar
           <div>
             <p className="truncate text-meta font-medium">{name}</p>
             <p className="label-caps mt-1 text-ice/50">{t.has(`roles.${role}`) ? t(`roles.${role}` as "roles.owner") : role}</p>
+            {studios !== null && (
+              <p className="mt-1 truncate text-[0.75rem] text-ice/55" title={studios || undefined}>
+                {studios || tm("noStudios")}
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <Link

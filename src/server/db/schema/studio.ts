@@ -13,7 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { audience, classFormat, classLevel, createdAt, mediaKind, pk, updatedAt } from "./_shared";
+import { audience, classFormat, classLevel, createdAt, mediaKind, pk, tstz, updatedAt } from "./_shared";
 import { users } from "./auth";
 
 /** Media library — every photo/video the admin uploads (stored in DO Spaces, served via CDN). */
@@ -137,6 +137,23 @@ export const staffBranches = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.branchId] }), index("staff_branches_branch_idx").on(t.branchId)],
 );
+
+/**
+ * Studio-desk access for one staff member. `permissions` null = the role's defaults (src/lib/permissions.ts).
+ * `all_branches` false = only the studios listed in staff_branches. Owners and administrators always see every studio.
+ */
+export const staffAccess = pgTable("staff_access", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  permissions: text("permissions").array(),
+  allBranches: boolean("all_branches").notNull().default(false),
+  invitedBy: text("invited_by").references(() => users.id, { onDelete: "set null" }),
+  invitedAt: tstz("invited_at"),
+  suspendedAt: tstz("suspended_at"),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
 
 export const coaches = pgTable(
   "coaches",

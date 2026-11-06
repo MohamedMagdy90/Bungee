@@ -35,7 +35,7 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const id = sp.id && UUID.test(sp.id) ? sp.id : null;
-  const staff = await staffGate("desk", locale, id ? `/admin/orders?id=${id}` : "/admin/orders");
+  const staff = await staffGate("orders", locale, id ? `/admin/orders?id=${id}` : "/admin/orders");
   if (!staff) return <Denied />;
 
   const view: DeskView = sp.view === "paid" || sp.view === "all" ? sp.view : "open";

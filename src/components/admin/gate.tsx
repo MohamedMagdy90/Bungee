@@ -3,18 +3,21 @@ import { getTranslations } from "next-intl/server";
 import { InfoIcon } from "@/components/brand/icons";
 import { buttonVariants } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
+import type { Permission } from "@/lib/permissions";
 import { getCurrentUser } from "@/server/session";
-import { canAccess, isStaff, type StaffArea, type StaffRole } from "@/server/staff";
+import { canAny, getStaffContext } from "@/server/staff";
 
 /**
  * Per-page access check for the studio desk. Signed out → staff sign-in, then straight back to `next` (keeps the
- * order id from the desk QR). Customers, unverified accounts and roles without the area get `null` → <Denied />.
+ * order id from the desk QR). Customers, suspended people and anyone without one of `perms` get `null` → <Denied />.
  */
-export async function staffGate(area: StaffArea, locale: string, next: string) {
+export async function staffGate(perms: Permission | readonly Permission[] | null, locale: string, next: string) {
   const user = await getCurrentUser();
   if (!user) return redirect({ href: `/admin/sign-in?next=${encodeURIComponent(next)}`, locale });
-  if (!user.emailVerified || !isStaff(user.role) || !canAccess(user.role, area)) return null;
-  return user as typeof user & { role: StaffRole };
+  const ctx = await getStaffContext();
+  if (!ctx) return null;
+  if (perms !== null && !canAny(ctx, typeof perms === "string" ? [perms] : perms)) return null;
+  return ctx;
 }
 
 export async function Denied() {

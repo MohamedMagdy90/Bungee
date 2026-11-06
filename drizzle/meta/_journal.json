@@ -29,6 +29,13 @@
       "when": 1793979777576,
       "tag": "0003_shop_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793986033936,
+      "tag": "0004_staff_access",
+      "breakpoints": true
     }
   ]
 }

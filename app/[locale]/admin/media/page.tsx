@@ -21,7 +21,7 @@ export default async function AdminMediaPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const { id } = await searchParams;
   setRequestLocale(locale);
-  const staff = await staffGate("website", locale, id ? `/admin/media?id=${id}` : "/admin/media");
+  const staff = await staffGate("media", locale, id ? `/admin/media?id=${id}` : "/admin/media");
   if (!staff) return <Denied />;
   const items = await listMedia(await getDb());
   return <MediaLibrary initial={items} initialId={id ?? null} />;

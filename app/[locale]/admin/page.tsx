@@ -30,7 +30,7 @@ const n = sql<number>`count(*)::int`;
 export default async function AdminOverview({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const staff = await staffGate("customers", locale, "/admin");
+  const staff = await staffGate(null, locale, "/admin");
   if (!staff) return <Denied />;
   const t = await getTranslations("manage.overview");
   const tn = await getTranslations("manage.nav");

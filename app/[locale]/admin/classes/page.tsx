@@ -26,7 +26,7 @@ export default async function AdminClassesPage({ params, searchParams }: Props) 
   setRequestLocale(locale);
   const tab = sp.tab === "coaches" ? "coaches" : "classes";
   const back = `/admin/classes${tab === "coaches" ? "?tab=coaches" : ""}`;
-  const staff = await staffGate("studio", locale, back);
+  const staff = await staffGate("classes", locale, back);
   if (!staff) return <Denied />;
 
   const db = await getDb();

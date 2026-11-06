@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 /** GET /api/admin/timetable → { slots, sessions (next 14 days, all studios), today } */
 export async function GET() {
   try {
-    await requireStaff("studio");
+    await requireStaff("timetable");
     return NextResponse.json(await getTimetable(await getDb()), { headers: noStore });
   } catch (error) {
     return errorResponse(error);
@@ -38,7 +38,7 @@ const Action = z.enum(["saveSlot", "deleteSlot", "updateSession", "cancelSession
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const user = await requireStaff("studio");
+    const user = await requireStaff("timetable");
     const raw = (await request.json()) as Record<string, unknown>;
     const action = Action.parse(raw.action);
     const id = raw.id === undefined || raw.id === null ? null : z.uuid().parse(raw.id);

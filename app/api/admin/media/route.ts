@@ -7,14 +7,9 @@ import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } fro
 
 export const dynamic = "force-dynamic";
 
-/** The library feeds both the Studio pages (covers, photos) and the Website pages: either area may use it. */
-async function requireLibrary() {
-  try {
-    return await requireStaff("website");
-  } catch (error) {
-    if (error instanceof HttpError && error.status === 403) return requireStaff("studio");
-    throw error;
-  }
+/** The library feeds every editor with a photo picker (locations, classes, shop, homepage) as well as its own page. */
+function requireLibrary() {
+  return requireStaff(["media", "website", "locations", "classes", "catalog"]);
 }
 
 /** GET /api/admin/media?kind=image|video */

@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 /** GET /api/admin/classes → { classTypes, coaches } */
 export async function GET() {
   try {
-    await requireStaff("studio");
+    await requireStaff("classes");
     const db = await getDb();
     const [types, coachRows] = await Promise.all([listClassTypes(db), listCoaches(db)]);
     return NextResponse.json({ classTypes: types, coaches: coachRows }, { headers: noStore });
@@ -33,7 +33,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const user = await requireStaff("studio");
+    const user = await requireStaff("classes");
     const raw = (await request.json()) as Record<string, unknown>;
     const kind = z.enum(["class", "coach"]).parse(raw.kind);
     const id = raw.id === undefined || raw.id === null ? null : z.uuid().parse(raw.id);

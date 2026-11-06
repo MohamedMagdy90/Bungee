@@ -1,45 +1,90 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
-import type { AuthUser } from "./auth";
-import type { Database } from "./db";
-import { accounts, users } from "./db/schema";
+import { cache } from "react";
+import {
+  ALL_STUDIO_ROLES,
+  effectivePermissions,
+  isStaffRole,
+  type Permission,
+  STAFF_ROLES,
+  type StaffRole,
+} from "@/lib/permissions";
+import { type Database, getDb } from "./db";
+import { accounts, coaches, staffAccess, staffBranches, users } from "./db/schema";
 import { getCurrentUser } from "./session";
 
-/** Who can open which part of the admin portal. */
-export const STAFF_ROLES = ["front_desk", "coach", "manager", "owner"] as const;
-export type StaffRole = (typeof STAFF_ROLES)[number];
-/**
- * Sections of the studio desk, grouped the way the menu shows them:
- *   Front desk: desk (orders & payments), customers
- *   Studio:     studio (locations, classes & coaches, timetable), catalog (packs, prices, shop items & stock)
- *   Website:    website (homepage, FAQs, images & videos)
- *   Settings:   settings (integrations, payment options)
- */
-export const STAFF_AREAS = ["desk", "customers", "studio", "catalog", "website", "settings"] as const;
-export type StaffArea = (typeof STAFF_AREAS)[number];
+export { STAFF_ROLES, type StaffRole };
+export const isStaff = isStaffRole;
 
-const AREA_ROLES: Record<StaffArea, readonly StaffRole[]> = {
-  desk: ["front_desk", "manager", "owner"],
-  customers: ["front_desk", "manager", "owner"],
-  studio: ["manager", "owner"],
-  catalog: ["manager", "owner"],
-  website: ["manager", "owner"],
-  settings: ["manager", "owner"],
+/** Everything the desk needs to know about the signed-in staff member, read fresh from the database. */
+export type StaffContext = {
+  id: string;
+  name: string;
+  email: string;
+  role: StaffRole;
+  perms: Permission[];
+  /** Studios this person works at; null = every studio. */
+  branchIds: string[] | null;
+  /** The coach profile linked to this login (coaches see their own classes). */
+  coachId: string | null;
 };
 
-/** Every section this role may open (drives the menu). */
-export const areasFor = (role: unknown): StaffArea[] => STAFF_AREAS.filter((a) => AREA_ROLES[a].includes(role as StaffRole));
-
-export const isStaff = (role: unknown): role is StaffRole => STAFF_ROLES.includes(role as StaffRole);
-export const canAccess = (role: unknown, area: StaffArea) => AREA_ROLES[area].includes(role as StaffRole);
-
-/** The signed-in staff member, or null (customers, signed out, unverified). */
-export async function getStaffUser(): Promise<(AuthUser & { role: StaffRole }) | null> {
-  const user = await getCurrentUser();
-  if (!user?.emailVerified || !isStaff(user.role)) return null;
-  return user as AuthUser & { role: StaffRole };
+/**
+ * Loads one person's desk access. Null for customers, unverified or suspended accounts.
+ * Reads the role from the database (not the 5-minute session cache), so access changes apply at once.
+ */
+export async function loadStaffContext(db: Database, userId: string): Promise<StaffContext | null> {
+  const [row] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      emailVerified: users.emailVerified,
+      role: users.role,
+      permissions: staffAccess.permissions,
+      allBranches: staffAccess.allBranches,
+      suspendedAt: staffAccess.suspendedAt,
+      hasAccessRow: staffAccess.userId,
+      coachId: coaches.id,
+    })
+    .from(users)
+    .leftJoin(staffAccess, eq(staffAccess.userId, users.id))
+    .leftJoin(coaches, eq(coaches.userId, users.id))
+    .where(eq(users.id, userId));
+  if (!row || !row.emailVerified || !isStaffRole(row.role) || row.suspendedAt) return null;
+  const role = row.role;
+  // No access row = an account from before Team & access existed (bootstrap owner, preview admin): every studio.
+  const everyStudio = ALL_STUDIO_ROLES.includes(role) || !row.hasAccessRow || row.allBranches === true;
+  const branchIds = everyStudio
+    ? null
+    : (await db.select({ id: staffBranches.branchId }).from(staffBranches).where(eq(staffBranches.userId, userId))).map(
+        (r) => r.id,
+      );
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role,
+    perms: effectivePermissions(role, row.permissions),
+    branchIds,
+    coachId: row.coachId ?? null,
+  };
 }
+
+/** The signed-in staff member for this request (memoised per render), or null. */
+export const getStaffContext = cache(async (): Promise<StaffContext | null> => {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  return loadStaffContext(await getDb(), user.id);
+});
+
+export const can = (ctx: StaffContext | null, perm: Permission) => !!ctx && ctx.perms.includes(perm);
+export const canAny = (ctx: StaffContext | null, perms: readonly Permission[]) =>
+  !!ctx && perms.some((p) => ctx.perms.includes(p));
+/** Whether a studio is inside this person's scope. Records with no studio count as in scope. */
+export const inScope = (ctx: StaffContext, branchId: string | null | undefined) =>
+  ctx.branchIds === null || !branchId || ctx.branchIds.includes(branchId);
 
 /** Production bootstrap: emails listed in ADMIN_EMAILS become owners when they sign up. */
 export function ownerEmails() {

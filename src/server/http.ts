@@ -6,7 +6,8 @@ import { BookingProblem } from "./booking/engine";
 import { CheckoutProblem } from "./payments/orders";
 import { publicOrigin } from "./runtime";
 import { getCurrentUser } from "./session";
-import { canAccess, isStaff, type StaffArea } from "./staff";
+import type { Permission } from "@/lib/permissions";
+import { canAny, getStaffContext } from "./staff";
 
 export class HttpError extends Error {
   constructor(
@@ -36,13 +37,16 @@ export async function requireUser(): Promise<AuthUser> {
   return user;
 }
 
-/** Staff-only API routes: 401 signed out, 403 for customers or roles without access to the area. */
-export async function requireStaff(area: StaffArea) {
+/**
+ * Staff-only API routes: 401 signed out, 403 for customers, suspended people and anyone without one of `perms`.
+ * Returns the staff context (id, role, permissions, studio scope, coach link).
+ */
+export async function requireStaff(perms: Permission | readonly Permission[]) {
   const user = await getCurrentUser();
   if (!user) throw new HttpError(401, "auth");
-  if (!user.emailVerified || !isStaff(user.role)) throw new HttpError(403, "forbidden");
-  if (!canAccess(user.role, area)) throw new HttpError(403, "forbidden");
-  return user;
+  const ctx = await getStaffContext();
+  if (!ctx || !canAny(ctx, typeof perms === "string" ? [perms] : perms)) throw new HttpError(403, "forbidden");
+  return ctx;
 }
 
 /** Turns known errors into `{ error: code }` JSON with the right status; logs the rest. */

@@ -28,7 +28,7 @@ export default async function AdminTimetablePage({ params, searchParams }: Props
   const sp = await searchParams;
   setRequestLocale(locale);
   const back = `/admin/timetable${sp.studio ? `?studio=${sp.studio}` : ""}`;
-  const staff = await staffGate("studio", locale, back);
+  const staff = await staffGate("timetable", locale, back);
   if (!staff) return <Denied />;
 
   const db = await getDb();

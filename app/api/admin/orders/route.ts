@@ -38,7 +38,7 @@ async function detail(orderId: string, sync: boolean) {
 /** GET /api/admin/orders?view=open|paid|all&q=… (list) or ?id=… (one order, re-checked with SkipCash). */
 export async function GET(request: Request) {
   try {
-    await requireStaff("desk");
+    await requireStaff("orders");
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (id) {
@@ -83,7 +83,7 @@ const Body = z.discriminatedUnion("action", [
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const staff = await requireStaff("desk");
+    const staff = await requireStaff("orders");
     const parsed = Body.safeParse(await request.json().catch(() => null));
     if (!parsed.success) throw new HttpError(400, "bad_request");
     const input = parsed.data;

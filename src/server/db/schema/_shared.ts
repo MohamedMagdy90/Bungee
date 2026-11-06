@@ -11,7 +11,7 @@ export const updatedAt = () =>
 export const tstz = (name: string) => timestamp(name, { withTimezone: true });
 
 /* Enums — one source of truth for every phase */
-export const userRole = pgEnum("user_role", ["customer", "front_desk", "coach", "manager", "owner"]);
+export const userRole = pgEnum("user_role", ["customer", "front_desk", "coach", "manager", "admin", "owner"]);
 export const audience = pgEnum("audience", ["adults", "kids", "all"]);
 export const classFormat = pgEnum("class_format", ["group", "private"]);
 export const classLevel = pgEnum("class_level", ["beginner", "intermediate", "advanced", "all"]);

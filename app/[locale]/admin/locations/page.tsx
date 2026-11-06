@@ -22,7 +22,7 @@ export default async function AdminLocationsPage({ params, searchParams }: Props
   const { locale } = await params;
   const { id } = await searchParams;
   setRequestLocale(locale);
-  const staff = await staffGate("studio", locale, id ? `/admin/locations?id=${id}` : "/admin/locations");
+  const staff = await staffGate("locations", locale, id ? `/admin/locations?id=${id}` : "/admin/locations");
   if (!staff) return <Denied />;
   const db = await getDb();
   const [locations, media] = await Promise.all([listLocations(db), listMedia(db)]);

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 /** GET /api/admin/locations */
 export async function GET() {
   try {
-    await requireStaff("studio");
+    await requireStaff("locations");
     return NextResponse.json({ locations: await listLocations(await getDb()) }, { headers: noStore });
   } catch (error) {
     return errorResponse(error);
@@ -19,7 +19,7 @@ export async function GET() {
 
 async function save(request: Request, mode: "create" | "update") {
   assertSameOrigin(request);
-  const user = await requireStaff("studio");
+  const user = await requireStaff("locations");
   const raw = (await request.json()) as Record<string, unknown>;
   const id = mode === "update" ? z.uuid().parse(raw.id) : null;
   const input = LocationInput.parse(raw);

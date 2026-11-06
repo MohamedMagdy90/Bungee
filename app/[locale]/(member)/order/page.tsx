@@ -16,7 +16,7 @@ import { getPaymentOptions, getSkipCashConfig } from "@/server/integrations";
 import { customerState, getOrderView, orderSig, syncOrderPayments, verifyOrderSig } from "@/server/payments/orders";
 import { publicOrigin } from "@/server/runtime";
 import { getCurrentUser } from "@/server/session";
-import { canAccess } from "@/server/staff";
+import { can, getStaffContext } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +61,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   if (!verifyOrderSig(id, s)) {
     const user = await getCurrentUser();
     if (!user) return redirect({ href: `/sign-in?next=${encodeURIComponent(`/order?id=${id}`)}`, locale });
-    if (user.id !== view.userId && !canAccess(user.role, "desk")) return notFound;
+    if (user.id !== view.userId && !can(await getStaffContext(), "orders")) return notFound;
   }
 
   if (view.status !== "paid") {
