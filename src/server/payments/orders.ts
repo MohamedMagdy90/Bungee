@@ -1,6 +1,6 @@
 import "server-only";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { and, asc, desc, eq, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { confirmHeldBooking, holdForPayment, releaseOrderHolds } from "../booking/engine";
 import type { Database } from "../db";
 import {
@@ -39,6 +39,7 @@ export type CheckoutErrorCode =
   | "payment_provider"
   | "already_paid"
   | "not_payable"
+  | "not_paid"
   | "not_cancellable";
 
 export class CheckoutProblem extends Error {
@@ -665,6 +666,23 @@ export async function switchToStudio(db: Database, orderId: string) {
   });
 }
 
+/** Front desk: a paid shop item was handed to the customer (collected at the order's studio). Idempotent. */
+export async function handOverItem(db: Database, input: { orderId: string; itemId: string; now?: Date }) {
+  const [row] = await db
+    .select({ status: orders.status, type: products.type, fulfilledAt: orderItems.fulfilledAt })
+    .from(orderItems)
+    .innerJoin(orders, eq(orders.id, orderItems.orderId))
+    .leftJoin(products, eq(products.id, orderItems.productId))
+    .where(and(eq(orderItems.id, input.itemId), eq(orderItems.orderId, input.orderId)));
+  if (!row) throw new CheckoutProblem("not_found");
+  if (row.type !== "retail") throw new CheckoutProblem("not_payable");
+  if (row.status !== "paid") throw new CheckoutProblem("not_paid");
+  if (row.fulfilledAt) return row.fulfilledAt;
+  const at = input.now ?? new Date();
+  await db.update(orderItems).set({ fulfilledAt: at }).where(eq(orderItems.id, input.itemId));
+  return at;
+}
+
 export async function cancelOrder(db: Database, orderId: string, actor: string | null, now = new Date()) {
   return db.transaction(async (txRaw) => {
     const tx = txRaw as unknown as Database;
@@ -716,7 +734,12 @@ export async function getOrderView(db: Database, orderId: string) {
     .where(eq(orders.id, orderId));
   if (!o) return null;
   const [items, pays, inv, booking] = await Promise.all([
-    db.select().from(orderItems).where(eq(orderItems.orderId, orderId)).orderBy(asc(orderItems.nameEn)),
+    db
+      .select({ ...getTableColumns(orderItems), type: products.type })
+      .from(orderItems)
+      .leftJoin(products, eq(products.id, orderItems.productId))
+      .where(eq(orderItems.orderId, orderId))
+      .orderBy(asc(orderItems.nameEn)),
     db
       .select({
         id: payments.id,

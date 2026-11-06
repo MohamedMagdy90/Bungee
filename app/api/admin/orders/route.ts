@@ -13,6 +13,7 @@ import {
   createCheckout,
   customerState,
   getOrderView,
+  handOverItem,
   listOrders,
   orderPath,
   recordDeskPayment,
@@ -64,6 +65,7 @@ const Body = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("cancel"), id: z.uuid() }),
   z.object({ action: z.literal("sync"), id: z.uuid() }),
+  z.object({ action: z.literal("hand_over"), id: z.uuid(), itemId: z.uuid() }),
   z.object({
     action: z.literal("create"),
     customerId: z.string().min(1).max(64),
@@ -126,6 +128,9 @@ export async function POST(request: Request) {
     } else if (input.action === "cancel") {
       await cancelOrder(db, input.id, staff.id);
       revalidateTag("schedule");
+    } else if (input.action === "hand_over") {
+      await handOverItem(db, { orderId: input.id, itemId: input.itemId });
+      await audit(db, staff.id, "order.hand_over", "order", input.id, null, { itemId: input.itemId });
     }
     return NextResponse.json({ order: await detail(input.id, input.action === "sync") }, { headers: noStore });
   } catch (error) {
