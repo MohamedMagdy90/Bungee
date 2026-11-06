@@ -245,6 +245,7 @@ export function TimetableManager({
           selectedId={editing?.id ?? null}
           onOpen={(id) => setEditing({ id, weekday: 0, key: Date.now() })}
           onAdd={openNew}
+          today={weekdayOf(view.today)}
         />
       ) : (
         <Upcoming
@@ -299,6 +300,7 @@ function WeekBoard({
   selectedId,
   onOpen,
   onAdd,
+  today,
 }: {
   slots: SlotView[];
   days: string[];
@@ -306,9 +308,16 @@ function WeekBoard({
   selectedId: string | null;
   onOpen: (id: string) => void;
   onAdd: (weekday: number) => void;
+  today: number;
 }) {
   const t = useTranslations("manage.timetable");
   const tc = useTranslations("manage.common");
+  const locale = useLocale();
+  const [phoneDay, setPhoneDay] = useState(today);
+  const shortDays = useMemo(() => {
+    const f = new Intl.DateTimeFormat(locale === "ar" ? "ar-u-nu-latn" : "en-GB", { weekday: "short", timeZone: "UTC" });
+    return WEEK.map((i) => f.format(new Date(Date.UTC(2024, 0, 7 + i))));
+  }, [locale]);
   return (
     <div className="lift max-w-[100rem]">
       <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-meta text-steel">
@@ -326,6 +335,28 @@ function WeekBoard({
           {t("paused")}
         </span>
       </div>
+      <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:hidden">
+        {WEEK.map((d) => {
+          const n = slots.filter((s) => s.weekday === d).length;
+          const on = d === phoneDay;
+          return (
+            <button
+              key={d}
+              type="button"
+              aria-pressed={on}
+              aria-label={`${days[d]} · ${n}`}
+              onClick={() => setPhoneDay(d)}
+              className={cn(
+                "flex h-12 min-w-[3.25rem] shrink-0 flex-col items-center justify-center rounded-lg border px-2 text-[0.75rem] font-semibold leading-tight transition-colors",
+                on ? "border-navy bg-navy text-ice" : "border-navy/15 bg-white text-navy hover:border-navy/40",
+              )}
+            >
+              <span>{shortDays[d]}</span>
+              <span className={cn("tabular font-medium", on ? "text-ice/70" : "text-steel")}>{n}</span>
+            </button>
+          );
+        })}
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
         {WEEK.map((d) => {
           const list = slots.filter((s) => s.weekday === d).sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -333,7 +364,7 @@ function WeekBoard({
             <section
               key={d}
               aria-labelledby={`tt-day-${d}`}
-              className="flex min-h-[13rem] flex-col rounded-xl border border-navy/10 bg-white"
+              className={cn("flex min-h-[13rem] flex-col rounded-xl border border-navy/10 bg-white", d !== phoneDay && "max-sm:hidden")}
             >
               <header className="flex items-baseline justify-between gap-2 border-b border-navy/[0.07] px-4 py-3">
                 <h2 id={`tt-day-${d}`} className="text-body font-semibold">

@@ -304,7 +304,7 @@ function FaqCard({ faqs, post }: { faqs: FaqView[]; post: Post }) {
     <Card title={t("title")} hint={t("hint")}>
       <div className="flex items-center gap-3 px-5 py-3 sm:px-7">
         <p className="me-auto text-meta text-steel" aria-live="polite">
-          {notice ?? tc("counts.faqs", { count: faqs.length })}
+          {notice ?? (faqs.length ? tc("counts.faqs", { count: faqs.length }) : null)}
         </p>
         <Button
           size="sm"

@@ -19,7 +19,7 @@
     },
     "denied": {
       "title": "This part of the studio desk isn’t open to your account",
-      "body": "Your account doesn't have access to this part of the studio desk. Ask an owner or administrator to change it in Team & access.",
+      "body": "Ask an owner or administrator to switch it on for you in Team & access.",
       "home": "Back to the website",
       "account": "My account",
       "overview": "Back to my overview"

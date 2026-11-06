@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ArrowIcon, CheckIcon, InfoIcon, PlusIcon } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -502,6 +502,25 @@ export function SelectInput<T extends string>({
  * The same field in both languages, side by side on wide screens. Arabic is typed right-to-left
  * whatever the page language, English left-to-right.
  */
+/** A text box that grows with its text (up to 24rem), so nothing is hidden behind a scrollbar. */
+export function GrowingTextarea({ className, value, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { value: string }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight + 2}px`; // + top and bottom border
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      {...props}
+      className={cn(inputClass, "h-auto max-h-96 resize-y py-2.5 leading-relaxed", className)}
+    />
+  );
+}
+
 export function Bilingual({
   label,
   en,
@@ -513,6 +532,7 @@ export function Bilingual({
   hint,
   error,
   required,
+  stack,
 }: {
   label: string;
   en: string;
@@ -524,6 +544,8 @@ export function Bilingual({
   hint?: string;
   error?: string | null;
   required?: boolean;
+  /** One field under the other even on wide screens (narrow side panels). */
+  stack?: boolean;
 }) {
   const t = useTranslations("manage.common");
   const id = useId();
@@ -546,12 +568,7 @@ export function Bilingual({
           {lang === "en" ? t("english") : t("arabic")}
         </label>
         {multiline ? (
-          <textarea
-            {...props}
-            rows={rows}
-            onChange={(e) => set(e.target.value)}
-            className={cn(inputClass, "h-auto resize-y py-2.5 leading-relaxed")}
-          />
+          <GrowingTextarea {...props} rows={rows} onChange={(e) => set(e.target.value)} />
         ) : (
           <input {...props} type="text" onChange={(e) => set(e.target.value)} className={inputClass} />
         )}
@@ -561,7 +578,7 @@ export function Bilingual({
   return (
     <fieldset>
       <legend className="mb-2 text-meta font-medium text-navy">{label}</legend>
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className={cn("grid gap-3", !stack && "md:grid-cols-2")}>
         {field("en", en, onEn)}
         {field("ar", ar, onAr)}
       </div>

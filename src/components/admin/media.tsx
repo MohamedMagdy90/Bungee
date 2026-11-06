@@ -304,7 +304,7 @@ function Uploader({ onUploaded, compact }: { onUploaded: (item: MediaItem) => vo
         <PlusIcon size={16} />
         {t("upload")}
       </Button>
-      <div className="min-w-0 flex-1 text-meta" aria-live="polite">
+      <div className="min-w-0 flex-[1_1_12rem] text-meta" aria-live="polite">
         {busy ? (
           <p className="flex items-center gap-2 font-medium text-navy">
             <span className="size-2 animate-pulse rounded-pill bg-orange" aria-hidden="true" />
@@ -500,7 +500,7 @@ function MediaDetail({
       </div>
 
       <div className="space-y-5 px-5 py-5">
-        <Bilingual label={t("description")} hint={t("descriptionHint")} en={altEn} ar={altAr} onEn={setAltEn} onAr={setAltAr} />
+        <Bilingual label={t("description")} hint={t("descriptionHint")} en={altEn} ar={altAr} onEn={setAltEn} onAr={setAltAr} multiline rows={2} stack />
 
         <div>
           <p className="text-meta font-medium">{t("usedIn")}</p>

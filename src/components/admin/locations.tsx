@@ -155,13 +155,13 @@ function HoursEditor({ hours, onChange, error }: { hours: Form["hours"]; onChang
               {h.isClosed ? t("closed") : t("open")}
             </button>
             {!h.isClosed && (
-              <span className="flex items-center gap-2" dir="ltr">
+              <span className="flex w-full items-center gap-2 sm:w-auto" dir="ltr">
                 <input
                   type="time"
                   aria-label={`${dayName(h.weekday)} · ${t("opens")}`}
                   value={h.opensAt}
                   onChange={(e) => set(i, { opensAt: e.target.value })}
-                  className={cn(inputClass, "tabular h-9 w-[7.5rem] px-2.5")}
+                  className={cn(inputClass, "tabular h-9 min-w-0 flex-1 px-2.5 max-sm:[&::-webkit-calendar-picker-indicator]:hidden sm:w-[9rem] sm:flex-none")}
                 />
                 <span className="text-steel" aria-hidden="true">
                   –
@@ -172,7 +172,7 @@ function HoursEditor({ hours, onChange, error }: { hours: Form["hours"]; onChang
                   value={h.closesAt}
                   onChange={(e) => set(i, { closesAt: e.target.value })}
                   aria-invalid={bad(h) ? true : undefined}
-                  className={cn(inputClass, "tabular h-9 w-[7.5rem] px-2.5")}
+                  className={cn(inputClass, "tabular h-9 min-w-0 flex-1 px-2.5 max-sm:[&::-webkit-calendar-picker-indicator]:hidden sm:w-[9rem] sm:flex-none")}
                 />
               </span>
             )}

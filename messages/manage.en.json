@@ -189,8 +189,8 @@
       },
       "fields": {
         "name": "Studio name",
-        "short": "Short name",
-        "shortHint": "Used where space is tight, like the studio switcher.",
+        "short": "Line under the name",
+        "shortHint": "One short line on the studio card on the homepage.",
         "address": "Address",
         "lat": "Latitude",
         "lng": "Longitude",
