@@ -62,11 +62,17 @@
       "auth": "Please sign in again.",
       "verify_email": "Verify your email first.",
       "bad_request": "Something was missing. Please try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "cart_empty": "Your cart is empty.",
+      "cart_full": "Your cart is full."
     },
     "pickup": "Pick-up",
     "pickupValue": "At the studio, on your next visit",
-    "backShop": "Back to the shop"
+    "backShop": "Back to the shop",
+    "backCart": "Back to the cart",
+    "cartChanged": "Something in your cart changed (price or stock). Check the cart and try again.",
+    "cartTitle": "{count, plural, one {Your cart · # item} other {Your cart · # items}}",
+    "pickupAt": "At {studio}, on your next visit"
   },
   "order": {
     "kicker": "Order {number}",

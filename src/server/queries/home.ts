@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { pick } from "@/lib/format";
 import type { PriceRow } from "@/lib/pricing";
@@ -14,6 +14,7 @@ import {
   coaches,
   faqs,
   media,
+  productCategories,
   productClassTypes,
   productPrices,
   products,
@@ -50,7 +51,8 @@ async function loadHomeData(locale: string) {
     pctRows,
     faqRows,
     shopRows,
-    stockRows,
+    shopCount,
+    aisleRows,
   ] = await Promise.all([
       db.select().from(media),
       db
@@ -91,13 +93,26 @@ async function loadHomeData(locale: string) {
       db.select().from(productPrices),
       db.select().from(productClassTypes),
       db.select().from(faqs).where(eq(faqs.isActive, true)).orderBy(asc(faqs.sortOrder), asc(faqs.createdAt)),
+      // Homepage teaser only: featured items first. The full catalogue lives on /shop (paged in the database).
       db
         .select()
         .from(products)
         .where(and(eq(products.isActive, true), eq(products.type, "retail")))
-        .orderBy(asc(products.sortOrder), asc(products.nameEn)),
-      db.select().from(branchStock),
+        .orderBy(desc(products.isFeatured), asc(products.sortOrder), asc(products.nameEn))
+        .limit(8),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(products)
+        .where(and(eq(products.isActive, true), eq(products.type, "retail"))),
+      db
+        .select({ slug: productCategories.slug, nameEn: productCategories.nameEn, nameAr: productCategories.nameAr })
+        .from(productCategories)
+        .where(eq(productCategories.isActive, true))
+        .orderBy(asc(productCategories.sortOrder)),
     ]);
+  const stockRows = shopRows.length
+    ? await db.select().from(branchStock).where(inArray(branchStock.productId, shopRows.map((p) => p.id)))
+    : [];
 
   const mediaById = new Map(mediaRows.map((m) => [m.id, m]));
   const toMedia = (id: string | null): MediaDTO | null => {
@@ -201,6 +216,8 @@ async function loadHomeData(locale: string) {
         ) as Record<string, { left: number; low: number } | null>,
       }))
       .filter((p) => p.prices.length > 0),
+    shopTotal: Number(shopCount[0]?.n ?? 0),
+    shopAisles: aisleRows.map((a) => ({ slug: a.slug, name: pick(locale, a.nameEn, a.nameAr) })),
     faqs: faqRows.map((f) => ({
       id: f.id,
       question: pick(locale, f.questionEn, f.questionAr),

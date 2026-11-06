@@ -238,7 +238,7 @@ export async function Shop({ data }: { data: HomeData }) {
           <h2 className="col-span-12 text-h1 font-semibold text-balance lg:col-span-8">{t("title")}</h2>
         </div>
         <div className="mt-10 lg:ms-[calc((100%+var(--gutter))*3/12)]">
-          <ShopBoard items={data.shop} />
+          <ShopBoard items={data.shop} total={data.shopTotal} aisles={data.shopAisles} />
         </div>
       </div>
     </section>

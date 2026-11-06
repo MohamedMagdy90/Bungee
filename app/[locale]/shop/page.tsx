@@ -255,13 +255,13 @@ function pageList(page: number, pages: number): (number | null)[] {
 function PageLink({ href, disabled, label, children }: { href: string; disabled: boolean; label: string; children: React.ReactNode }) {
   if (disabled) {
     return (
-      <span aria-hidden="true" className="grid size-10 place-items-center rounded-pill text-slate opacity-50 rtl:-scale-x-100">
+      <span aria-hidden="true" className="grid size-10 place-items-center rounded-pill text-slate opacity-50">
         {children}
       </span>
     );
   }
   return (
-    <Link href={href} aria-label={label} className="grid size-10 place-items-center rounded-pill bg-white text-navy ring-1 ring-navy/10 hover:ring-navy/30 rtl:-scale-x-100">
+    <Link href={href} aria-label={label} className="grid size-10 place-items-center rounded-pill bg-white text-navy ring-1 ring-navy/10 hover:ring-navy/30">
       {children}
     </Link>
   );
