@@ -86,7 +86,11 @@
         "customerPage": "Open the customer’s order page",
         "invoice": "Invoice INV-{number}",
         "paidOn": "Paid {date} · {method}",
-        "closed": "This order is closed. Nothing to collect."
+        "closed": "This order is closed. Nothing to collect.",
+        "handOver": "Mark handed over",
+        "handedOver": "Handed over {date}",
+        "toCollect": "To collect at the desk",
+        "collectAfterPayment": "Collected at the studio once paid"
       },
       "take": {
         "title": "Take payment",
@@ -140,7 +144,8 @@
         "paid": "Payment recorded. The invoice is on its way to the customer.",
         "cancelled": "Order cancelled.",
         "synced": "Checked with SkipCash. Nothing new yet.",
-        "skipcashPaid": "SkipCash confirmed the payment."
+        "skipcashPaid": "SkipCash confirmed the payment.",
+        "handedOver": "Marked as handed over."
       },
       "errors": {
         "phone_required": "This customer has no mobile number on file, and SkipCash needs one. Record the payment at the desk instead.",
@@ -154,7 +159,8 @@
         "limit_reached": "This customer has already used this offer.",
         "sold_out": "Out of stock at this studio.",
         "unavailable": "Not for sale at this studio.",
-        "branch_required": "Pick a studio first."
+        "branch_required": "Pick a studio first.",
+        "not_paid": "Take the payment first, then hand the item over."
       },
       "new": {
         "button": "New order",

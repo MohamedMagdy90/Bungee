@@ -46,7 +46,16 @@ export type DeskOrder = {
   paidAt: string | null;
   user: { id: string; name: string; email: string; phone: string | null };
   branch: { en: string; ar: string } | null;
-  items: { id: string; nameEn: string; nameAr: string; quantity: number; lineTotal: number }[];
+  items: {
+    id: string;
+    nameEn: string;
+    nameAr: string;
+    quantity: number;
+    lineTotal: number;
+    /** Product kind ("retail" = shop item collected at the studio); null if the product was deleted. */
+    type?: string | null;
+    fulfilledAt?: string | null;
+  }[];
   payments: {
     id: string;
     provider: string;
@@ -672,6 +681,11 @@ function OrderDetail({
     }
   }
 
+  async function handOver(itemId: string) {
+    const data = await act({ action: "hand_over", itemId }, `hand-${itemId}`);
+    if (data) setFlash({ tone: "success", text: t("orders.done.handedOver") });
+  }
+
   async function recheck() {
     const data = await act({ action: "sync" }, "sync");
     if (data) {
@@ -941,12 +955,39 @@ function OrderDetail({
             <p className="label-caps text-steel">{t("orders.detail.items")}</p>
             <ul className="mt-2 space-y-1.5">
               {order.items.map((i) => (
-                <li key={i.id} className="flex items-baseline justify-between gap-3 text-body">
-                  <span className="min-w-0">
-                    {pick(locale, i.nameEn, i.nameAr)}
-                    {i.quantity > 1 && <span className="tabular text-steel"> × {fmtNum(i.quantity, locale)}</span>}
-                  </span>
-                  <span className="tabular shrink-0">{fmtMoney(i.lineTotal, locale)}</span>
+                <li key={i.id} className="text-body">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0">
+                      {pick(locale, i.nameEn, i.nameAr)}
+                      {i.quantity > 1 && <span className="tabular text-steel"> &times; {fmtNum(i.quantity, locale)}</span>}
+                    </span>
+                    <span className="tabular shrink-0">{fmtMoney(i.lineTotal, locale)}</span>
+                  </div>
+                  {i.type === "retail" &&
+                    (i.fulfilledAt ? (
+                      <p className="mt-1 flex items-center gap-1.5 text-meta text-[#1F7A4D]">
+                        <CheckIcon size={14} />
+                        {t("orders.detail.handedOver", {
+                          date: `${fmtShortDate(i.fulfilledAt, locale)}, ${fmtTime(i.fulfilledAt, locale)}`,
+                        })}
+                      </p>
+                    ) : order.status === "paid" ? (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="text-meta text-orange-ember">{t("orders.detail.toCollect")}</span>
+                        <Button
+                          size="sm"
+                          variant="navy"
+                          className="h-8 px-3"
+                          onClick={() => handOver(i.id)}
+                          disabled={busy !== null}
+                          aria-busy={busy === `hand-${i.id}`}
+                        >
+                          {t("orders.detail.handOver")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-meta text-steel">{t("orders.detail.collectAfterPayment")}</p>
+                    ))}
                 </li>
               ))}
             </ul>
