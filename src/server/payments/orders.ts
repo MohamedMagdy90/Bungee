@@ -7,6 +7,7 @@ import {
   bookings,
   branches,
   branchStock,
+  cartItems,
   classSessions,
   classTypes,
   creditLedger,
@@ -40,6 +41,7 @@ export type CheckoutErrorCode =
   | "already_paid"
   | "not_payable"
   | "not_paid"
+  | "cart_empty"
   | "not_cancellable";
 
 export class CheckoutProblem extends Error {
@@ -315,6 +317,100 @@ export async function createCheckout(db: Database, input: CheckoutInput, now = n
     return { orderId: order.id, number: order.number, total: order.total, method: input.method, held: held ? { bookingId: held.bookingId, code: held.code } : null };
   });
   return result;
+}
+
+/* ── Cart checkout (shop) ──────────────────────────────────────────────── */
+
+/**
+ * Turns the shop cart into one order with a line per item (collected at the cart's studio). Prices and
+ * stock are re-checked here, so the order always matches what the customer was shown; the cart is emptied
+ * once the order exists (the order page keeps "try again" and "pay at the studio").
+ */
+export async function createCartCheckout(
+  db: Database,
+  input: { userId: string; cartId: string; locale: string; method: PayMethod; phone?: string | null; fallbackBranchSlug?: string | null },
+) {
+  const opts = await getPaymentOptions(db);
+  if (input.method === "online" && !opts.online) throw new CheckoutProblem("method_unavailable");
+  if (input.method === "at_studio" && !opts.atStudio) throw new CheckoutProblem("method_unavailable");
+  if (input.method === "online" && !(await getSkipCashConfig(db)).ready) throw new CheckoutProblem("payments_unavailable");
+  const [user] = await db
+    .select({ id: users.id, name: users.name, email: users.email, phone: users.phone })
+    .from(users)
+    .where(eq(users.id, input.userId));
+  if (!user) throw new CheckoutProblem("not_found");
+  const phone = input.phone?.trim() ? normalisePhone(input.phone) : user.phone;
+  if (input.method === "online" && (!phone || phone.replace(/\D/g, "").length < 8)) throw new CheckoutProblem("phone_required");
+  if (input.phone?.trim() && phone !== user.phone) await db.update(users).set({ phone }).where(eq(users.id, user.id));
+
+  // Dynamic: shop/cart imports http, which imports this module.
+  const { getCartView } = await import("../shop/cart");
+  const cart = await getCartView(db, input.cartId, input.fallbackBranchSlug);
+  if (!cart.id || !cart.lines.length) throw new CheckoutProblem("cart_empty");
+  if (!cart.branch) throw new CheckoutProblem("branch_required");
+  const bad = cart.lines.find((l) => l.problem);
+  if (bad) throw new CheckoutProblem(bad.problem === "unavailable" ? "unavailable" : "sold_out", bad.slug);
+
+  const limited = await db
+    .select({ id: products.id, max: products.maxPerCustomer })
+    .from(products)
+    .where(and(inArray(products.id, cart.lines.map((l) => l.productId)), sql`${products.maxPerCustomer} is not null`));
+  for (const p of limited) {
+    const line = cart.lines.find((l) => l.productId === p.id);
+    const [{ n }] = await db
+      .select({ n: sql<number>`coalesce(sum(${orderItems.quantity}), 0)::int` })
+      .from(orderItems)
+      .innerJoin(orders, eq(orders.id, orderItems.orderId))
+      .where(and(eq(orders.userId, user.id), eq(orderItems.productId, p.id), eq(orders.status, "paid")));
+    if (line && Number(n) + line.quantity > (p.max ?? 0)) throw new CheckoutProblem("limit_reached", line.slug);
+  }
+
+  const subtotal = cart.lines.reduce((n, l) => n + l.lineTotal, 0);
+  const branchId = cart.branch.id;
+  const cartId = cart.id;
+  return db.transaction(async (txRaw) => {
+    const tx = txRaw as unknown as Database;
+    const [order] = await tx
+      .insert(orders)
+      .values({
+        userId: user.id,
+        branchId,
+        status: "awaiting_payment",
+        subtotal,
+        total: subtotal,
+        locale: input.locale === "ar" ? "ar" : "en",
+        paymentMethod: input.method,
+      })
+      .returning({ id: orders.id, number: orders.number, total: orders.total });
+    await tx.insert(orderItems).values(
+      cart.lines.map((l) => ({
+        orderId: order.id,
+        productId: l.productId,
+        nameEn: l.nameEn,
+        nameAr: l.nameAr,
+        unitAmount: l.unitAmount,
+        quantity: l.quantity,
+        lineTotal: l.lineTotal,
+      })),
+    );
+    if (input.method === "at_studio") {
+      await queueEmail(tx, {
+        template: "order.awaiting",
+        to: user.email,
+        userId: user.id,
+        payload: {
+          name: user.name,
+          orderNumber: order.number,
+          total: order.total,
+          lines: cart.lines.map((l) => ({ en: l.nameEn, ar: l.nameAr, quantity: l.quantity, lineTotal: l.lineTotal })),
+          orderPath: orderPath(order.id),
+        },
+        dedupeKey: `order.awaiting:${order.id}`,
+      });
+    }
+    await tx.delete(cartItems).where(eq(cartItems.cartId, cartId));
+    return { orderId: order.id, number: order.number, total: order.total, method: input.method, held: null };
+  });
 }
 
 /* ── SkipCash ──────────────────────────────────────────────────────────── */

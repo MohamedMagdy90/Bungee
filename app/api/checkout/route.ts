@@ -1,11 +1,14 @@
 import { revalidateTag } from "next/cache";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/server/db";
 import { assertSameOrigin, errorResponse, HttpError, noStore, requireUser } from "@/server/http";
 import { rememberOrigin } from "@/server/mail/outbox";
-import { CheckoutProblem, createCheckout, orderPath, startSkipCashPayment } from "@/server/payments/orders";
+import { BRANCH_COOKIE } from "@/lib/constants";
+import { CheckoutProblem, createCartCheckout, createCheckout, orderPath, startSkipCashPayment } from "@/server/payments/orders";
 import { publicOrigin } from "@/server/runtime";
+import { CART_COOKIE, resolveCart } from "@/server/shop/cart";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +19,12 @@ const Body = z
     branchSlug: z.string().max(80).nullish(),
     sessionId: z.uuid().nullish(),
     dependentId: z.uuid().nullish(),
+    /** The whole shop cart (one order, one line per item). */
+    cart: z.boolean().optional(),
     phone: z.string().max(24).nullish(),
     locale: z.enum(["en", "ar"]).default("en"),
   })
-  .refine((b) => !!b.productSlug !== !!b.sessionId, { message: "product or session" });
+  .refine((b) => [!!b.productSlug, !!b.sessionId, !!b.cart].filter(Boolean).length === 1, { message: "product, session or cart" });
 
 /**
  * POST /api/checkout — creates the order (and holds the class spot for "book & pay").
@@ -34,8 +39,23 @@ export async function POST(request: Request) {
     const db = await getDb();
     const origin = publicOrigin(request.headers);
     rememberOrigin(origin);
-    const { locale, ...input } = parsed.data;
-    const order = await createCheckout(db, { ...input, userId: user.id, locale });
+    const { locale, cart, ...input } = parsed.data;
+    let order: Awaited<ReturnType<typeof createCheckout>>;
+    if (cart) {
+      const jar = await cookies();
+      const ref = await resolveCart(db, { userId: user.id, cookieId: jar.get(CART_COOKIE)?.value }, false);
+      if (!ref.id) throw new CheckoutProblem("cart_empty");
+      order = await createCartCheckout(db, {
+        userId: user.id,
+        cartId: ref.id,
+        locale,
+        method: input.method,
+        phone: input.phone,
+        fallbackBranchSlug: jar.get(BRANCH_COOKIE)?.value ?? null,
+      });
+    } else {
+      order = await createCheckout(db, { ...input, userId: user.id, locale });
+    }
     if (order.held) revalidateTag("schedule");
     const orderUrl = `/${locale}${orderPath(order.orderId)}`;
     if (input.method === "at_studio") {
