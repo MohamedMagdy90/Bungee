@@ -71,8 +71,20 @@
     standard + per-studio prices; stock per studio (received/returned/remove/count/move), warn-at level, history; overview low-stock
   - Customer: homepage section 05 Shop (#shop, header link), collect-at studio switcher, checkout Pick-up row
   - Desk: paid shop lines "To collect" -> Mark handed over (order_items.fulfilled_at); order page shows collect note + desk QR
-  - Not yet: refunds (no refund flow exists at all; returns are a manual "Returned" stock entry), quantity > 1 per order,
+  - Not yet: refunds (no refund flow exists at all; returns are a manual "Returned" stock entry),
     front desk can't receive stock (catalog is manager/owner only)
+- [x] Real shop (Nov 6, after "very weak shop" feedback):
+  - DB: product_categories (aisles), product_media (gallery), products.category_id (migration 0003); seed-shop.ts adds
+    5 aisles + 21 sample items once (gated like the main seed; runs on setup and PGlite boot)
+  - Public: /shop (search EN/AR + SKU, aisle, sort, in-stock at studio, 24/page, all in SQL), /shop/[slug] (gallery,
+    stock per studio, qty, add / buy now, related), /cart, /checkout?cart=1. Header cart badge (window event bf:cart)
+  - Cart: carts/cart_items tables; guest cart by http-only cookie bf_cart, account cart by user; merge at sign-in
+    (src/server/shop/cart.ts). createCartCheckout = one order, one line per item, re-checks price/stock, empties cart
+  - Staff: shop list paged in SQL (40/page) with search + filters (low/out/hidden/no aisle), Aisles tab, aisle +
+    gallery on items, CSV import (dry run first; match by SKU then slug; empty cell keeps, "-" clears; stock:<studio>,
+    price:<studio> columns; unknown aisles created) and export (Excel BOM). 300 rows import in ~7 s.
+  - Gotcha: drizzle leaves columns unqualified in single-table selects -> correlated subqueries need explicit aliases
+  - Next: variants (sizes/colours), desk "New order" with several items, refunds putting stock back
 - [ ] R10 Session inventory: each booking deducts from purchased sessions (credits + ledger, visible balance)
 - [ ] R11 Multiple branches (pricing, schedule, stock, staff scope)
 ## Open questions for client
