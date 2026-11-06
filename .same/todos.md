@@ -192,7 +192,10 @@
       ledger renamed "Sessions added and used"
 - [ ] Not yet walked: website/media/locations/timetable/team retakes; Arabic #timetable bidi in website hints (minor)
 ## Batch Nov 6 night (user picked 3)
-- [ ] A Re-shoot Homepage & FAQs, Images & videos, Locations, Timetable, Team (EN / AR / phone) + fix findings
+- [~] A Re-shoot Homepage & FAQs, Images & videos, Locations, Timetable, Team (EN / AR / phone) + fix findings
+  - Fixed in 1b4c476 (not deployed yet): GrowingTextarea in Bilingual, phone timetable day strip, hours inputs,
+    studio "Line under the name" (limit 40 -> 120: sample studios failed to save), FAQ empty count, media stacked
+    description, AR ctaHrefHint LRI/PDI, denied copy. To verify after deploy: map preview (lazy iframe in full-page shot?)
 - [ ] B Front desk can receive stock (own studios) + desk "New order" with several shop items (qty) in one order
 - [ ] C Refunds: staff refund (full / per line), stock goes back, SkipCash refund when paid online, refund email EN/AR
 - Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo
