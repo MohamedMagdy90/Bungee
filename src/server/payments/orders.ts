@@ -413,6 +413,90 @@ export async function createCartCheckout(
   });
 }
 
+/* ── Desk order (several items) ────────────────────────────────────────── */
+
+/**
+ * Front desk "New order": one unpaid order with a line per item (packs, services, shop items with a quantity),
+ * sold at one studio. Prices, stock and once-per-customer offers are checked here, so the order always matches
+ * what the desk showed. Payment follows in the normal order panel (SkipCash QR or cash / card); no email until paid.
+ */
+export async function createDeskOrder(
+  db: Database,
+  input: { userId: string; branchId: string; locale: string; lines: { productId: string; quantity: number }[]; phone?: string | null },
+) {
+  // The same item twice = one line with both quantities.
+  const wanted = new Map<string, number>();
+  for (const l of input.lines) wanted.set(l.productId, (wanted.get(l.productId) ?? 0) + l.quantity);
+  if (!wanted.size) throw new CheckoutProblem("cart_empty");
+
+  const [user] = await db.select({ id: users.id, phone: users.phone }).from(users).where(eq(users.id, input.userId));
+  if (!user) throw new CheckoutProblem("not_found");
+  if (input.phone?.trim()) {
+    const phone = normalisePhone(input.phone);
+    if (phone !== user.phone) await db.update(users).set({ phone }).where(eq(users.id, user.id));
+  }
+
+  const ids = [...wanted.keys()];
+  const rows = await db
+    .select()
+    .from(products)
+    .where(and(inArray(products.id, ids), eq(products.isActive, true), inArray(products.type, [...DESK_TYPES])));
+  if (rows.length !== ids.length) throw new CheckoutProblem("unavailable");
+  const prices = await pricesFor(db, ids, input.branchId);
+  const stock = await db
+    .select({ productId: branchStock.productId, q: branchStock.quantity })
+    .from(branchStock)
+    .where(and(inArray(branchStock.productId, ids), eq(branchStock.branchId, input.branchId)));
+
+  const lines = [];
+  for (const p of rows) {
+    const quantity = wanted.get(p.id) ?? 1;
+    // Packs and services are one each (a pack's credits multiply by quantity; sell a bigger pack instead).
+    if (quantity < 1 || quantity > 20 || (p.type !== "retail" && quantity !== 1)) throw new CheckoutProblem("unavailable", p.slug);
+    const amount = prices.get(p.id);
+    if (amount === undefined) throw new CheckoutProblem("unavailable", p.slug);
+    if (p.type === "retail" && p.trackStock && (stock.find((s) => s.productId === p.id)?.q ?? 0) < quantity) {
+      throw new CheckoutProblem("sold_out", p.slug);
+    }
+    if (p.maxPerCustomer) {
+      const [{ n }] = await db
+        .select({ n: sql<number>`coalesce(sum(${orderItems.quantity} - ${orderItems.refundedQuantity}), 0)::int` })
+        .from(orderItems)
+        .innerJoin(orders, eq(orders.id, orderItems.orderId))
+        .where(and(eq(orders.userId, user.id), eq(orderItems.productId, p.id), inArray(orders.status, ["paid", "partially_refunded"])));
+      if (Number(n) + quantity > p.maxPerCustomer) throw new CheckoutProblem("limit_reached", p.slug);
+    }
+    lines.push({
+      productId: p.id,
+      nameEn: p.nameEn,
+      nameAr: p.nameAr,
+      unitAmount: amount,
+      quantity,
+      lineTotal: amount * quantity,
+      credits: p.type === "class_pack" ? p.credits : null,
+      validityDays: p.type === "class_pack" ? p.validityDays : null,
+    });
+  }
+  const subtotal = lines.reduce((n, l) => n + l.lineTotal, 0);
+  return db.transaction(async (txRaw) => {
+    const tx = txRaw as unknown as Database;
+    const [order] = await tx
+      .insert(orders)
+      .values({
+        userId: user.id,
+        branchId: input.branchId,
+        status: "awaiting_payment",
+        subtotal,
+        total: subtotal,
+        locale: input.locale === "ar" ? "ar" : "en",
+        paymentMethod: "at_studio",
+      })
+      .returning({ id: orders.id, number: orders.number, total: orders.total });
+    await tx.insert(orderItems).values(lines.map((l) => ({ ...l, orderId: order.id })));
+    return { orderId: order.id, number: order.number, total: order.total, lines: lines.length };
+  });
+}
+
 /* ── SkipCash ──────────────────────────────────────────────────────────── */
 
 /** Creates a SkipCash pay link for an unpaid order (customer checkout, retry, or the desk QR). */
@@ -977,6 +1061,7 @@ export async function getDeskCatalog(db: Database, branchIds: string[] | null = 
         isIntroOffer: products.isIntroOffer,
         maxPerCustomer: products.maxPerCustomer,
         trackStock: products.trackStock,
+        sku: products.sku,
       })
       .from(products)
       .where(and(eq(products.isActive, true), inArray(products.type, [...DESK_TYPES])))

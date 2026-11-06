@@ -10,7 +10,7 @@ import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } fro
 import { rememberOrigin } from "@/server/mail/outbox";
 import {
   cancelOrder,
-  createCheckout,
+  createDeskOrder,
   customerState,
   getOrderView,
   handOverItem,
@@ -80,8 +80,11 @@ const Body = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
     customerId: z.string().min(1).max(64),
-    productSlug: z.string().min(1).max(80),
     branchSlug: z.string().min(1).max(80),
+    items: z
+      .array(z.object({ productId: z.uuid(), quantity: z.number().int().min(1).max(20) }))
+      .min(1)
+      .max(40),
     phone: z.string().trim().max(24).nullish(),
   }),
 ]);
@@ -89,7 +92,7 @@ const Body = z.discriminatedUnion("action", [
 /**
  * POST /api/admin/orders — front-desk actions on one order:
  * show a SkipCash QR for the customer's phone, record a cash/card payment, cancel, or re-check SkipCash.
- * "create" sells something over the counter (any customer, walk-ins included) and returns the new unpaid order.
+ * "create" sells over the counter (any customer, walk-ins included): one unpaid order with every item in the basket.
  */
 export async function POST(request: Request) {
   try {
@@ -108,19 +111,17 @@ export async function POST(request: Request) {
         .from(users)
         .where(eq(users.id, input.customerId));
       if (!customer || customer.role !== "customer") throw new HttpError(404, "not_found");
-      const created = await createCheckout(db, {
+      const created = await createDeskOrder(db, {
         userId: customer.id,
+        branchId: studio.id,
         locale: customer.locale === "ar" ? "ar" : "en",
-        method: "at_studio",
-        productSlug: input.productSlug,
-        branchSlug: input.branchSlug,
+        lines: input.items,
         phone: input.phone || null,
-        source: "admin",
       });
       await audit(db, staff.id, "order.create", "order", created.orderId, null, {
         number: created.number,
         customerId: customer.id,
-        product: input.productSlug,
+        items: input.items,
         branch: input.branchSlug,
       });
       return NextResponse.json({ order: await detail(created.orderId, false) }, { headers: noStore });
