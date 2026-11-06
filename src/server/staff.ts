@@ -22,6 +22,7 @@ export type StaffContext = {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   role: StaffRole;
   perms: Permission[];
   /** Studios this person works at; null = every studio. */
@@ -40,6 +41,7 @@ export async function loadStaffContext(db: Database, userId: string): Promise<St
       id: users.id,
       name: users.name,
       email: users.email,
+      phone: users.phone,
       emailVerified: users.emailVerified,
       role: users.role,
       permissions: staffAccess.permissions,
@@ -65,6 +67,7 @@ export async function loadStaffContext(db: Database, userId: string): Promise<St
     id: row.id,
     name: row.name,
     email: row.email,
+    phone: row.phone,
     role,
     perms: effectivePermissions(role, row.permissions),
     branchIds,

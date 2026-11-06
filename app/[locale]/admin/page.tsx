@@ -107,7 +107,7 @@ export default async function AdminOverview({ params, searchParams }: Props) {
               items={[
                 { key: "all", label: staff.branchIds === null ? t("allStudios") : t("myStudios"), href: query({ period, studio: undefined }), on: !studio },
                 ...studioRows.map((s) => ({ key: s.id, label: pick(locale, s.nameEn, s.nameAr), href: query({ period, studio: s.id }), on: studio?.id === s.id })),
-              ],
+              ]}
             />
           )}
         </div>

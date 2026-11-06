@@ -88,7 +88,7 @@ const plainSession = (r: Record<string, unknown>) =>
 export async function listCalendar(
   db: Database,
   range: { from: Date; to: Date },
-  scope: { branchIds: string[] | null; coachId: string | null },
+  scope: { branchIds: string[] | null; coachId?: string | null },
 ): Promise<CalendarSession[]> {
   if (scope.branchIds && scope.branchIds.length === 0) return [];
   const where = [gte(classSessions.startsAt, range.from), lt(classSessions.startsAt, range.to)];
