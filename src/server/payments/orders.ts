@@ -458,7 +458,16 @@ export async function createDeskOrder(
     .from(branchStock)
     .where(and(inArray(branchStock.productId, ids), eq(branchStock.branchId, input.branchId)));
 
-  const lines = [];
+  const lines: {
+    productId: string;
+    nameEn: string;
+    nameAr: string;
+    unitAmount: number;
+    quantity: number;
+    lineTotal: number;
+    credits: number | null;
+    validityDays: number | null;
+  }[] = [];
   for (const p of rows) {
     const quantity = wanted.get(p.id) ?? 1;
     // Packs and services are one each (a pack's credits multiply by quantity; sell a bigger pack instead).

@@ -608,7 +608,7 @@ function OrderDetail({
   const tz = order.booking?.timezone || STUDIO_TZ;
   const amount = fmtMoney(order.total, locale);
   const methodLabel = t(`orders.take.methods.${method}`);
-  const paidWith = order.payments.find((p) => p.status === "succeeded")?.provider ?? null;
+  const paidWith = order.payments.find((p) => p.status === "succeeded" || p.status === "refunded")?.provider ?? null;
   const hasSkipCash = order.payments.some((p) => p.provider === "skipcash");
 
   // While the QR is up, ask the server (which asks SkipCash) every 4s, for up to 10 minutes.

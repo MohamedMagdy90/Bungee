@@ -76,7 +76,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const booking = view.booking;
   const tz = booking?.timezone || STUDIO_TZ;
   const openPay = view.payments.find((p) => p.provider === "skipcash" && (p.status === "pending" || p.status === "initiated") && p.payUrl);
-  const paidWith = view.payments.find((p) => p.status === "succeeded")?.provider ?? null;
+  const paidWith = view.payments.find((p) => p.status === "succeeded" || p.status === "refunded")?.provider ?? null;
   const credits = view.items.reduce((n, i) => n + (i.credits ?? 0) * i.quantity, 0);
 
   const heldUntil =
@@ -105,16 +105,25 @@ export default async function OrderPage({ params, searchParams }: Props) {
     failed: { tone: "bg-orange text-navy", icon: <CloseIcon size={24} />, title: t("failed.title"), body: t("failed.body") },
     at_studio: { tone: "bg-navy text-ice", icon: <TicketIcon size={24} />, title: t("atStudio.title"), body: t("atStudio.body") },
     cancelled: { tone: "bg-navy/10 text-navy", icon: <InfoIcon size={24} />, title: t("cancelled.title"), body: t("cancelled.body") },
+    refunded: {
+      tone: "bg-navy/10 text-navy",
+      icon: <InfoIcon size={24} />,
+      title: t("refunded.title"),
+      body: t("refunded.body", { amount: fmtMoney(view.refundedAmount, locale) }),
+    },
   }[state];
+  // Refunds given (or on their way through SkipCash); failed attempts are the desk's business.
+  const refundsShown = view.refunds.filter((r) => r.status === "succeeded" || r.status === "processing");
 
   const notes: string[] = [];
+  if (state === "paid" && view.refundedAmount > 0) notes.push(t("paid.partlyRefunded", { amount: fmtMoney(view.refundedAmount, locale) }));
   if (state === "paid") {
     if (booking?.status === "booked" || booking?.status === "attended") notes.push(t("paid.booked"));
     else if (booking) notes.push(t("paid.lateHold"));
     else if (credits > 0) notes.push(t("paid.sessions"));
   }
   // Shop items (R9): collected at the order's studio; the desk QR below lets staff open the order and hand them over.
-  const toCollect = state === "paid" ? view.items.filter((i) => i.type === "retail" && !i.fulfilledAt) : [];
+  const toCollect = state === "paid" ? view.items.filter((i) => i.type === "retail" && !i.fulfilledAt && i.quantity > i.refundedQuantity) : [];
   const collected = state === "paid" && view.items.some((i) => i.type === "retail") && toCollect.length === 0;
   const studioName = view.branch ? pick(locale, view.branch.en, view.branch.ar) : "";
   if (toCollect.length) notes.push(t("paid.collect", { studio: studioName }));
@@ -125,7 +134,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const deskQr =
     state === "at_studio" || toCollect.length > 0 ? await ticketQrSvg(`${origin}/${locale}/admin/orders?id=${id}`) : null;
   const ticketHref = booking && (booking.status === "booked" || booking.status === "attended") ? ticketUrl(origin, locale, booking.code) : null;
-  const inv = state === "paid" ? view.invoice : null;
+  const inv = state === "paid" || state === "refunded" ? view.invoice : null;
 
   return (
     <div className="frame flex-1 py-10 md:py-14">
@@ -148,7 +157,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
               ))}
             </div>
           </div>
-          {state !== "paid" && state !== "cancelled" && (
+          {state !== "paid" && state !== "cancelled" && state !== "refunded" && (
             <div className="border-t border-navy/10 bg-ice/50 p-5 sm:px-7">
               <OrderLive
                 orderId={id}
@@ -280,6 +289,33 @@ export default async function OrderPage({ params, searchParams }: Props) {
                 </tr>
               </tfoot>
             </table>
+            {refundsShown.length > 0 && (
+              <div className="mt-5 rounded-lg bg-mist/80 p-4">
+                <p className="label-caps text-steel">{t("refunds.title")}</p>
+                <ul className="mt-2 space-y-2 text-meta">
+                  {refundsShown.map((r) => (
+                    <li key={r.id} className="flex items-start justify-between gap-4">
+                      <span className="min-w-0">
+                        <span className="tabular block font-medium">
+                          {fmtLongDate(r.createdAt, locale)} · {t(`refunds.to.${r.method}` as "refunds.to.other")}
+                          {r.status === "processing" && <span className="text-aqua-lagoon"> · {t("refunds.processing")}</span>}
+                        </span>
+                        <span className="block text-steel">
+                          {r.lines.map((l) => `${pick(locale, l.nameEn, l.nameAr)}${l.quantity > 1 ? ` × ${fmtNum(l.quantity, locale)}` : ""}`).join(", ")}
+                        </span>
+                      </span>
+                      <span className="tabular shrink-0 font-medium" dir="ltr">
+                        −{fmtMoney(r.amount, locale)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3 flex items-baseline justify-between border-t border-navy/10 pt-3">
+                  <span className="text-meta font-medium">{t("refunds.net")}</span>
+                  <span className="tabular text-body-lg font-semibold">{fmtMoney(Math.max(0, inv.total - view.refundedAmount), locale)}</span>
+                </div>
+              </div>
+            )}
             {paidWith && (
               <p className="mt-4 text-meta text-steel">
                 {t("invoice.method")}: <span className="font-medium text-navy">{t(`methods.${paidWith}` as "methods.other")}</span>
