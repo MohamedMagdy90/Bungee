@@ -206,8 +206,17 @@
   - Perm "refunds" (manager default; owner/admin all). Desk: Refund link in the order footer -> inline form, history,
     refunded lines, net paid, orange "Part refunded" chip. Customer order page: refunded state + refunds list
   - markOrderPaid ignores late payments on paid/part-refunded/refunded orders; per-customer limits count kept units
-- [ ] Deploy B+C to the droplet + live test (stock receive as desk, basket order, cash refund partial then full,
-      stock back, pack sessions off, SkipCash sandbox partial refund, EN/AR shots, phone)
+- [x] Deployed B+C (Nov 6 23:33) + live test: /opt/shots/refunds.js 46/46 (desk stock rights, basket order, cash
+      payment, part refund, too much, hand over, damaged no-restock, closing refund = exact total, pack sessions off,
+      payment refunded, 3 emails without staff reason, pages EN/AR). Shots /opt/shots/s4 (shots4.js) reviewed + polished
+- SkipCash sandbox (skip1.js creates + QR link, skip2.js pays with test card incl. 3-D Secure code 1234 in the
+  Cardinal creq frame, then refunds through the app):
+  - Refund signature = Id,KeyId ONLY (Amount in body, not signed) — fixed in ac5113b. Probe: skipprobe.js
+  - Sandbox refuses refunds "try again in 5 minutes" for 25+ min after payment (its timestamps are Qatar time
+    labelled Z, maybe a 3 h clock skew). skiploop.sh retries a 1 QAR refund on order 100148 every 5 min -> log
+    /opt/shots/skiploop.log. [ ] When it passes: check SkipCash honours Amount (partial) vs refunds in full
+    (skipprobe2.js prints payment detail before/after), then run skip2.js on a fresh paid order
+  - Our failure path verified live: failed attempt recorded with SkipCash's message, quantities released, order unchanged
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
 - Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo
