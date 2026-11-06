@@ -1152,6 +1152,9 @@ function CategoryEditor({
   );
 }
 
+/** File downloads straight from the API (not page navigations). */
+const exportUrl = (kind: "csv" | "template") => `/api/admin/products?export=${kind}`;
+
 /* ── Spreadsheet import / export ──────────────────────────────────────── */
 
 function ImportPanel({ onBack, onImported }: { onBack: () => void; onImported: () => void }) {
@@ -1196,11 +1199,11 @@ function ImportPanel({ onBack, onImported }: { onBack: () => void; onImported: (
     <EditorCard title={t("title")} subtitle={t("subtitle")} onBack={onBack}>
       <Section title={t("export.title")} hint={t("export.hint")}>
         <div className="flex flex-wrap gap-2">
-          <a href="/api/admin/products?export=csv" className={cn(buttonVariants({ variant: "navy", size: "sm" }), "gap-2")}>
+          <a href={exportUrl("csv")} download className={cn(buttonVariants({ variant: "navy", size: "sm" }), "gap-2")}>
             <DownloadIcon size={16} />
             {t("export.all")}
           </a>
-          <a href="/api/admin/products?export=template" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-2")}>
+          <a href={exportUrl("template")} download className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-2")}>
             <DownloadIcon size={16} />
             {t("export.template")}
           </a>
