@@ -29,12 +29,12 @@ export function ShopBoard({ items }: { items: HomeData["shop"] }) {
 
   return (
     <div>
-      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <p className="max-w-[30rem] text-body text-ice/75 text-pretty">{t("intro", { studio: branch?.name ?? "" })}</p>
         {branches.length > 1 && (
           <div className="flex flex-col gap-2">
             <span className="label-caps text-ice/55">{t("collectAt")}</span>
-            <div role="radiogroup" aria-label={t("collectAt")} className="inline-flex flex-wrap gap-1 rounded-pill bg-ice/[0.07] p-1">
+            <div role="radiogroup" aria-label={t("collectAt")} className="flex flex-wrap gap-2">
               {branches.map((b) => {
                 const on = b.id === branchId;
                 return (
@@ -45,8 +45,8 @@ export function ShopBoard({ items }: { items: HomeData["shop"] }) {
                     aria-checked={on}
                     onClick={() => setBranch(b.slug)}
                     className={cn(
-                      "h-9 rounded-pill px-4 text-meta font-medium transition-colors duration-200",
-                      on ? "bg-ice text-navy" : "text-ice/70 hover:text-ice",
+                      "h-10 shrink-0 rounded-pill border px-4 text-meta font-medium transition-colors duration-200",
+                      on ? "border-ice bg-ice text-navy" : "border-ice/20 text-ice/80 hover:border-ice/45 hover:text-ice",
                     )}
                   >
                     {b.name}
