@@ -139,7 +139,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   return (
     <div className="frame flex-1 py-10 md:py-14">
       <div className="mx-auto max-w-[40rem] space-y-6">
-        <p className="label-caps text-orange-ember print:hidden">{t("kicker", { number: fmtNum(view.number, "en") })}</p>
+        <p className="label-caps text-orange-ember print:hidden">{t("kicker", { number: String(view.number) })}</p>
 
         {/* One clear state (R5) */}
         <section className="lift overflow-hidden rounded-xl bg-white shadow-[0_24px_60px_-30px_rgb(11_31_51/0.4)] print:hidden">
@@ -244,11 +244,11 @@ export default async function OrderPage({ params, searchParams }: Props) {
                 <dt className="text-steel">{t("invoice.date")}</dt>
                 <dd className="tabular font-medium">{fmtLongDate(inv.issuedAt, locale)}</dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-steel">{t("invoice.billTo")}</dt>
                 <dd className="font-medium">
                   {(inv.billTo as BillTo).name}
-                  <span className="block font-normal text-steel">{(inv.billTo as BillTo).email}</span>
+                  <span className="block break-all font-normal text-steel">{(inv.billTo as BillTo).email}</span>
                 </dd>
               </div>
             </dl>

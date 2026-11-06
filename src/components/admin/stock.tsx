@@ -194,7 +194,19 @@ function Desk({
         heading={
           <div className="flex items-start gap-4">
             <span className="size-16 shrink-0 overflow-hidden rounded-lg bg-navy/[0.06]">
-              {thumb ? <img src={thumb} alt="" className="size-full object-cover" /> : null}
+              {thumb ? (
+                <img src={thumb} alt="" className="size-full object-cover" />
+              ) : (
+                <span className="grid size-full place-items-center text-body-lg font-semibold text-navy/45" aria-hidden="true">
+                  {name
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((w) => Array.from(w)[0] ?? "")
+                    .join("")
+                    .toUpperCase()}
+                </span>
+              )}
             </span>
             <div className="min-w-0 flex-1">
               <h2 id="stock-title" className="text-h3 font-semibold text-balance">

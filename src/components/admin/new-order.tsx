@@ -269,7 +269,7 @@ export function NewOrder({
             return (
               <div key={g}>
                 <p className="label-caps mb-2.5 text-steel">{t(`groups.${g}`)}</p>
-                <div className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
+                <div className="grid gap-2.5 sm:grid-cols-2">
                   {items.map((p) => (
                     <ProductTile
                       key={p.id}

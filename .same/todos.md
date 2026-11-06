@@ -196,8 +196,20 @@
   - Fixed in 1b4c476 (not deployed yet): GrowingTextarea in Bilingual, phone timetable day strip, hours inputs,
     studio "Line under the name" (limit 40 -> 120: sample studios failed to save), FAQ empty count, media stacked
     description, AR ctaHrefHint LRI/PDI, denied copy. To verify after deploy: map preview (lazy iframe in full-page shot?)
-- [ ] B Front desk can receive stock (own studios) + desk "New order" with several shop items (qty) in one order
-- [ ] C Refunds: staff refund (full / per line), stock goes back, SkipCash refund when paid online, refund email EN/AR
+- [x] B (code, tsc/eslint clean) Front desk Stock screen /admin/stock (perm "stock": own studios editable, others view-only)
+      + desk New order basket (createDeskOrder: one order, many lines, shop qty capped by stock) — 377451c..d279442
+- [x] C (code, tsc/eslint clean) Refunds — d20a661..16ac908:
+  - refundOrder (src/server/payments/refunds.ts): lines+qty, discount shared out, closing refund = exactly what's left;
+    desk cash/card/other in one tx; SkipCash: reserve -> API (partial Amount) -> finish, failure releases reservation;
+    stock back (always if not handed over, else if "restock"); pack sessions off (unused only) + ledger; status
+    partially_refunded / refunded; payment -> refunded on full; email order.refunded (staff reason NOT emailed)
+  - Perm "refunds" (manager default; owner/admin all). Desk: Refund link in the order footer -> inline form, history,
+    refunded lines, net paid, orange "Part refunded" chip. Customer order page: refunded state + refunds list
+  - markOrderPaid ignores late payments on paid/part-refunded/refunded orders; per-customer limits count kept units
+- [ ] Deploy B+C to the droplet + live test (stock receive as desk, basket order, cash refund partial then full,
+      stock back, pack sessions off, SkipCash sandbox partial refund, EN/AR shots, phone)
+- Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
+  role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
 - Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo
   (https://github.com/MohamedMagdy90/Bungee.git); commit with GIT_AUTHOR_*/GIT_COMMITTER_* env (AmrDNAERP), never
   git config. Push needs the user to re-auth gh. Backup: git bundle -> /root/bungee-fly.bundle on the droplet.
