@@ -16,7 +16,11 @@
       "media": "Images & videos",
       "integrations": "Integrations",
       "overview": "Overview",
-      "products": "Packs & shop"
+      "products": "Packs & shop",
+      "schedule": "Schedule",
+      "mySchedule": "My schedule",
+      "team": "Team & access",
+      "noStudios": "No studio assigned"
     },
     "common": {
       "save": "Save changes",
@@ -49,7 +53,8 @@
       "coverNone": "No image",
       "choose": "Choose",
       "change": "Change",
-      "clear": "Clear"
+      "clear": "Clear",
+      "savedPlain": "Saved."
     },
     "errors": {
       "generic": "Something went wrong. Please try again.",
@@ -75,7 +80,18 @@
       "sku_taken": "That item code is already used by another item.",
       "type_locked": "The kind can't change once it's created.",
       "not_enough_stock": "There isn't that much in stock at this studio.",
-      "not_stocked": "Stock isn't counted for this item. Turn on “Count stock” first."
+      "not_stocked": "Stock isn't counted for this item. Turn on “Count stock” first.",
+      "owner_only": "Only an owner can add, change or remove owners.",
+      "self": "You can't change your own role, studios or access. Ask another owner.",
+      "grant_denied": "You can't give access you don't have yourself.",
+      "coach_required": "Choose the coach profile they teach as.",
+      "coach_taken": "That coach profile is already linked to someone else.",
+      "studio_required": "Pick at least one studio.",
+      "last_owner": "The studio needs at least one active owner.",
+      "already_staff": "That email is already on the team.",
+      "not_yours": "That class isn't one of yours.",
+      "out_of_scope": "That studio isn't one of yours.",
+      "too_early": "Check-in opens on the day of the class."
     },
     "media": {
       "kicker": "Website",
@@ -815,6 +831,217 @@
             "studio_price": "That studio's own price. Empty uses the standard price."
           }
         }
+      }
+    },
+    "team": {
+      "kicker": "Settings",
+      "title": "Team & access",
+      "lede": "Everyone who signs in to the studio desk. Pick each person's role and studios, then switch on exactly what they can open. Anything that's off is hidden from them.",
+      "listTitle": "Team",
+      "add": "Add person",
+      "filterLabel": "Filter by role",
+      "filters": {
+        "all": "All",
+        "leads": "Managers",
+        "desk": "Front desk",
+        "coaches": "Coaches"
+      },
+      "noMatches": "Nobody matches that search.",
+      "empty": "No one in this group yet.",
+      "pick": "Pick someone to see and change their access, or add a new person.",
+      "you": "You",
+      "everyStudio": "Every studio",
+      "ownClasses": "Their own classes",
+      "noStudio": "No studio yet",
+      "newTitle": "Add a team member",
+      "newSubtitle": "They'll get a link to choose their own password.",
+      "roleReset": "Access set to the {role} defaults. Adjust it below if needed.",
+      "checkFields": "Check the highlighted fields.",
+      "created": "{name} is on the team.",
+      "promoted": "{name} already had an account, so they're on the team now and keep their password.",
+      "createAndInvite": "Add and create invite",
+      "selfNote": "This is your own account. You can change your name and mobile; ask another owner to change your role, studios or access.",
+      "person": {
+        "title": "Person",
+        "hint": "How they appear in the desk and in the activity log.",
+        "name": "Full name",
+        "nameError": "Add their name.",
+        "email": "Email",
+        "emailHint": "They sign in with this email, and the invite goes here too.",
+        "emailError": "Enter a valid email that isn't already on the team.",
+        "emailLocked": "The sign-in email can't be changed here.",
+        "phone": "Mobile",
+        "phoneError": "Use digits, spaces and an optional +."
+      },
+      "role": {
+        "title": "Role",
+        "hint": "Decides the overview they land on and their starting access."
+      },
+      "coach": {
+        "title": "Coach profile",
+        "hintRequired": "Link the coach profile they teach as, so they see their own classes.",
+        "hintOptional": "Only if they also teach: their own classes then appear on their schedule.",
+        "label": "Teaches as",
+        "choose": "Choose a coach profile",
+        "none": "Doesn't teach classes",
+        "linkedTo": "linked to {name}",
+        "noneYet": "No coach profiles yet. Add one in Classes & coaches first."
+      },
+      "studios": {
+        "title": "Studios",
+        "hint": "Where they work. Their schedule, orders and overview only show these studios.",
+        "always": "Owners and administrators always cover every studio.",
+        "every": "Every studio",
+        "everyHint": "For someone who works across all studios, like an area manager.",
+        "pick": "Works at",
+        "closed": "closed",
+        "required": "Pick at least one studio.",
+        "coachHint": "Coaches always see their own classes at any studio. Studios only matter for extra access you give them.",
+        "scopeHint": "They'll only see these studios' classes, orders and figures."
+      },
+      "access": {
+        "title": "Access",
+        "hint": "Exactly which parts of the desk they can open. Anything off is hidden from their menu and overview.",
+        "ownerAll": "Owners have full access",
+        "default": "{role} defaults",
+        "custom": "Customised",
+        "reset": "Reset to role defaults",
+        "notForRole": "Only owners and administrators can manage the team.",
+        "cantGrant": "You can't give access you don't have yourself.",
+        "previewTitle": "Their menu",
+        "previewHint": "Exactly what they'll see after signing in."
+      },
+      "groups": {
+        "daily": "Every day",
+        "frontDesk": "Front desk",
+        "studio": "Studio",
+        "website": "Website",
+        "settings": "Settings"
+      },
+      "menuOverview": "Overview",
+      "menuMySchedule": "My schedule",
+      "status": {
+        "invited": "Invite pending",
+        "suspended": "Suspended"
+      },
+      "signin": {
+        "title": "Sign-in",
+        "hint": "Their account status, links and access controls.",
+        "status": "Status",
+        "invited": "Invite sent {date}, not used yet",
+        "suspended": "Suspended: can't open the studio desk",
+        "active": "Active",
+        "lastActive": "Last active",
+        "never": "Not yet",
+        "newInvite": "New invite link",
+        "resetLink": "New set-password link",
+        "suspend": "Suspend access",
+        "suspendConfirm": "Yes, suspend",
+        "reactivate": "Reactivate",
+        "remove": "Remove from team",
+        "removeConfirm": "Yes, remove",
+        "removeHint": "Suspending keeps their role and access for later. Removing turns them back into a regular customer account; their history stays."
+      },
+      "done": {
+        "invite": "New link ready. It's been emailed too.",
+        "suspend": "Access suspended. They can't open the desk now.",
+        "reactivate": "Access restored.",
+        "remove": "Removed from the team."
+      },
+      "invite": {
+        "titleNew": "{name} is on the team. Send them this link.",
+        "titleAgain": "New link ready.",
+        "body": "They open it to choose a password, then sign in. It's been emailed too and works until {date}. Older links no longer work.",
+        "linkLabel": "Invite link",
+        "copy": "Copy link",
+        "copied": "Copied",
+        "whatsappButton": "Send on WhatsApp",
+        "whatsapp": "Hi {name}, here's your link to set up your Bungee Fly studio desk account: {url}"
+      },
+      "roles": {
+        "owner": {
+          "label": "Owner",
+          "hint": "Everything, always. Manages the team, including other owners."
+        },
+        "admin": {
+          "label": "Administrator",
+          "hint": "Runs the whole business day to day. Every studio; access can be narrowed."
+        },
+        "manager": {
+          "label": "Branch manager",
+          "hint": "Runs one or more studios: their schedule, orders, customers and sales."
+        },
+        "front_desk": {
+          "label": "Front desk",
+          "hint": "Takes payments, checks people in and looks after customers at their studio."
+        },
+        "coach": {
+          "label": "Coach",
+          "hint": "Sees their own classes and who's booked, and checks people in."
+        }
+      },
+      "perms": {
+        "schedule": {
+          "label": "Schedule",
+          "hint": "Class calendar, who's booked, and checking people in. Coaches only see their own classes."
+        },
+        "reports": {
+          "label": "Sales figures",
+          "hint": "Revenue, best sellers and sales trends on the overview."
+        },
+        "orders": {
+          "label": "Orders & payments",
+          "hint": "Take payments at the desk, sell packs and shop items, hand over shop orders."
+        },
+        "customers": {
+          "label": "Customers",
+          "hint": "Find customers, see their packs and bookings, register walk-ins, adjust sessions."
+        },
+        "locations": {
+          "label": "Locations",
+          "hint": "Studio addresses, opening hours, contact details and photos."
+        },
+        "classes": {
+          "label": "Classes & coaches",
+          "hint": "Class types and coach profiles shown on the website."
+        },
+        "timetable": {
+          "label": "Timetable",
+          "hint": "The weekly plan; moving or cancelling a class."
+        },
+        "catalog": {
+          "label": "Packs & shop",
+          "hint": "Prices, packs, shop items and stock."
+        },
+        "website": {
+          "label": "Homepage & FAQs",
+          "hint": "The homepage banner, photos and questions."
+        },
+        "media": {
+          "label": "Images & videos",
+          "hint": "Upload and organise every photo and video."
+        },
+        "settings": {
+          "label": "Integrations",
+          "hint": "Payment and email keys. Very sensitive."
+        },
+        "team": {
+          "label": "Team & access",
+          "hint": "Add people and change what they can open."
+        }
+      },
+      "menu": {
+        "schedule": "Schedule",
+        "orders": "Orders & payments",
+        "customers": "Customers",
+        "locations": "Locations",
+        "classes": "Classes & coaches",
+        "timetable": "Timetable",
+        "products": "Packs & shop",
+        "homepage": "Homepage & FAQs",
+        "media": "Images & videos",
+        "team": "Team & access",
+        "integrations": "Integrations"
       }
     }
   }

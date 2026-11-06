@@ -7,10 +7,11 @@
       "site": "Back to the website"
     },
     "roles": {
+      "owner": "Owner",
+      "admin": "Administrator",
+      "manager": "Branch manager",
       "front_desk": "Front desk",
-      "coach": "Coach",
-      "manager": "Manager",
-      "owner": "Owner"
+      "coach": "Coach"
     },
     "meta": {
       "orders": "Orders & payments",
@@ -18,7 +19,7 @@
     },
     "denied": {
       "title": "This part of the studio desk isn’t open to your account",
-      "body": "Orders and payments are for front desk, managers and owners. Integrations are for managers and owners. Ask an owner to change your role if you need access.",
+      "body": "Your account doesn't have access to this part of the studio desk. Ask an owner or administrator to change it in Team & access.",
       "home": "Back to the website",
       "account": "My account"
     },
