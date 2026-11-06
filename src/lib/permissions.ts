@@ -13,7 +13,9 @@ export const PERMISSIONS = [
   "schedule", // Schedule: calendar, class rosters, check-in
   "reports", // Sales figures: revenue and sales analytics on the overview
   "orders", // Orders & payments (front desk)
+  "refunds", // Refund paid orders (money back, stock back)
   "customers", // Customers
+  "stock", // Stock: deliveries in, shelf counts, moves (own studios)
   "locations", // Locations
   "classes", // Classes & coaches
   "timetable", // Timetable (weekly plan, cancel a class)
@@ -28,7 +30,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 /** How the Team screen groups the switches (same order as the menu). */
 export const PERMISSION_GROUPS: { key: "daily" | "frontDesk" | "studio" | "website" | "settings"; perms: Permission[] }[] = [
   { key: "daily", perms: ["schedule", "reports"] },
-  { key: "frontDesk", perms: ["orders", "customers"] },
+  { key: "frontDesk", perms: ["orders", "refunds", "customers", "stock"] },
   { key: "studio", perms: ["locations", "classes", "timetable", "catalog"] },
   { key: "website", perms: ["website", "media"] },
   { key: "settings", perms: ["settings", "team"] },
@@ -38,8 +40,8 @@ export const PERMISSION_GROUPS: { key: "daily" | "frontDesk" | "studio" | "websi
 export const ROLE_DEFAULTS: Record<StaffRole, readonly Permission[]> = {
   owner: PERMISSIONS,
   admin: PERMISSIONS,
-  manager: ["schedule", "reports", "orders", "customers", "timetable"],
-  front_desk: ["schedule", "orders", "customers"],
+  manager: ["schedule", "reports", "orders", "refunds", "customers", "stock", "timetable"],
+  front_desk: ["schedule", "orders", "customers", "stock"],
   coach: ["schedule"],
 };
 
@@ -84,6 +86,7 @@ export const DESK_GROUPS: { key: DeskGroupKey; items: DeskItem[] }[] = [
     items: [
       { href: "/admin/orders", key: "orders", perm: "orders" },
       { href: "/admin/customers", key: "customers", perm: "customers" },
+      { href: "/admin/stock", key: "stock", perm: "stock" },
     ],
   },
   {

@@ -253,6 +253,8 @@ export const orders = pgTable(
     /** The customer's choice at checkout: "online" (SkipCash) or "at_studio" (paid at the front desk). */
     paymentMethod: text("payment_method").notNull().default("online"),
     paidAt: tstz("paid_at"),
+    /** Money given back so far (succeeded refunds). Net revenue = total - refunded_amount. */
+    refundedAmount: integer("refunded_amount").notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -281,6 +283,8 @@ export const orderItems = pgTable(
     validityDays: smallint("validity_days"),
     /** Shop items are collected at the order's branch; set when handed over at the front desk. */
     fulfilledAt: tstz("fulfilled_at"),
+    /** How many of `quantity` have been refunded (reserved while a refund is processing, released if it fails). */
+    refundedQuantity: smallint("refunded_quantity").notNull().default(0),
   },
   (t) => [index("order_items_order_idx").on(t.orderId)],
 );
@@ -414,22 +418,35 @@ export const paymentEvents = pgTable(
   (t) => [unique("payment_events_dedupe").on(t.provider, t.providerEventKey)],
 );
 
+/** Money given back on a paid order: which lines, how much, how (SkipCash or at the desk), and whether stock went back. */
 export const refunds = pgTable(
   "refunds",
   {
     id: pk(),
-    paymentId: uuid("payment_id")
+    orderId: uuid("order_id")
       .notNull()
-      .references(() => payments.id, { onDelete: "restrict" }),
+      .references(() => orders.id, { onDelete: "restrict" }),
+    /** The payment refunded (SkipCash refunds go back to it). Null for sample orders that have no payment row. */
+    paymentId: uuid("payment_id").references(() => payments.id, { onDelete: "restrict" }),
+    /** "skipcash" (back to the card that paid online) or "cash" | "card" | "other" handed back at the desk. */
+    method: text("method").notNull().default("skipcash"),
     amount: integer("amount").notNull(),
+    /** [{ itemId, quantity, amount }]: the lines (and how many of each) this refund covers. */
+    lines: jsonb("lines").notNull().default([]),
+    restock: boolean("restock").notNull().default(true),
     reason: text("reason"),
     status: refundStatus("status").notNull().default("requested"),
     providerRefundId: text("provider_refund_id"),
+    error: text("error"),
     actorUserId: text("actor_user_id").references(() => users.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [check("refunds_amount", sql`${t.amount} > 0`), index("refunds_payment_idx").on(t.paymentId)],
+  (t) => [
+    check("refunds_amount", sql`${t.amount} > 0`),
+    index("refunds_payment_idx").on(t.paymentId),
+    index("refunds_order_idx").on(t.orderId, t.createdAt),
+  ],
 );
 
 export const favourites = pgTable(
