@@ -243,7 +243,6 @@ async function applyRefund(tx: Database, ctx: Reserved, input: RefundInput) {
         amount,
         full,
         method: input.method,
-        reason: input.reason,
         credits: creditsRemoved,
         lines: lines.map((l) => ({ en: l.nameEn, ar: l.nameAr, quantity: l.quantity, lineTotal: l.amount })),
         orderPath: orderPath(o.id),

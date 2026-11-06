@@ -194,7 +194,6 @@ function content(template: EmailTemplate, p: Payload, ar: boolean, origin: strin
     }
     case "order.refunded": {
       const path = str(p.orderPath);
-      const reason = str(p.reason).trim();
       const credits = num(p.credits);
       const money = fmtMoney(num(p.amount), locale);
       const table = invoiceTable({ lines: p.lines, total: num(p.amount) }, ar);
@@ -214,7 +213,6 @@ function content(template: EmailTemplate, p: Payload, ar: boolean, origin: strin
           ...(credits > 0
             ? [ar ? `أُزيلت ${credits} من الحصص غير المستخدمة من رصيدك.` : `${credits} unused ${credits === 1 ? "session was" : "sessions were"} taken off your balance.`]
             : []),
-          ...(reason ? [ar ? `السبب: ${reason}` : `Reason: ${reason}`] : []),
         ],
         table: table ? { ...table, total: [ar ? "المبلغ المسترد" : "Refunded", money] as [string, string] } : undefined,
         action: path ? { label: ar ? "اعرض الطلب" : "View order", url: `${origin}/${locale}${path}` } : undefined,

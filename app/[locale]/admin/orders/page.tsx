@@ -6,6 +6,7 @@ import { type DeskOrder, type DeskRow, type DeskView, OrdersDesk } from "@/compo
 import { getCustomer } from "@/server/admin/customers";
 import { getDb } from "@/server/db";
 import { getSkipCashConfig } from "@/server/integrations";
+import { can } from "@/server/staff";
 import { customerState, getDeskCatalog, getOrderView, isOpenStatus, listOrders, orderPath, syncOrderPayments } from "@/server/payments/orders";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +78,7 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
       qrReady={skipcash.ready}
       catalog={plain(catalog)}
       initialCompose={compose}
+      canRefund={can(staff, "refunds")}
     />
   );
 }

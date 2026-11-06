@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowIcon, ArrowUpRightIcon, CheckIcon, PlusIcon, TicketIcon } from "@/components/brand/icons";
+import { ArrowIcon, ArrowUpRightIcon, CheckIcon, CloseIcon, MinusIcon, PlusIcon, TicketIcon } from "@/components/brand/icons";
 import { TicketQr } from "@/components/member/account-client";
 import { Notice } from "@/components/member/field";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,9 @@ export type DeskOrder = {
   total: number;
   createdAt: string;
   paidAt: string | null;
+  /** Before any order discount; refunds share the discount out by subtotal. */
+  subtotal: number;
+  refundedAmount: number;
   user: { id: string; name: string; email: string; phone: string | null };
   branch: { en: string; ar: string } | null;
   items: {
@@ -55,6 +58,11 @@ export type DeskOrder = {
     /** Product kind ("retail" = shop item collected at the studio); null if the product was deleted. */
     type?: string | null;
     fulfilledAt?: string | null;
+    refundedQuantity?: number;
+    /** Class packs: sessions per pack, and what's still unused on the pack this line bought. */
+    credits?: number | null;
+    packLeft?: number | null;
+    packTotal?: number | null;
   }[];
   payments: {
     id: string;
@@ -77,7 +85,19 @@ export type DeskOrder = {
     classAr: string;
     timezone: string;
   } | null;
-  state: DeskState;
+  refunds: {
+    id: string;
+    amount: number;
+    method: string;
+    status: string;
+    reason: string | null;
+    lines: { itemId: string; quantity: number; amount: number; nameEn: string; nameAr: string }[];
+    restock: boolean;
+    error: string | null;
+    createdAt: string;
+    staff: string | null;
+  }[];
+  state: DeskState | "refunded";
   customerPath: string;
 };
 
@@ -122,9 +142,10 @@ export async function copyText(text: string) {
 }
 
 function deskState(status: OrderStatus, method: string): DeskState {
-  if (status === "paid") return "paid";
+  // Part refunded is still a sale (items can be handed over, more can be refunded); fully refunded is closed.
+  if (status === "paid" || status === "partially_refunded") return "paid";
   if (status === "failed") return "failed";
-  if (status === "cancelled" || status === "refunded" || status === "partially_refunded") return "cancelled";
+  if (status === "cancelled" || status === "refunded") return "cancelled";
   return method === "at_studio" ? "at_studio" : "pending";
 }
 
@@ -155,13 +176,16 @@ function StatusChip({ status, method, large }: { status: OrderStatus; method: st
   const t = useTranslations("admin.orders.status");
   const state = deskState(status, method);
   const label = state === "pending" ? t("pending") : state === "at_studio" ? t("awaiting_payment") : t(status);
-  const tone = {
-    paid: "bg-[#1F7A4D]/[0.12] text-[#1F7A4D]",
-    pending: "bg-aqua/15 text-aqua-lagoon",
-    at_studio: "bg-orange/15 text-orange-ember",
-    failed: "bg-orange-ember text-white",
-    cancelled: "bg-navy/[0.07] text-steel",
-  }[state];
+  const tone =
+    status === "partially_refunded"
+      ? "bg-orange/[0.12] text-orange-ember"
+      : {
+          paid: "bg-[#1F7A4D]/[0.12] text-[#1F7A4D]",
+          pending: "bg-aqua/15 text-aqua-lagoon",
+          at_studio: "bg-orange/15 text-orange-ember",
+          failed: "bg-orange-ember text-white",
+          cancelled: "bg-navy/[0.07] text-steel",
+        }[state];
   return (
     <span
       className={cn(
@@ -252,6 +276,7 @@ export function OrdersDesk({
   qrReady,
   catalog,
   initialCompose,
+  canRefund = false,
 }: {
   initialRows: DeskRow[];
   initialView: DeskView;
@@ -261,6 +286,8 @@ export function OrdersDesk({
   catalog: DeskCatalog;
   /** Opened as /admin/orders?new=1[&customer=…] (e.g. from a customer's profile). */
   initialCompose: { customer: DeskCustomer | null } | null;
+  /** Holds the "refunds" permission. */
+  canRefund?: boolean;
 }) {
   const { t, errorText } = useDeskText();
   const locale = useLocale();
@@ -550,6 +577,7 @@ export function OrdersDesk({
               onUpdate={applyOrder}
               onBack={back}
               intro={intro?.id === order.id ? intro.text : undefined}
+              canRefund={canRefund}
             />
           )}
         </section>
@@ -580,6 +608,7 @@ function OrderDetail({
   onUpdate,
   onBack,
   intro,
+  canRefund,
 }: {
   order: DeskOrder;
   qrReady: boolean;
@@ -588,6 +617,7 @@ function OrderDetail({
   onBack: () => void;
   /** Shown once when the panel opens (e.g. "Order #… created"). */
   intro?: string;
+  canRefund: boolean;
 }) {
   const { t, errorText } = useDeskText();
   const locale = useLocale();
@@ -602,6 +632,7 @@ function OrderDetail({
   const [note, setNote] = useState("");
   const [confirm, setConfirm] = useState<"paid" | "cancel" | null>(null);
   const [copied, setCopied] = useState(false);
+  const [refunding, setRefunding] = useState(false);
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
 
@@ -610,6 +641,11 @@ function OrderDetail({
   const methodLabel = t(`orders.take.methods.${method}`);
   const paidWith = order.payments.find((p) => p.status === "succeeded" || p.status === "refunded")?.provider ?? null;
   const hasSkipCash = order.payments.some((p) => p.provider === "skipcash");
+  const refunds = order.refunds ?? [];
+  const refundedAmount = order.refundedAmount ?? 0;
+  const refundBusy = refunds.some((r) => r.status === "processing");
+  const refundable = state === "paid" && order.items.some((i) => i.quantity - (i.refundedQuantity ?? 0) > 0);
+  const showRefund = canRefund && refundable && !refundBusy;
 
   // While the QR is up, ask the server (which asks SkipCash) every 4s, for up to 10 minutes.
   useEffect(() => {
@@ -768,13 +804,22 @@ function OrderDetail({
                   <bdi>{t("orders.detail.invoice", { number: String(order.invoice.number) })}</bdi>
                 </p>
               )}
+              {refundedAmount > 0 && (
+                <p className="tabular mt-1 text-meta font-medium text-orange-ember">
+                  {t("orders.detail.partlyRefunded", { amount: fmtMoney(refundedAmount, locale) })}
+                </p>
+              )}
             </div>
           </section>
         )}
 
         {/* Closed */}
         {state === "cancelled" && (
-          <div className="border-y border-navy/10 bg-mist px-5 py-4 text-meta text-steel sm:px-6">{t("orders.detail.closed")}</div>
+          <div className="border-y border-navy/10 bg-mist px-5 py-4 text-meta text-steel sm:px-6">
+            {order.status === "refunded"
+              ? t("orders.detail.refundedAll", { amount: fmtMoney(refundedAmount, locale) })
+              : t("orders.detail.closed")}
+          </div>
         )}
 
         {/* Take payment */}
@@ -953,16 +998,25 @@ function OrderDetail({
           <div className="min-w-0">
             <p className="label-caps text-steel">{t("orders.detail.items")}</p>
             <ul className="mt-2 space-y-1.5">
-              {order.items.map((i) => (
+              {order.items.map((i) => {
+                const back = i.refundedQuantity ?? 0;
+                const allBack = back >= i.quantity;
+                return (
                 <li key={i.id} className="text-body">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0">
+                    <span className={cn("min-w-0", allBack && "text-steel line-through decoration-navy/30")}>
                       {pick(locale, i.nameEn, i.nameAr)}
                       {i.quantity > 1 && <span className="tabular text-steel"> &times; {fmtNum(i.quantity, locale)}</span>}
                     </span>
-                    <span className="tabular shrink-0">{fmtMoney(i.lineTotal, locale)}</span>
+                    <span className={cn("tabular shrink-0", allBack && "text-steel line-through decoration-navy/30")}>{fmtMoney(i.lineTotal, locale)}</span>
                   </div>
+                  {back > 0 && (
+                    <p className="tabular mt-1 text-meta font-medium text-orange-ember">
+                      {allBack ? t("orders.detail.lineRefundedAll") : t("orders.detail.lineRefundedSome", { count: back, total: i.quantity })}
+                    </p>
+                  )}
                   {i.type === "retail" &&
+                    !(allBack && !i.fulfilledAt) &&
                     (i.fulfilledAt ? (
                       <p className="mt-1 flex items-center gap-1.5 text-meta text-[#1F7A4D]">
                         <CheckIcon size={14} />
@@ -970,7 +1024,7 @@ function OrderDetail({
                           date: `${fmtShortDate(i.fulfilledAt, locale)}, ${fmtTime(i.fulfilledAt, locale)}`,
                         })}
                       </p>
-                    ) : order.status === "paid" ? (
+                    ) : state === "paid" ? (
                       <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         <span className="text-meta text-orange-ember">{t("orders.detail.toCollect")}</span>
                         <Button
@@ -988,12 +1042,27 @@ function OrderDetail({
                       <p className="mt-1 text-meta text-steel">{t("orders.detail.collectAfterPayment")}</p>
                     ))}
                 </li>
-              ))}
+                );
+              })}
             </ul>
             <div className="mt-3 flex items-baseline justify-between border-t border-navy/10 pt-3">
               <span className="text-meta font-medium text-steel">{t("orders.detail.total")}</span>
-              <span className="tabular text-h3 font-semibold">{amount}</span>
+              <span className={cn("tabular font-semibold", refundedAmount > 0 ? "text-body-lg text-steel" : "text-h3")}>{amount}</span>
             </div>
+            {refundedAmount > 0 && (
+              <>
+                <div className="mt-1 flex items-baseline justify-between">
+                  <span className="text-meta font-medium text-orange-ember">{t("orders.detail.refundedRow")}</span>
+                  <span className="tabular text-body font-medium text-orange-ember" dir="ltr">
+                    &minus;{fmtMoney(refundedAmount, locale)}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between border-t border-navy/10 pt-2">
+                  <span className="text-meta font-medium text-steel">{t("orders.detail.netRow")}</span>
+                  <span className="tabular text-h3 font-semibold">{fmtMoney(Math.max(0, order.total - refundedAmount), locale)}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -1058,6 +1127,79 @@ function OrderDetail({
           )}
         </section>
 
+        {/* Refund history */}
+        {refunds.length > 0 && (
+          <section className="border-t border-navy/10 p-5 sm:p-6">
+            <p className="label-caps text-steel">{t("orders.detail.refunds")}</p>
+            <ol className="mt-3 space-y-4">
+              {refunds.map((r) => (
+                <li key={r.id} className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-meta font-medium">
+                      {t.has(`orders.refund.methods.${r.method}`) ? t(`orders.refund.methods.${r.method}`) : r.method}
+                      <span
+                        className={cn(
+                          "text-[0.75rem] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal",
+                          r.status === "succeeded" ? "text-[#1F7A4D]" : r.status === "failed" ? "text-orange-ember" : "text-aqua-lagoon",
+                        )}
+                      >
+                        {t.has(`orders.refund.status.${r.status}`) ? t(`orders.refund.status.${r.status}`) : r.status}
+                      </span>
+                    </p>
+                    <p className="tabular mt-0.5 text-meta text-steel">
+                      {fmtShortDate(r.createdAt, locale)}, {fmtTime(r.createdAt, locale)}
+                      {r.staff && ` · ${t("orders.detail.by", { name: r.staff })}`}
+                    </p>
+                    {r.lines.length > 0 && (
+                      <p className="mt-0.5 text-meta text-navy/80">
+                        {r.lines.map((l) => `${pick(locale, l.nameEn, l.nameAr)}${l.quantity > 1 ? ` × ${fmtNum(l.quantity, locale)}` : ""}`).join(", ")}
+                      </p>
+                    )}
+                    {r.reason && <p className="mt-0.5 text-meta text-steel text-pretty">&ldquo;{r.reason}&rdquo;</p>}
+                    {r.status === "failed" && r.error && (
+                      <p className="mt-0.5 text-meta text-orange-ember text-pretty">{t("orders.refund.failedSaid", { message: r.error })}</p>
+                    )}
+                    {r.status === "processing" && <p className="mt-0.5 text-meta text-aqua-lagoon text-pretty">{t("orders.refund.processingHint")}</p>}
+                  </div>
+                  <span className={cn("tabular shrink-0 text-meta font-medium", r.status === "failed" && "text-steel line-through")} dir="ltr">
+                    &minus;{fmtMoney(r.amount, locale)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {/* Refund */}
+        <AnimatePresence initial={false}>
+          {refunding && showRefund && (
+            <RefundPanel
+              key={`refund-${order.id}-${refundedAmount}`}
+              order={order}
+              paidWith={paidWith}
+              skipcashReady={qrReady}
+              onClose={() => setRefunding(false)}
+              onFresh={(o, message) => {
+                // A refund landed meanwhile: the form starts over, so say why up top.
+                if ((o.refundedAmount ?? 0) !== refundedAmount) setFlash({ tone: "error", text: message });
+                onUpdate(o);
+              }}
+              onDone={(o, refunded, how) => {
+                onUpdate(o);
+                setRefunding(false);
+                const money = fmtMoney(refunded, locale);
+                setFlash({
+                  tone: "success",
+                  text:
+                    how === "skipcash"
+                      ? t("orders.done.refundedSkipcash", { amount: money })
+                      : t("orders.done.refunded", { amount: money, method: t(`orders.refund.methods.${how}`) }),
+                });
+              }}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Secondary actions */}
         <footer className="border-t border-navy/10 bg-mist/70 px-5 py-4 sm:px-6">
           {confirm === "cancel" ? (
@@ -1097,6 +1239,20 @@ function OrderDetail({
                   {t("orders.take.recheck")}
                 </button>
               )}
+              {showRefund && !refunding && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirm(null);
+                    setFlash(null);
+                    setRefunding(true);
+                  }}
+                  disabled={!!busy}
+                  className="ms-auto inline-flex items-center gap-1.5 text-meta font-medium text-orange-ember underline-offset-4 hover:underline disabled:opacity-50"
+                >
+                  {t("orders.refund.open")}
+                </button>
+              )}
               {open && (
                 <button
                   type="button"
@@ -1112,5 +1268,295 @@ function OrderDetail({
         </footer>
       </article>
     </div>
+  );
+}
+
+/* ── Refund ───────────────────────────────────────────────────────────── */
+
+type RefundMethod = "skipcash" | "cash" | "card" | "other";
+
+/**
+ * Pick the lines (and how many) coming back; the amount follows from what was paid for them (same rule as the
+ * server, which has the final word). Paid online → back to the card through SkipCash, or cash; paid at the desk →
+ * cash / card machine / other. Shop items not handed over yet always go back on the shelf.
+ */
+function RefundPanel({
+  order,
+  paidWith,
+  skipcashReady,
+  onDone,
+  onFresh,
+  onClose,
+}: {
+  order: DeskOrder;
+  paidWith: string | null;
+  /** SkipCash connected: only then can money go back to the card it came from. */
+  skipcashReady: boolean;
+  onDone: (o: DeskOrder, amount: number, method: RefundMethod) => void;
+  /** The order changed under us (another refund, a failed SkipCash attempt): show the fresh one. */
+  onFresh: (o: DeskOrder, message: string) => void;
+  onClose: () => void;
+}) {
+  const { t, errorText } = useDeskText();
+  const locale = useLocale();
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, []);
+  const open = order.items.filter((i) => i.quantity - (i.refundedQuantity ?? 0) > 0);
+  const [qty, setQty] = useState<Record<string, number>>(() =>
+    Object.fromEntries(open.map((i) => [i.id, i.quantity - (i.refundedQuantity ?? 0)])),
+  );
+  const methods: RefundMethod[] = paidWith === "skipcash" && skipcashReady ? ["skipcash", "cash"] : ["cash", "card", "other"];
+  const [method, setMethod] = useState<RefundMethod>(
+    methods.includes(paidWith as RefundMethod) ? (paidWith as RefundMethod) : methods[0],
+  );
+  const [restock, setRestock] = useState(true);
+  const [reason, setReason] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const share = order.subtotal > 0 ? order.total / order.subtotal : 0;
+  const lineAmount = (i: DeskOrder["items"][number], q: number) => Math.round((i.lineTotal * share * q) / i.quantity);
+  const chosen = open.filter((i) => (qty[i.id] ?? 0) > 0);
+  const units = chosen.reduce((n, i) => n + (qty[i.id] ?? 0), 0);
+  const remaining = order.total - order.refundedAmount;
+  const closes = order.items.every((i) => i.quantity - (i.refundedQuantity ?? 0) - (qty[i.id] ?? 0) <= 0);
+  let amount = chosen.reduce((n, i) => n + lineAmount(i, qty[i.id] ?? 0), 0);
+  if (closes || amount > remaining) amount = remaining;
+  const handedBack = chosen.some((i) => i.type === "retail" && i.fulfilledAt);
+  const hasPack = chosen.some((i) => i.type === "class_pack");
+  const valid = chosen.length > 0 && amount > 0 && reason.trim().length >= 3;
+  const money = fmtMoney(amount, locale);
+  const titleId = `refund-${order.id}`;
+
+  async function submit() {
+    setBusy(true);
+    setError(null);
+    const res = await call<{ order: DeskOrder; refund: { amount: number } }>("/api/admin/orders", {
+      action: "refund",
+      id: order.id,
+      lines: chosen.map((i) => ({ itemId: i.id, quantity: qty[i.id] })),
+      method,
+      restock,
+      reason: reason.trim(),
+    });
+    setBusy(false);
+    setConfirm(false);
+    if (!res.ok) {
+      const message = errorText(res.code);
+      setError(message);
+      if (["refund_too_much", "not_refundable", "refund_in_progress", "refund_failed", "not_found"].includes(res.code)) {
+        const fresh = await call<{ order: DeskOrder }>(`/api/admin/orders?id=${order.id}`);
+        if (fresh.ok) onFresh(fresh.data.order, message);
+      }
+      return;
+    }
+    onDone(res.data.order, res.data.refund.amount, method);
+  }
+
+  return (
+    <motion.section
+      ref={ref}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 8 }}
+      transition={{ duration: 0.2 }}
+      className="border-t border-orange/30 bg-orange/[0.05] p-5 sm:p-6"
+      aria-labelledby={titleId}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 id={titleId} className="text-body-lg font-semibold">
+            {t("orders.refund.title")}
+          </h3>
+          <p className="mt-1 text-meta text-steel text-pretty">{t("orders.refund.lede")}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("orders.refund.close")}
+          className="grid size-9 shrink-0 place-items-center rounded-pill border border-navy/15 bg-white text-steel transition-colors hover:border-navy/35 hover:text-navy"
+        >
+          <CloseIcon size={16} />
+        </button>
+      </div>
+
+      <ul className="mt-4 divide-y divide-navy/[0.08] overflow-hidden rounded-lg border border-navy/10 bg-white">
+        {open.map((i) => {
+          const left = i.quantity - (i.refundedQuantity ?? 0);
+          const q = qty[i.id] ?? 0;
+          const on = q > 0;
+          const name = pick(locale, i.nameEn, i.nameAr);
+          const packShort = i.type === "class_pack" && !!i.packTotal && (i.packLeft ?? 0) < (i.credits ?? 0) * Math.max(q, 1);
+          const hint =
+            i.type === "retail"
+              ? i.fulfilledAt
+                ? t("orders.refund.handedOver")
+                : t("orders.refund.notHandedOver")
+              : i.type === "class_pack" && i.packTotal
+                ? packShort
+                  ? t("orders.refund.sessionsUsed", { left: i.packLeft ?? 0, total: i.packTotal })
+                  : t("orders.refund.sessions", { left: i.packLeft ?? 0, total: i.packTotal })
+                : null;
+          return (
+            <li key={i.id} className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition-colors", !on && "bg-mist/50")}>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                onClick={() => setQty((s) => ({ ...s, [i.id]: on ? 0 : left }))}
+                className="flex min-w-0 flex-[1_1_14rem] items-start gap-3 text-start"
+              >
+                <span
+                  className={cn(
+                    "mt-0.5 grid size-5 shrink-0 place-items-center rounded-[6px] border transition-colors",
+                    on ? "border-navy bg-navy text-ice" : "border-navy/30 bg-white text-transparent",
+                  )}
+                  aria-hidden="true"
+                >
+                  <CheckIcon size={12} />
+                </span>
+                <span className="min-w-0">
+                  <span className={cn("block text-body font-medium", !on && "text-steel")}>
+                    {name}
+                    {left < i.quantity && <span className="tabular font-normal text-steel"> · {t("orders.refund.leftOf", { left, total: i.quantity })}</span>}
+                  </span>
+                  {hint && <span className={cn("block text-meta text-pretty", packShort ? "text-orange-ember" : "text-steel")}>{hint}</span>}
+                </span>
+              </button>
+              <span className="ms-auto flex shrink-0 items-center gap-3">
+                {left > 1 && on && (
+                  <span className="inline-flex h-8 items-center rounded-pill border border-navy/20 bg-white" role="group" aria-label={name}>
+                    <button
+                      type="button"
+                      onClick={() => setQty((s) => ({ ...s, [i.id]: Math.max(1, q - 1) }))}
+                      disabled={q <= 1}
+                      aria-label={t("orders.refund.less", { name })}
+                      className="grid size-8 place-items-center rounded-pill transition-colors hover:bg-navy/[0.06] disabled:opacity-35"
+                    >
+                      <MinusIcon size={13} />
+                    </button>
+                    <span className="tabular min-w-5 text-center text-meta font-semibold" aria-live="polite">
+                      {fmtNum(q, locale)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQty((s) => ({ ...s, [i.id]: Math.min(left, q + 1) }))}
+                      disabled={q >= left}
+                      aria-label={t("orders.refund.more", { name })}
+                      className="grid size-8 place-items-center rounded-pill transition-colors hover:bg-navy/[0.06] disabled:opacity-35"
+                    >
+                      <PlusIcon size={13} />
+                    </button>
+                  </span>
+                )}
+                <span className={cn("tabular min-w-[5.5rem] text-end text-body font-semibold", !on && "text-steel/60")}>
+                  {on ? fmtMoney(lineAmount(i, q), locale) : "—"}
+                </span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+
+      {handedBack && (
+        <label className="mt-4 flex cursor-pointer items-start gap-3">
+          <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} className="mt-1 size-4 shrink-0 accent-[#0B1F33]" />
+          <span>
+            <span className="block text-body font-medium">{t("orders.refund.restock")}</span>
+            <span className="block text-meta text-steel">{t("orders.refund.restockHint")}</span>
+          </span>
+        </label>
+      )}
+      {hasPack && order.booking && <p className="mt-3 text-meta text-steel text-pretty">{t("orders.refund.bookingNote")}</p>}
+
+      <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        <div className="min-w-0">
+          <p className="mb-2 text-meta font-medium">{t("orders.refund.method")}</p>
+          <Segmented
+            id={`refund-method-${order.id}`}
+            role="radiogroup"
+            label={t("orders.refund.method")}
+            value={method}
+            onChange={setMethod}
+            options={methods.map((m) => ({ value: m, label: t(`orders.refund.methods.${m}`) }))}
+          />
+          <p className="mt-2 text-meta text-steel text-pretty">
+            {method === "skipcash" ? t("orders.refund.methodHint.skipcash") : t("orders.refund.methodHint.desk")}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <label htmlFor={`refund-reason-${order.id}`} className="mb-1.5 block text-meta font-medium">
+            {t("orders.refund.reason")}
+          </label>
+          <input
+            id={`refund-reason-${order.id}`}
+            value={reason}
+            maxLength={300}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={t("orders.refund.reasonPlaceholder")}
+            className="h-11 w-full rounded-md border border-navy/20 bg-white px-4 text-body text-navy placeholder:text-slate transition-[border-color,box-shadow] hover:border-navy/35 focus:border-navy focus:outline-none focus:ring-[3px] focus:ring-aqua/35"
+          />
+          <p className="mt-1.5 text-meta text-steel">{t("orders.refund.reasonHint")}</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mt-4">
+          <Notice tone="error">{error}</Notice>
+        </div>
+      )}
+
+      <div className="mt-5">
+        <AnimatePresence mode="wait" initial={false}>
+          {confirm ? (
+            <motion.div
+              key="confirm"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={CORD}
+              className="rounded-lg bg-navy p-4 text-ice sm:p-5"
+              role="alertdialog"
+              aria-label={t("orders.refund.submit", { amount: money })}
+            >
+              <p className="text-body text-pretty">
+                {t("orders.refund.confirm", { amount: money, name: order.user.name, method: t(`orders.refund.methods.${method}`) })}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={submit} disabled={busy} aria-busy={busy}>
+                  {busy ? t("orders.refund.working") : t("orders.refund.confirmYes")}
+                </Button>
+                <Button variant="ghostDark" onClick={() => setConfirm(false)} disabled={busy}>
+                  {t("orders.take.goBack")}
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cta"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex flex-wrap items-center justify-between gap-3"
+            >
+              <p className="text-meta text-steel">
+                {chosen.length === 0
+                  ? t("orders.refund.pickLines")
+                  : reason.trim().length < 3
+                    ? t("orders.refund.needReason")
+                    : t("orders.refund.summary", { count: units })}
+              </p>
+              <Button size="lg" variant="navy" onClick={() => setConfirm(true)} disabled={!valid} className="w-full sm:w-auto">
+                {t("orders.refund.submit", { amount: money })}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.section>
   );
 }
