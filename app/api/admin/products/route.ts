@@ -23,6 +23,7 @@ import {
 import { audit, refreshSite } from "@/server/admin/common";
 import { getDb } from "@/server/db";
 import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } from "@/server/http";
+import { inScope } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +107,8 @@ export async function POST(request: Request) {
     }
     if (action === "stock") {
       const input = StockInput.parse(raw);
+      // Studio-scoped staff count, receive and send stock at their own studios (sending out to another is fine).
+      if (!inScope(user, input.branchId)) throw new HttpError(403, "forbidden");
       const quantity = await adjustStock(db, user.id, input);
       await audit(db, user.id, `stock.${input.mode}`, "product", input.productId, null, { ...input, quantityAfter: quantity });
       refreshSite("catalog");
@@ -114,6 +117,7 @@ export async function POST(request: Request) {
     }
     if (action === "threshold") {
       const input = ThresholdInput.parse(raw);
+      if (!inScope(user, input.branchId)) throw new HttpError(403, "forbidden");
       await setLowStock(db, input);
       await audit(db, user.id, "stock.threshold", "product", input.productId, null, input);
       return NextResponse.json({ id: input.productId, product: await getProduct(db, input.productId) }, { headers: noStore });

@@ -46,7 +46,7 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
   if (id) {
     let v = await getOrderView(db, id);
     // Studio-scoped staff can't open another studio's order (the desk QR of a different studio).
-    if (v && staff.branchIds !== null && v.order.branchId && !staff.branchIds.includes(v.order.branchId)) v = null;
+    if (v && staff.branchIds !== null && v.branchId && !staff.branchIds.includes(v.branchId)) v = null;
     if (v && v.status !== "paid") {
       await syncOrderPayments(db, id).catch((error) => console.warn("[desk] sync failed", error));
       v = (await getOrderView(db, id)) ?? v;

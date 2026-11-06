@@ -390,7 +390,7 @@ function LocationEditor({
 
 /* ── Page ─────────────────────────────────────────────────────────────── */
 
-function Manager({ initial, initialId }: { initial: LocationView[]; initialId: string | null }) {
+function Manager({ initial, initialId, canAdd }: { initial: LocationView[]; initialId: string | null; canAdd: boolean }) {
   const t = useTranslations("manage.locations");
   const tc = useTranslations("manage.common");
   const locale = useLocale();
@@ -419,7 +419,7 @@ function Manager({ initial, initialId }: { initial: LocationView[]; initialId: s
       <MasterDetail
         showDetail={selected !== null}
         list={
-          <ListCard title={t("list")} count={locations.length} onAdd={() => select("new")} addLabel={t("add")} search={q} onSearch={setQ}>
+          <ListCard title={t("list")} count={locations.length} onAdd={canAdd ? () => select("new") : undefined} addLabel={t("add")} search={q} onSearch={setQ}>
             {shown.length ? (
               shown.map((l) => (
                 <ListRow
@@ -471,14 +471,17 @@ export function LocationsManager({
   initial,
   initialId,
   media,
+  canAdd = true,
 }: {
   initial: LocationView[];
   initialId: string | null;
   media: MediaItem[];
+  /** False for studio-scoped staff: they edit their own studios but don't open new ones. */
+  canAdd?: boolean;
 }) {
   return (
     <MediaProvider initial={media}>
-      <Manager initial={initial} initialId={initialId} />
+      <Manager initial={initial} initialId={initialId} canAdd={canAdd} />
     </MediaProvider>
   );
 }

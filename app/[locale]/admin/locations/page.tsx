@@ -25,6 +25,9 @@ export default async function AdminLocationsPage({ params, searchParams }: Props
   const staff = await staffGate("locations", locale, id ? `/admin/locations?id=${id}` : "/admin/locations");
   if (!staff) return <Denied />;
   const db = await getDb();
-  const [locations, media] = await Promise.all([listLocations(db), listMedia(db)]);
-  return <LocationsManager initial={locations} initialId={id ?? null} media={media} />;
+  const [all, media] = await Promise.all([listLocations(db), listMedia(db)]);
+  // Studio-scoped staff see and edit only their own studios, and can't open new ones.
+  const mine = staff.branchIds;
+  const locations = mine === null ? all : all.filter((l) => mine.includes(l.id));
+  return <LocationsManager initial={locations} initialId={id ?? null} media={media} canAdd={mine === null} />;
 }
