@@ -66,7 +66,13 @@
 - [ ] R6 Arabic everywhere (screens, emails, invoices)
 - [ ] R7 Invoice emailed automatically after payment; email verification REQUIRED at sign-up
 - [ ] R8 Admin registers walk-in customers without email verification (phone-only allowed)
-- [ ] R9 Shop for stockable retail items (per-branch stock tracking)
+- [x] R9 Shop for stockable retail items (per-branch stock tracking) — Nov 6:
+  - Staff: Studio > Packs & shop (/admin/products, area "catalog" = manager/owner): packs, extensions, services, shop items;
+    standard + per-studio prices; stock per studio (received/returned/remove/count/move), warn-at level, history; overview low-stock
+  - Customer: homepage section 05 Shop (#shop, header link), collect-at studio switcher, checkout Pick-up row
+  - Desk: paid shop lines "To collect" -> Mark handed over (order_items.fulfilled_at); order page shows collect note + desk QR
+  - Not yet: refunds (no refund flow exists at all; returns are a manual "Returned" stock entry), quantity > 1 per order,
+    front desk can't receive stock (catalog is manager/owner only)
 - [ ] R10 Session inventory: each booking deducts from purchased sessions (credits + ledger, visible balance)
 - [ ] R11 Multiple branches (pricing, schedule, stock, staff scope)
 ## Open questions for client
@@ -132,6 +138,10 @@
   use single quotes for grep patterns containing `!`
   -> one edit per file per step, or a python patch script; always grep to verify
 - Gotcha: memory limit 4 GB; ship ~1.6 GB + dev server ~1 GB + tsc ~1.2 GB = restarts. Never run tsc with dev up.
+- Nov 6: compiling admin routes in the local dev server (turbopack, >2 GB) restarted the workspace 3 times. Each restart
+  empties .git and rolls EDITED files back to the last version (new files survive). So: don't run the dev server; test on
+  the droplet (bash deploy/push.sh, then python tests against https://142-93-222-165.sslip.io); version after every batch.
+  Git backup of local commits: git bundle -> /root/bungee-fly.bundle on the droplet (restore: git clone /root/... or scp back)
 
 ## Phase 3 — Admin
 - [ ] Walk-in registration (R8), QR check-in (R3), branches/schedule/products/stock (R9, R11)
