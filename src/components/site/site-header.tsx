@@ -10,7 +10,8 @@ import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useBranch } from "./branch-context";
 import { BranchSwitcher } from "./branch-switcher";
-import { NAV_ITEMS } from "./nav-items";
+import { CartButton } from "@/components/shop/parts";
+import { NAV_ITEMS, navHref } from "./nav-items";
 
 export function SiteHeader() {
   const t = useTranslations("nav");
@@ -44,7 +45,7 @@ export function SiteHeader() {
       )}
     >
       <div className="frame flex h-16 items-center gap-6 md:h-[4.5rem]">
-        <a href="#top" className="shrink-0" aria-label={t("home")}>
+        <a href={pathname === "/" ? "#top" : `/${locale}`} className="shrink-0" aria-label={t("home")}>
           <Logo variant="horizontal" className="w-[8.25rem] md:w-[9.5rem]" />
         </a>
 
@@ -53,8 +54,9 @@ export function SiteHeader() {
             {NAV_ITEMS.map((item) => (
               <li key={item.key}>
                 <a
-                  href={item.href}
-                  className="rounded-pill px-3.5 py-2 text-meta font-medium text-ice/75 transition-colors hover:text-ice"
+                  href={navHref(item.href, locale)}
+                  aria-current={pathname.startsWith(item.href) ? "page" : undefined}
+                  className="rounded-pill px-3.5 py-2 text-meta font-medium text-ice/75 transition-colors hover:text-ice aria-[current=page]:text-ice"
                 >
                   {t(item.key)}
                 </a>
@@ -74,7 +76,8 @@ export function SiteHeader() {
             {t("otherLanguage")}
           </Link>
           <AccountLink className="hidden md:inline-flex" />
-          <a href="#timetable" className={cn(buttonVariants({ size: "sm" }), "hidden sm:inline-flex")}>
+          <CartButton />
+          <a href={navHref("#timetable", locale)} className={cn(buttonVariants({ size: "sm" }), "hidden sm:inline-flex")}>
             {t("book")}
             <ButtonArrow size={16} />
           </a>
@@ -108,6 +111,7 @@ function MobileMenu({
   pathname: string;
 }) {
   const t = useTranslations("nav");
+  const locale = useLocale();
   const { branches, branch, setBranch } = useBranch();
 
   return (
@@ -130,7 +134,7 @@ function MobileMenu({
                 )}
                 style={{ transitionDelay: open ? `${80 + i * 50}ms` : "0ms" }}
               >
-                <a href={item.href} onClick={onClose} className="flex items-baseline gap-5 py-5">
+                <a href={navHref(item.href, locale)} onClick={onClose} className="flex items-baseline gap-5 py-5">
                   <span className="tabular w-6 text-meta text-ice/45">{String(i + 1).padStart(2, "0")}</span>
                   <span className="text-h2 font-semibold">{t(item.key)}</span>
                 </a>
@@ -168,7 +172,7 @@ function MobileMenu({
           <Link href={pathname} locale={other} lang={other} className="text-body font-medium underline underline-offset-4">
             {t("otherLanguage")}
           </Link>
-          <a href="#timetable" onClick={onClose} className={buttonVariants({ size: "md" })}>
+          <a href={navHref("#timetable", locale)} onClick={onClose} className={buttonVariants({ size: "md" })}>
             {t("book")}
             <ButtonArrow size={16} />
           </a>

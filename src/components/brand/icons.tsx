@@ -175,3 +175,27 @@ export const TicketIcon = (p: IconProps) => (
     <path d="M14 7v10" strokeDasharray="2 2.5" />
   </Icon>
 );
+export const BagIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 8h14l-1 12H6z" />
+    <path d="M9 10V7a3 3 0 0 1 6 0v3" />
+  </Icon>
+);
+export const SearchIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="10.5" cy="10.5" r="6" />
+    <path d="M15 15l5 5" />
+  </Icon>
+);
+export const MinusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 12h14" />
+  </Icon>
+);
+export const TrashIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 7h16" />
+    <path d="M9 7V4h6v3" />
+    <path d="M6 7l1 13h10l1-13" />
+  </Icon>
+);

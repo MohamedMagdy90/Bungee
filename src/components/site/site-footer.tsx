@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Logo } from "@/components/brand/logo";
 import { Link } from "@/i18n/navigation";
 import type { HomeData } from "@/server/queries/home";
-import { NAV_ITEMS } from "./nav-items";
+import { NAV_ITEMS, navHref } from "./nav-items";
 
 export async function SiteFooter({ branches }: { branches: HomeData["branches"] }) {
   const t = await getTranslations("footer");
@@ -25,7 +25,7 @@ export async function SiteFooter({ branches }: { branches: HomeData["branches"] 
           <ul className="mt-4 space-y-2.5">
             {NAV_ITEMS.map((item) => (
               <li key={item.key}>
-                <a href={item.href} className="text-body text-ice/80 hover:text-ice">
+                <a href={navHref(item.href, locale)} className="text-body text-ice/80 hover:text-ice">
                   {tn(item.key)}
                 </a>
               </li>
@@ -38,7 +38,7 @@ export async function SiteFooter({ branches }: { branches: HomeData["branches"] 
           <ul className="mt-4 space-y-2.5">
             {branches.map((b) => (
               <li key={b.id}>
-                <a href="#studios" className="text-body text-ice/80 hover:text-ice">
+                <a href={navHref("#studios", locale)} className="text-body text-ice/80 hover:text-ice">
                   {b.name}
                 </a>
               </li>
