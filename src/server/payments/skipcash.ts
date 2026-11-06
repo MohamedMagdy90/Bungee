@@ -70,7 +70,7 @@ export function normalisePhone(raw: string) {
   return p.slice(0, 15);
 }
 
-async function call<T>(url: string, init: RequestInit): Promise<T> {
+async function call<T>(url: string, init: RequestInit, allowEmpty = false): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, { ...init, signal: AbortSignal.timeout(20_000), cache: "no-store" });
@@ -84,14 +84,14 @@ async function call<T>(url: string, init: RequestInit): Promise<T> {
   } catch {
     throw new SkipCashError(`SkipCash ${res.status}: ${text.slice(0, 200)}`, res.status);
   }
-  if (!res.ok || data.hasError || !data.resultObj) {
+  if (!res.ok || data.hasError || (!data.resultObj && !allowEmpty)) {
     throw new SkipCashError(
       data.errorMessage || `SkipCash ${res.status}`,
       res.status,
       data.validationErrors ?? data,
     );
   }
-  return data.resultObj;
+  return data.resultObj as T;
 }
 
 export async function createPayment(
@@ -156,23 +156,33 @@ export async function getPayment(cfg: SkipCashConfig, id: string): Promise<SkipC
   });
 }
 
-/** Full refund of a paid SkipCash payment (processed by SkipCash within ~1 day). */
-export async function refundPayment(cfg: SkipCashConfig, id: string) {
-  const body = { Id: id, KeyId: cfg.keyId };
-  return call<{ id?: string; refundId?: string }>(`${cfg.apiUrl}/api/v1/payments/refund`, {
-    method: "POST",
-    headers: {
-      Authorization: sign(
-        [
-          ["Id", body.Id],
-          ["KeyId", body.KeyId],
-        ],
-        cfg.keySecret,
-      ),
-      "Content-Type": "application/json",
+/**
+ * Refunds a paid SkipCash payment: in full, or part of it when `amount` (minor units) is given. SkipCash
+ * processes it within about a day; the card sees it a few days later. Signature: Id,KeyId[,Amount].
+ */
+export async function refundPayment(cfg: SkipCashConfig, id: string, amount?: number | null) {
+  const body: Record<string, string> = { Id: id, KeyId: cfg.keyId };
+  if (amount) body.Amount = toAmount(amount);
+  const result = await call<{ id?: string; refundId?: string } | null>(
+    `${cfg.apiUrl}/api/v1/payments/refund`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: sign(
+          [
+            ["Id", body.Id],
+            ["KeyId", body.KeyId],
+            ["Amount", body.Amount],
+          ],
+          cfg.keySecret,
+        ),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
+    true,
+  );
+  return result ?? {};
 }
 
 export type SkipCashWebhook = {

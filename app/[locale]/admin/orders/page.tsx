@@ -6,7 +6,7 @@ import { type DeskOrder, type DeskRow, type DeskView, OrdersDesk } from "@/compo
 import { getCustomer } from "@/server/admin/customers";
 import { getDb } from "@/server/db";
 import { getSkipCashConfig } from "@/server/integrations";
-import { customerState, getDeskCatalog, getOrderView, listOrders, orderPath, syncOrderPayments } from "@/server/payments/orders";
+import { customerState, getDeskCatalog, getOrderView, isOpenStatus, listOrders, orderPath, syncOrderPayments } from "@/server/payments/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,7 @@ export default async function AdminOrdersPage({ params, searchParams }: Props) {
     let v = await getOrderView(db, id);
     // Studio-scoped staff can't open another studio's order (the desk QR of a different studio).
     if (v && staff.branchIds !== null && v.branchId && !staff.branchIds.includes(v.branchId)) v = null;
-    if (v && v.status !== "paid") {
+    if (v && isOpenStatus(v.status)) {
       await syncOrderPayments(db, id).catch((error) => console.warn("[desk] sync failed", error));
       v = (await getOrderView(db, id)) ?? v;
     }

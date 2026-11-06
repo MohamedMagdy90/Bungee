@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ticketQrSvg } from "@/server/booking/ticket";
-import { audit } from "@/server/admin/common";
+import { audit, refreshSite } from "@/server/admin/common";
 import { getDb } from "@/server/db";
 import { branches, orders, users } from "@/server/db/schema";
 import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } from "@/server/http";
@@ -14,14 +14,16 @@ import {
   customerState,
   getOrderView,
   handOverItem,
+  isOpenStatus,
   listOrders,
   orderPath,
   recordDeskPayment,
   startSkipCashPayment,
   syncOrderPayments,
 } from "@/server/payments/orders";
+import { REFUND_METHODS, refundOrder } from "@/server/payments/refunds";
 import { publicOrigin } from "@/server/runtime";
-import { inScope, type StaffContext } from "@/server/staff";
+import { can, inScope, type StaffContext } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +40,7 @@ async function detail(orderId: string, sync: boolean) {
   const db = await getDb();
   let view = await getOrderView(db, orderId);
   if (!view) throw new HttpError(404, "not_found");
-  if (sync && view.status !== "paid") {
+  if (sync && isOpenStatus(view.status)) {
     await syncOrderPayments(db, orderId).catch((error) => console.warn("[desk] sync failed", error));
     view = (await getOrderView(db, orderId)) ?? view;
   }
@@ -77,6 +79,17 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("cancel"), id: z.uuid() }),
   z.object({ action: z.literal("sync"), id: z.uuid() }),
   z.object({ action: z.literal("hand_over"), id: z.uuid(), itemId: z.uuid() }),
+  z.object({
+    action: z.literal("refund"),
+    id: z.uuid(),
+    lines: z
+      .array(z.object({ itemId: z.uuid(), quantity: z.number().int().min(1).max(100) }))
+      .min(1)
+      .max(40),
+    method: z.enum(REFUND_METHODS),
+    restock: z.boolean(),
+    reason: z.string().trim().min(3).max(300),
+  }),
   z.object({
     action: z.literal("create"),
     customerId: z.string().min(1).max(64),
@@ -128,6 +141,28 @@ export async function POST(request: Request) {
     }
 
     await assertOrderInScope(staff, input.id);
+    if (input.action === "refund") {
+      if (!can(staff, "refunds")) throw new HttpError(403, "forbidden");
+      const refund = await refundOrder(db, {
+        orderId: input.id,
+        lines: input.lines,
+        method: input.method,
+        restock: input.restock,
+        reason: input.reason,
+        actorUserId: staff.id,
+      });
+      await audit(db, staff.id, "order.refund", "order", input.id, null, {
+        refundId: refund.refundId,
+        amount: refund.amount,
+        method: input.method,
+        lines: input.lines,
+        restock: input.restock,
+        reason: input.reason,
+      });
+      refreshSite("catalog");
+      revalidateTag("schedule");
+      return NextResponse.json({ refund, order: await detail(input.id, false) }, { headers: noStore });
+    }
     if (input.action === "skipcash_qr") {
       const origin = publicOrigin(request.headers);
       rememberOrigin(origin);

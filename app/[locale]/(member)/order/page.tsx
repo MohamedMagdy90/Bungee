@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { ticketQrSvg, ticketUrl } from "@/server/booking/ticket";
 import { getDb } from "@/server/db";
 import { getPaymentOptions, getSkipCashConfig } from "@/server/integrations";
-import { customerState, getOrderView, orderSig, syncOrderPayments, verifyOrderSig } from "@/server/payments/orders";
+import { customerState, getOrderView, isOpenStatus, orderSig, syncOrderPayments, verifyOrderSig } from "@/server/payments/orders";
 import { publicOrigin } from "@/server/runtime";
 import { getCurrentUser } from "@/server/session";
 import { can, getStaffContext } from "@/server/staff";
@@ -64,7 +64,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
     if (user.id !== view.userId && !can(await getStaffContext(), "orders")) return notFound;
   }
 
-  if (view.status !== "paid") {
+  if (isOpenStatus(view.status)) {
     await syncOrderPayments(db, id).catch((error) => console.warn("[order] sync failed", error));
     view = (await getOrderView(db, id)) ?? view;
   }

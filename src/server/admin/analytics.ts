@@ -63,28 +63,30 @@ export type Sales = {
 
 export async function salesFor(db: Database, scope: Scope, r: Range): Promise<Sales> {
   const where = (from: Date, to: Date) =>
-    sql`o.status = 'paid' and o.paid_at >= ${ts(from)} and o.paid_at < ${ts(to)} and ${inStudios("o.branch_id", scope.branchIds)}`;
+    sql`o.status in ('paid', 'partially_refunded') and o.paid_at >= ${ts(from)} and o.paid_at < ${ts(to)} and ${inStudios("o.branch_id", scope.branchIds)}`;
   const [daily, [prev], mix, top] = await Promise.all([
     rows<{ day: string; revenue: number; orders: number }>(
       db,
-      sql`select ${day("o.paid_at")} as day, sum(o.total)::int as revenue, count(*)::int as orders
+      sql`select ${day("o.paid_at")} as day, sum(o.total - o.refunded_amount)::int as revenue, count(*)::int as orders
           from orders o where ${where(r.from, r.to)} group by 1`,
     ),
     rows<{ revenue: number; orders: number }>(
       db,
-      sql`select coalesce(sum(o.total), 0)::int as revenue, count(*)::int as orders from orders o where ${where(r.prevFrom, r.prevTo)}`,
+      sql`select coalesce(sum(o.total - o.refunded_amount), 0)::int as revenue, count(*)::int as orders from orders o where ${where(r.prevFrom, r.prevTo)}`,
     ),
     rows<{ type: string; revenue: number }>(
       db,
-      sql`select coalesce(p.type::text, 'other') as type, sum(oi.line_total)::int as revenue
+      sql`select coalesce(p.type::text, 'other') as type, sum(oi.line_total * (oi.quantity - oi.refunded_quantity) / nullif(oi.quantity, 0))::int as revenue
           from order_items oi join orders o on o.id = oi.order_id left join products p on p.id = oi.product_id
           where ${where(r.from, r.to)} group by 1 order by 2 desc`,
     ),
     rows<{ name_en: string; name_ar: string; type: string | null; units: number; revenue: number }>(
       db,
-      sql`select oi.name_en, oi.name_ar, p.type::text as type, sum(oi.quantity)::int as units, sum(oi.line_total)::int as revenue
+      sql`select oi.name_en, oi.name_ar, p.type::text as type, sum(oi.quantity - oi.refunded_quantity)::int as units,
+            sum(oi.line_total * (oi.quantity - oi.refunded_quantity) / nullif(oi.quantity, 0))::int as revenue
           from order_items oi join orders o on o.id = oi.order_id left join products p on p.id = oi.product_id
-          where ${where(r.from, r.to)} group by oi.name_en, oi.name_ar, p.type order by revenue desc limit 6`,
+          where ${where(r.from, r.to)} and oi.quantity > oi.refunded_quantity
+          group by oi.name_en, oi.name_ar, p.type order by revenue desc limit 6`,
     ),
   ]);
   const map = new Map(daily.map((d) => [d.day, d]));
@@ -213,7 +215,7 @@ export async function studiosFor(db: Database, scope: Scope, r: Range, now = new
           (select count(*) from class_sessions cs where cs.branch_id = b.id and cs.status <> 'cancelled' and cs.starts_at >= ${ts(r.from)} and cs.starts_at < ${ts(end)})::int as classes,
           (select coalesce(sum(cs.booked_count), 0) from class_sessions cs where cs.branch_id = b.id and cs.status <> 'cancelled' and cs.starts_at >= ${ts(r.from)} and cs.starts_at < ${ts(end)})::int as booked,
           (select coalesce(sum(cs.capacity), 0) from class_sessions cs where cs.branch_id = b.id and cs.status <> 'cancelled' and cs.starts_at >= ${ts(r.from)} and cs.starts_at < ${ts(end)})::int as capacity,
-          (select coalesce(sum(o.total), 0) from orders o where o.branch_id = b.id and o.status = 'paid' and o.paid_at >= ${ts(r.from)} and o.paid_at < ${ts(r.to)})::int as revenue
+          (select coalesce(sum(o.total - o.refunded_amount), 0) from orders o where o.branch_id = b.id and o.status in ('paid', 'partially_refunded') and o.paid_at >= ${ts(r.from)} and o.paid_at < ${ts(r.to)})::int as revenue
         from branches b where b.is_active = true and ${inStudios("b.id", scope.branchIds)} order by b.sort_order`,
   );
   return list.map((s) => ({ id: s.id, nameEn: s.name_en, nameAr: s.name_ar, classes: n(s.classes), booked: n(s.booked), capacity: n(s.capacity), revenue: n(s.revenue) }));
@@ -273,7 +275,7 @@ export async function attentionFor(db: Database, scope: Scope, now = new Date())
       sql`select
         (select count(*) from orders o where o.status = 'awaiting_payment' and ${inStudios("o.branch_id", scope.branchIds)})::int as awaiting,
         (select count(*) from order_items oi join orders o on o.id = oi.order_id join products p on p.id = oi.product_id
-           where o.status = 'paid' and p.type = 'retail' and oi.fulfilled_at is null and ${inStudios("o.branch_id", scope.branchIds)})::int as collect,
+           where o.status in ('paid', 'partially_refunded') and p.type = 'retail' and oi.fulfilled_at is null and oi.quantity > oi.refunded_quantity and ${inStudios("o.branch_id", scope.branchIds)})::int as collect,
         (select count(distinct bs.product_id) from branch_stock bs join products p on p.id = bs.product_id join branches br on br.id = bs.branch_id
            where p.type = 'retail' and p.track_stock and p.is_active and br.is_active and bs.quantity <= bs.low_stock_threshold
            and ${inStudios("bs.branch_id", scope.branchIds)})::int as low,

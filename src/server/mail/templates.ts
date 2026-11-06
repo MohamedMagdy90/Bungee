@@ -42,6 +42,21 @@ function methodLabel(method: string, ar: boolean) {
   return ar ? l[1] : l[0];
 }
 
+/** How a refund reached the customer. */
+function refundRoute(method: string, ar: boolean) {
+  if (method === "skipcash") {
+    return ar
+      ? "يعود المبلغ إلى البطاقة التي دفعت بها عبر SkipCash. قد يستغرق ظهوره من 5 إلى 10 أيام عمل حسب البنك."
+      : "It goes back to the card you paid with through SkipCash. Depending on your bank, it can take 5 to 10 working days to show.";
+  }
+  const how: Record<string, [string, string]> = {
+    cash: ["in cash", "نقدًا"],
+    card: ["to your card", "إلى بطاقتك"],
+    other: ["", ""],
+  };
+  const h = how[method] ?? how.other;
+  return ar ? `أعدنا المبلغ ${h[1] ? `${h[1]} ` : ""}في الاستوديو.` : `We handed it back ${h[0] ? `${h[0]} ` : ""}at the studio.`;
+}
 type Table = { rows: [string, string][]; total: [string, string] };
 
 /** Invoice lines: "10 Classes × 1 · QAR 1,050", then the total. */
@@ -175,6 +190,34 @@ function content(template: EmailTemplate, p: Payload, ar: boolean, origin: strin
           : path
             ? { label: ar ? "اعرض الفاتورة" : "View invoice", url: `${origin}/${locale}${path}` }
             : undefined,
+      };
+    }
+    case "order.refunded": {
+      const path = str(p.orderPath);
+      const reason = str(p.reason).trim();
+      const credits = num(p.credits);
+      const money = fmtMoney(num(p.amount), locale);
+      const table = invoiceTable({ lines: p.lines, total: num(p.amount) }, ar);
+      return {
+        subject: ar ? `استرداد للطلب رقم ${num(p.orderNumber)}` : `Refund for order ${num(p.orderNumber)}`,
+        heading: p.full
+          ? ar
+            ? "تم استرداد طلبك."
+            : "Your order has been refunded."
+          : ar
+            ? "تم استرداد جزء من طلبك."
+            : "Part of your order has been refunded.",
+        lines: [
+          hi,
+          ar ? `أعدنا ${money} عن الطلب رقم ${num(p.orderNumber)}.` : `We've refunded ${money} on order ${num(p.orderNumber)}.`,
+          refundRoute(str(p.method), ar),
+          ...(credits > 0
+            ? [ar ? `أُزيلت ${credits} من الحصص غير المستخدمة من رصيدك.` : `${credits} unused ${credits === 1 ? "session was" : "sessions were"} taken off your balance.`]
+            : []),
+          ...(reason ? [ar ? `السبب: ${reason}` : `Reason: ${reason}`] : []),
+        ],
+        table: table ? { ...table, total: [ar ? "المبلغ المسترد" : "Refunded", money] as [string, string] } : undefined,
+        action: path ? { label: ar ? "اعرض الطلب" : "View order", url: `${origin}/${locale}${path}` } : undefined,
       };
     }
     case "order.awaiting": {

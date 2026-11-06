@@ -20,6 +20,7 @@ import {
   productClassTypes,
   productPrices,
   products,
+  refunds,
   stockMovements,
   users,
 } from "../db/schema";
@@ -42,7 +43,12 @@ export type CheckoutErrorCode =
   | "not_payable"
   | "not_paid"
   | "cart_empty"
-  | "not_cancellable";
+  | "not_cancellable"
+  | "not_refundable"
+  | "refund_too_much"
+  | "refund_in_progress"
+  | "refund_failed"
+  | "item_refunded";
 
 export class CheckoutProblem extends Error {
   constructor(
@@ -57,6 +63,10 @@ export class CheckoutProblem extends Error {
 export type PayMethod = "online" | "at_studio";
 export type DeskMethod = "cash" | "card" | "other";
 const OPEN = ["pending", "awaiting_payment", "failed"] as const;
+/** Still waiting for money (worth re-checking with SkipCash). Paid and refunded orders are settled. */
+export const isOpenStatus = (status: string) => (OPEN as readonly string[]).includes(status);
+/** Paid, possibly with part of it given back: still counts as a sale, shop items can still be handed over. */
+const SETTLED = ["paid", "partially_refunded"] as const;
 /** Phone-only walk-ins registered at the desk get a placeholder address: never shown, printed or emailed. */
 const realEmail = (email: string | null | undefined) => (email && !email.endsWith("@walk-in.bungeefly.invalid") ? email : "");
 
@@ -849,14 +859,21 @@ export async function switchToStudio(db: Database, orderId: string) {
 /** Front desk: a paid shop item was handed to the customer (collected at the order's studio). Idempotent. */
 export async function handOverItem(db: Database, input: { orderId: string; itemId: string; now?: Date }) {
   const [row] = await db
-    .select({ status: orders.status, type: products.type, fulfilledAt: orderItems.fulfilledAt })
+    .select({
+      status: orders.status,
+      type: products.type,
+      fulfilledAt: orderItems.fulfilledAt,
+      quantity: orderItems.quantity,
+      refundedQuantity: orderItems.refundedQuantity,
+    })
     .from(orderItems)
     .innerJoin(orders, eq(orders.id, orderItems.orderId))
     .leftJoin(products, eq(products.id, orderItems.productId))
     .where(and(eq(orderItems.id, input.itemId), eq(orderItems.orderId, input.orderId)));
   if (!row) throw new CheckoutProblem("not_found");
   if (row.type !== "retail") throw new CheckoutProblem("not_payable");
-  if (row.status !== "paid") throw new CheckoutProblem("not_paid");
+  if (!(SETTLED as readonly string[]).includes(row.status)) throw new CheckoutProblem("not_paid");
+  if (row.refundedQuantity >= row.quantity) throw new CheckoutProblem("item_refunded");
   if (row.fulfilledAt) return row.fulfilledAt;
   const at = input.now ?? new Date();
   await db.update(orderItems).set({ fulfilledAt: at }).where(eq(orderItems.id, input.itemId));
@@ -913,11 +930,18 @@ export async function getOrderView(db: Database, orderId: string) {
     .leftJoin(branches, eq(branches.id, orders.branchId))
     .where(eq(orders.id, orderId));
   if (!o) return null;
-  const [items, pays, inv, booking] = await Promise.all([
+  const [items, pays, inv, booking, refundRows] = await Promise.all([
     db
-      .select({ ...getTableColumns(orderItems), type: products.type })
+      .select({
+        ...getTableColumns(orderItems),
+        type: products.type,
+        // Class packs: sessions still unused on the pack this line bought (what a refund can take back).
+        packLeft: customerPackages.creditsRemaining,
+        packTotal: customerPackages.creditsTotal,
+      })
       .from(orderItems)
       .leftJoin(products, eq(products.id, orderItems.productId))
+      .leftJoin(customerPackages, eq(customerPackages.orderItemId, orderItems.id))
       .where(eq(orderItems.orderId, orderId))
       .orderBy(asc(orderItems.nameEn)),
     db
@@ -954,6 +978,23 @@ export async function getOrderView(db: Database, orderId: string) {
       .where(eq(bookings.orderId, orderId))
       .orderBy(desc(bookings.createdAt))
       .limit(1),
+    db
+      .select({
+        id: refunds.id,
+        amount: refunds.amount,
+        method: refunds.method,
+        status: refunds.status,
+        reason: refunds.reason,
+        lines: refunds.lines,
+        restock: refunds.restock,
+        error: refunds.error,
+        createdAt: refunds.createdAt,
+        staff: users.name,
+      })
+      .from(refunds)
+      .leftJoin(users, eq(users.id, refunds.actorUserId))
+      .where(eq(refunds.orderId, orderId))
+      .orderBy(desc(refunds.createdAt)),
   ]);
   return {
     ...o.order,
@@ -963,15 +1004,20 @@ export async function getOrderView(db: Database, orderId: string) {
     payments: pays,
     invoice: inv[0] ?? null,
     booking: booking[0] ?? null,
+    refunds: refundRows.map((r) => ({
+      ...r,
+      lines: (Array.isArray(r.lines) ? r.lines : []) as { itemId: string; quantity: number; amount: number; nameEn: string; nameAr: string }[],
+    })),
   };
 }
 export type OrderView = NonNullable<Awaited<ReturnType<typeof getOrderView>>>;
 
 /** What the customer sees: one clear state (R5). */
 export function customerState(o: Pick<OrderView, "status" | "paymentMethod">) {
-  if (o.status === "paid") return "paid" as const;
+  if (o.status === "paid" || o.status === "partially_refunded") return "paid" as const;
+  if (o.status === "refunded") return "refunded" as const;
   if (o.status === "failed") return "failed" as const;
-  if (o.status === "cancelled" || o.status === "refunded" || o.status === "partially_refunded") return "cancelled" as const;
+  if (o.status === "cancelled") return "cancelled" as const;
   return o.paymentMethod === "at_studio" ? ("at_studio" as const) : ("pending" as const);
 }
 
@@ -988,13 +1034,13 @@ export async function listOrders(
     filter.view === "open"
       ? inArray(orders.status, [...OPEN])
       : filter.view === "paid"
-        ? eq(orders.status, "paid")
+        ? inArray(orders.status, [...SETTLED])
         : filter.view === "collect"
-          ? // Paid, with a shop item still waiting at the desk.
+          ? // Paid, with a shop item still waiting at the desk (and not refunded).
             and(
-              eq(orders.status, "paid"),
+              inArray(orders.status, [...SETTLED]),
               sql`exists (select 1 from order_items oi join products p on p.id = oi.product_id
-                where oi.order_id = ${orders.id} and p.type = 'retail' and oi.fulfilled_at is null)`,
+                where oi.order_id = ${orders.id} and p.type = 'retail' and oi.fulfilled_at is null and oi.quantity > oi.refunded_quantity)`,
             )
           : undefined,
     q
@@ -1012,6 +1058,7 @@ export async function listOrders(
       total: orders.total,
       createdAt: orders.createdAt,
       paidAt: orders.paidAt,
+      refundedAmount: orders.refundedAmount,
       name: users.name,
       email: users.email,
       phone: users.phone,

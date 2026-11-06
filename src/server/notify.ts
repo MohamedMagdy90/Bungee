@@ -12,7 +12,8 @@ export type EmailTemplate =
   | "booking.promoted"
   | "booking.cancelled"
   | "order.paid"
-  | "order.awaiting";
+  | "order.awaiting"
+  | "order.refunded";
 
 /**
  * Writes an email to the transactional outbox (same transaction as the business change when `db` is a

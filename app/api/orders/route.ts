@@ -8,6 +8,7 @@ import {
   cancelOrder,
   customerState,
   getOrderView,
+  isOpenStatus,
   startSkipCashPayment,
   switchToStudio,
   syncOrderPayments,
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     const id = z.uuid().safeParse(url.searchParams.get("id"));
     if (!id.success) throw new HttpError(400, "bad_request");
     const { db, order } = await authorise(id.data, url.searchParams.get("s"));
-    if (order.status !== "paid") await syncOrderPayments(db, order.id);
+    if (isOpenStatus(order.status)) await syncOrderPayments(db, order.id);
     const fresh = (await getOrderView(db, order.id)) ?? order;
     return NextResponse.json(
       { state: customerState(fresh), status: fresh.status, bookingStatus: fresh.booking?.status ?? null },
