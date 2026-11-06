@@ -552,7 +552,8 @@ async function UpNext({
           {upcoming.map((s) => {
             const live = !tomorrow && new Date(s.startsAt) <= now;
             return (
-              <li key={s.id}>
+              // Phones show the next three; the full list is one tap away in the schedule.
+              <li key={s.id} className="max-sm:[&:nth-child(n+4)]:hidden">
                 <Link
                   href={`/admin/schedule?session=${s.id}`}
                   className="group flex h-full flex-col rounded-lg border border-navy/10 p-4 transition-colors hover:border-navy/35"
@@ -564,9 +565,7 @@ async function UpNext({
                         <span className="size-1.5 animate-pulse rounded-pill bg-[#0E8A8A]" aria-hidden="true" />
                         {t("upNext.live")}
                       </span>
-                    ) : tomorrow ? (
-                      <span className="text-[0.75rem] text-steel">{t("upNext.tomorrow")}</span>
-                    ) : (
+                    ) : tomorrow ? null : (
                       <span className="text-[0.75rem] text-steel">{startsIn(new Date(s.startsAt).getTime() - now.getTime())}</span>
                     )}
                   </span>

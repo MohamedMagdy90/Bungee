@@ -103,9 +103,14 @@
   top classes / items; sales mix; studios + coaches tables; needs-attention (gated per permission). No menu cards.
 - seed-history.ts (once, sample data only, marker in settings): 48 customers, real bookings 6 weeks back + 2 ahead,
   check-ins, no-shows, waitlists, pack + shop orders; booked_count recomputed from real rows
-- [ ] Deploy + test each role live (create admin/manager/desk/coach via Team), screenshots EN/AR/phone
-- [ ] Studio scope for orders list / new order / timetable / locations / stock actions (overview + schedule done)
-- [ ] Audit fixes found: timetable "1 places" plural, hero button /timetable 404, "Pick one on the left" in RTL
+- [x] Deployed + tested live (Nov 6): roles.js 51/53 (2 = test counted "reports" as a menu item) + scope.js 8/8.
+  Test accounts admin./manager./desk./coach.test@bungeefly.local (passwords in /root/.role-test-pass on the server);
+  test scripts + Playwright in /opt/shots (shot.js, roles.js, scope.js). Better Auth sign-in limit 3/10 s: space sign-ins 11 s
+- [x] Studio scope: orders (own + studio-less; detail/actions 404 elsewhere; New order own studios), timetable
+  (scopeTimetable + studioOf guard), stock actions + low-stock level (own studio), locations (own, no new)
+- [x] Audit fixes: plural places, "Pick one from the list"; hero /timetable already maps to #timetable (not a bug);
+  same-runtime/react-grab scripts now dev-only (were on the live site)
+- [ ] Next: walk the other admin screens (orders, customers, classes, products, website, media) per role, EN/AR/phone
 ## Open questions for client
 - Email provider (Resend / Postmark / SES / SMTP)? SkipCash sandbox credentials? "Stackable" = stockable retail (assumed)
 ## Phase 2 — Customer app (in progress)

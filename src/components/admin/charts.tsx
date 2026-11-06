@@ -54,11 +54,11 @@ export function Kpi({
   const positive = delta && delta.tone !== "flat" && delta.tone === good;
   return (
     <div className="lift min-w-0 rounded-xl border border-navy/10 bg-white p-4 sm:p-5">
-      <p className="truncate text-meta text-steel">{label}</p>
-      <p className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 leading-none">
-        <span className="tabular whitespace-nowrap text-[1.75rem] font-semibold tracking-tight sm:text-[2rem]">{value}</span>
-        {unit && <span className="text-meta font-semibold text-steel">{unit}</span>}
+      <p className="flex items-baseline justify-between gap-2 text-meta text-steel">
+        <span className="truncate">{label}</span>
+        {unit && <span className="shrink-0 text-[0.6875rem] font-semibold tracking-[0.08em] rtl:tracking-normal">{unit}</span>}
       </p>
+      <p className="tabular mt-1.5 whitespace-nowrap text-[1.75rem] font-semibold leading-none tracking-tight sm:text-[2rem]">{value}</p>
       <div className="mt-2 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem]">
         {delta && (
           <span
