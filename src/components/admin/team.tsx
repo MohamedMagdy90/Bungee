@@ -620,7 +620,21 @@ function MemberEditor({
             </button>
           )}
         </div>
-        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_15rem]">
+        <div className="space-y-5">
+          {/* Live preview of their menu, kept above the switches so every change shows at once. */}
+          <aside aria-label={t("access.previewTitle")} aria-live="polite" className="rounded-lg bg-navy px-4 py-3.5 text-ice">
+            <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <span className="label-caps text-aqua">{t("access.previewTitle")}</span>
+              <span className="text-[0.75rem] text-ice/60">{t("access.previewHint")}</span>
+            </p>
+            <ul className="mt-2.5 flex flex-wrap gap-1.5">
+              {menuPreview.map((i) => (
+                <li key={i.key} className="rounded-pill bg-ice/[0.1] px-2.5 py-1 text-[0.75rem] font-medium text-ice/90">
+                  {i.label}
+                </li>
+              ))}
+            </ul>
+          </aside>
           <div className="space-y-5">
             {PERMISSION_GROUPS.map((g) => (
               <fieldset key={g.key}>
@@ -676,17 +690,6 @@ function MemberEditor({
               </fieldset>
             ))}
           </div>
-          <aside aria-label={t("access.previewTitle")} className="self-start rounded-lg bg-navy p-4 text-ice 2xl:sticky 2xl:top-6">
-            <p className="label-caps text-aqua">{t("access.previewTitle")}</p>
-            <p className="mt-1 text-[0.75rem] text-ice/60 text-pretty">{t("access.previewHint")}</p>
-            <ul className="mt-3 space-y-0.5">
-              {menuPreview.map((i) => (
-                <li key={i.key} className="rounded-md px-2.5 py-1.5 text-meta text-ice/85">
-                  {i.label}
-                </li>
-              ))}
-            </ul>
-          </aside>
         </div>
       </Section>
 
