@@ -501,7 +501,9 @@ export async function listCategoriesAdmin(db: Database): Promise<CategoryView[]>
   const rows = await db
     .select({
       category: productCategories,
-      items: sql<number>`(select count(*)::int from ${products} where ${products.categoryId} = ${productCategories.id})`,
+      // Explicit aliases: in a single-table select drizzle leaves columns unqualified, which would make
+      // "id" inside the subquery mean products.id.
+      items: sql<number>`(select count(*)::int from products p where p.category_id = product_categories.id)`,
     })
     .from(productCategories)
     .orderBy(asc(productCategories.sortOrder), asc(productCategories.nameEn));
