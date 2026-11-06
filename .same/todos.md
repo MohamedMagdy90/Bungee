@@ -186,11 +186,23 @@
 - [x] kit: MasterDetail grid-cols-[minmax(0,1fr)] (phone overflow), initials for missing photos, selectClass/selectStyle
       (chevron on the left in Arabic), NumberInput unit opposite the number in Arabic, Segmented tabs content-sized
 - [x] Per-list counts (classes, coaches, studios, packs, aisles, shop items, questions); low stock in the shop row meta
-- [ ] Verify retakes (audit2.sh) after deploy; full-page shots faded = entry animation (shot.js now freezes animations)
+- [x] Verified retakes (audit2.sh, frozen animations): faded/missing lists were capture artifacts; all fixes OK EN/AR/phone
+- [x] Retake polish (ea8f3a7): EditorCard title flex-[1_1_14rem] (actions wrap below, name stays one line); phone booking
+      row status + Cancel on one line; profile order rows grid; email box break-all; aisle filter selectClass;
+      ledger renamed "Sessions added and used"
+- [ ] Not yet walked: website/media/locations/timetable/team retakes; Arabic #timetable bidi in website hints (minor)
+## Batch Nov 6 night (user picked 3)
+- [ ] A Re-shoot Homepage & FAQs, Images & videos, Locations, Timetable, Team (EN / AR / phone) + fix findings
+- [ ] B Front desk can receive stock (own studios) + desk "New order" with several shop items (qty) in one order
+- [ ] C Refunds: staff refund (full / per line), stock goes back, SkipCash refund when paid online, refund email EN/AR
 - Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo
   (https://github.com/MohamedMagdy90/Bungee.git); commit with GIT_AUTHOR_*/GIT_COMMITTER_* env (AmrDNAERP), never
   git config. Push needs the user to re-auth gh. Backup: git bundle -> /root/bungee-fly.bundle on the droplet.
 - A dev server auto-started after the restart: kill it (pkill -f "next dev") before tsc/builds.
+- Restart #2 21:17: restore .git from the droplet bundle (has unpushed commits), then fix remote refs:
+  bash deploy/push.sh run 'cat /root/bungee-fly.bundle' > /tmp/bf.bundle; git clone -q --no-checkout /tmp/bf.bundle /tmp/g;
+  mv /tmp/g/.git .; git reset -q; git remote set-url origin https://github.com/MohamedMagdy90/Bungee.git; git fetch origin
+  Refresh the bundle after EVERY commit (git bundle create /tmp/bf.bundle --all; push.sh run 'cat > /root/...' < it)
 ## Phase 3 — Admin
 - [ ] Walk-in registration (R8), QR check-in (R3), branches/schedule/products/stock (R9, R11)
 - [ ] Branches (locations, hours, map, gallery), media library uploads (Spaces presigned)
