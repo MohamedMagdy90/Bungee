@@ -23,7 +23,7 @@ import {
 import { audit, refreshSite } from "@/server/admin/common";
 import { getDb } from "@/server/db";
 import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } from "@/server/http";
-import { inScope } from "@/server/staff";
+import { can, inScope } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
 
@@ -35,16 +35,26 @@ export const dynamic = "force-dynamic";
  *   ?categories=1                       → { categories }
  *   ?history=<productId>                → { movements }
  *   ?export=csv | template              → spreadsheet download
+ *
+ * People with "stock" but not "catalog" (front desk) only get the Stock screen's reads: shop items (counted
+ * stock, low / out at their studios), one shop item, and its history.
  */
 export async function GET(request: Request) {
   try {
-    await requireStaff("catalog");
+    const user = await requireStaff(["catalog", "stock"]);
+    const full = can(user, "catalog");
     const db = await getDb();
     const sp = new URL(request.url).searchParams;
     const history = sp.get("history");
     if (history) return NextResponse.json({ movements: await stockHistory(db, z.uuid().parse(history)) }, { headers: noStore });
     const id = sp.get("id");
-    if (id) return NextResponse.json({ product: await getProduct(db, z.uuid().parse(id)) }, { headers: noStore });
+    if (id) {
+      const product = await getProduct(db, z.uuid().parse(id));
+      if (!full && product.type !== "retail") throw new HttpError(404, "not_found");
+      return NextResponse.json({ product }, { headers: noStore });
+    }
+    const desk = !full || sp.get("desk") === "1";
+    if (!full && sp.get("kind") !== "shop") throw new HttpError(403, "forbidden");
     if (sp.get("categories")) return NextResponse.json({ categories: await listCategoriesAdmin(db) }, { headers: noStore });
     const exp = sp.get("export");
     if (exp === "csv" || exp === "template") {
@@ -65,7 +75,8 @@ export async function GET(request: Request) {
         filter: sp.get("filter") ?? undefined,
         page: sp.get("page") ?? undefined,
       });
-      return NextResponse.json(await listShopAdmin(db, query), { headers: noStore });
+      const opts = desk ? { trackedOnly: true, branchIds: user.branchIds } : {};
+      return NextResponse.json(await listShopAdmin(db, query, opts), { headers: noStore });
     }
     return NextResponse.json({ products: await listPacks(db) }, { headers: noStore });
   } catch (error) {
@@ -79,15 +90,17 @@ export async function GET(request: Request) {
  *   stock | threshold                   shop stock (answers with { product, movements? })
  *   category_save | category_delete     aisles (answers with { categories })
  *   import { csv, dryRun }              spreadsheet → { result }
+ * "stock" holders (front desk) may only do stock | threshold, at their own studios.
  */
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const user = await requireStaff("catalog");
+    const user = await requireStaff(["catalog", "stock"]);
     const raw = (await request.json()) as Record<string, unknown>;
     const action = z
       .enum(["save", "delete", "stock", "threshold", "category_save", "category_delete", "import"])
       .parse(raw.action);
+    if (action !== "stock" && action !== "threshold" && !can(user, "catalog")) throw new HttpError(403, "forbidden");
     const db = await getDb();
 
     if (action === "save") {

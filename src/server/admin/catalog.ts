@@ -194,14 +194,32 @@ export const ShopListQuery = z.object({
 });
 export type ShopListQueryValue = z.infer<typeof ShopListQuery>;
 
-/** Shop items for the desk: searched, filtered and paged in the database (thousands of items are fine). */
-export async function listShopAdmin(db: Database, query: ShopListQueryValue) {
+/**
+ * Shop items for the desk: searched, filtered and paged in the database (thousands of items are fine).
+ * The Stock screen passes `trackedOnly` (only items whose stock is counted) and the person's studios, so
+ * "Running low" / "Sold out" mean low or out at THEIR studios.
+ */
+export async function listShopAdmin(
+  db: Database,
+  query: ShopListQueryValue,
+  opts: { trackedOnly?: boolean; branchIds?: string[] | null } = {},
+) {
   const like = query.q ? `%${query.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
+  const ids = opts.branchIds ?? null;
+  const inStudios = ids
+    ? ids.length
+      ? sql` and bs.branch_id in (${sql.join(
+          ids.map((id) => sql`${id}::uuid`),
+          sql`, `,
+        )})`
+      : sql` and false`
+    : sql``;
   const lowish = sql`exists (select 1 from ${branchStock} bs join ${branches} b on b.id = bs.branch_id
-      where bs.product_id = ${products.id} and b.is_active and bs.quantity <= bs.low_stock_threshold)`;
-  const outEverywhere = sql`not exists (select 1 from ${branchStock} bs where bs.product_id = ${products.id} and bs.quantity > 0)`;
+      where bs.product_id = ${products.id} and b.is_active and bs.quantity <= bs.low_stock_threshold${inStudios})`;
+  const outEverywhere = sql`not exists (select 1 from ${branchStock} bs where bs.product_id = ${products.id} and bs.quantity > 0${inStudios})`;
   const where = and(
     eq(products.type, "retail"),
+    opts.trackedOnly ? eq(products.trackStock, true) : undefined,
     like ? or(ilike(products.nameEn, like), ilike(products.nameAr, like), ilike(products.sku, like), ilike(products.slug, like)) : undefined,
     query.cat === "none" ? isNull(products.categoryId) : query.cat && /^[0-9a-f-]{36}$/i.test(query.cat) ? eq(products.categoryId, query.cat) : undefined,
     query.filter === "low" ? and(eq(products.trackStock, true), lowish) : undefined,

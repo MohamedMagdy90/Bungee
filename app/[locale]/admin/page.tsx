@@ -473,7 +473,7 @@ const ATTENTION: { key: keyof Awaited<ReturnType<typeof attentionFor>>; perm: Pe
   { key: "toCollect", perm: "orders", href: "/admin/orders?view=collect" },
   { key: "waitlists", perm: "schedule", href: "/admin/schedule" },
   { key: "noCoach", perm: "timetable", href: "/admin/timetable?tab=upcoming" },
-  { key: "lowStock", perm: "catalog", href: "/admin/products?tab=shop" },
+  { key: "lowStock", perm: "stock", href: "/admin/stock?filter=low" },
   { key: "expiringPacks", perm: "customers", href: "/admin/customers?filter=active" },
 ];
 
