@@ -6,6 +6,8 @@ import {
   deleteSlot,
   getTimetable,
   reinstateSession,
+  scopeTimetable,
+  studioOf,
   SessionInput,
   SlotInput,
   saveSlot,
@@ -13,14 +15,15 @@ import {
 } from "@/server/admin/timetable";
 import { getDb } from "@/server/db";
 import { assertSameOrigin, errorResponse, HttpError, noStore, requireStaff } from "@/server/http";
+import { inScope } from "@/server/staff";
 
 export const dynamic = "force-dynamic";
 
 /** GET /api/admin/timetable → { slots, sessions (next 14 days, all studios), today } */
 export async function GET() {
   try {
-    await requireStaff("timetable");
-    return NextResponse.json(await getTimetable(await getDb()), { headers: noStore });
+    const staff = await requireStaff("timetable");
+    return NextResponse.json(scopeTimetable(await getTimetable(await getDb()), staff.branchIds), { headers: noStore });
   } catch (error) {
     return errorResponse(error);
   }
@@ -44,7 +47,12 @@ export async function POST(request: Request) {
     const id = raw.id === undefined || raw.id === null ? null : z.uuid().parse(raw.id);
     const db = await getDb();
     let extra: Record<string, unknown> = {};
-
+    // Studio-scoped staff only change their own studios' slots and classes (and can't move a slot elsewhere).
+    if (user.branchIds !== null) {
+      const own = id ? await studioOf(db, action === "saveSlot" || action === "deleteSlot" ? "slot" : "session", id) : null;
+      if (id && (!own || !inScope(user, own))) throw new HttpError(404, "not_found");
+      if (action === "saveSlot" && !inScope(user, SlotInput.parse(raw).branchId)) throw new HttpError(403, "forbidden");
+    }
     if (action === "saveSlot") {
       const { id: savedId, report } = await saveSlot(db, id, SlotInput.parse(raw));
       await audit(db, user.id, id ? "update" : "create", "schedule_template", savedId, null, raw);
@@ -68,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     refreshSite("schedule", "home");
-    return NextResponse.json({ ...extra, timetable: await getTimetable(db) }, { headers: noStore });
+    return NextResponse.json({ ...extra, timetable: scopeTimetable(await getTimetable(db), user.branchIds) }, { headers: noStore });
   } catch (error) {
     return errorResponse(error);
   }

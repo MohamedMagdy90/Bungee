@@ -1,14 +1,16 @@
-import { asc } from "drizzle-orm";
+import { asc, inArray } from "drizzle-orm";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Denied, staffGate } from "@/components/admin/gate";
 import { TimetableManager } from "@/components/admin/timetable";
-import { getTimetable, SESSION_WINDOW_DAYS } from "@/server/admin/timetable";
+import { getTimetable, SESSION_WINDOW_DAYS, scopeTimetable } from "@/server/admin/timetable";
 import { getDb } from "@/server/db";
 import { branches, classTypes, coaches } from "@/server/db/schema";
 import { materializeSessions } from "@/server/schedule/materialize";
 
 export const dynamic = "force-dynamic";
+/** Placeholder id for "no studio": an empty IN () list is invalid SQL. */
+const NO_STUDIO = "00000000-0000-0000-0000-000000000000";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -37,10 +39,11 @@ export default async function AdminTimetablePage({ params, searchParams }: Props
     console.warn("[timetable] materialize failed", error),
   );
   const [view, branchRows, typeRows, coachRows] = await Promise.all([
-    getTimetable(db),
+    getTimetable(db).then((v) => scopeTimetable(v, staff.branchIds)),
     db
       .select({ id: branches.id, nameEn: branches.nameEn, nameAr: branches.nameAr })
       .from(branches)
+      .where(staff.branchIds ? inArray(branches.id, staff.branchIds.length ? staff.branchIds : [NO_STUDIO]) : undefined)
       .orderBy(asc(branches.sortOrder)),
     db
       .select({

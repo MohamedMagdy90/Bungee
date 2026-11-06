@@ -72,6 +72,28 @@ export const SessionInput = z.object({
   notes: z.string().trim().max(500).nullable(),
 });
 
+/** The timetable limited to some studios (studio-scoped staff); null = every studio. */
+export function scopeTimetable<T extends { slots: { branchId: string }[]; sessions: { branchId: string }[] }>(
+  view: T,
+  branchIds: string[] | null,
+): T {
+  if (branchIds === null) return view;
+  return {
+    ...view,
+    slots: view.slots.filter((s) => branchIds.includes(s.branchId)),
+    sessions: view.sessions.filter((s) => branchIds.includes(s.branchId)),
+  };
+}
+
+/** Which studio a weekly slot or a dated class belongs to (null when it doesn't exist). */
+export async function studioOf(db: Database, kind: "slot" | "session", id: string): Promise<string | null> {
+  const [row] =
+    kind === "slot"
+      ? await db.select({ branchId: scheduleTemplates.branchId }).from(scheduleTemplates).where(eq(scheduleTemplates.id, id))
+      : await db.select({ branchId: classSessions.branchId }).from(classSessions).where(eq(classSessions.id, id));
+  return row?.branchId ?? null;
+}
+
 export async function getTimetable(db: Database, now = new Date()): Promise<TimetableView> {
   const today = zonedDateKey(now, STUDIO_TZ);
   const from = zonedToUtc(today, "00:00", STUDIO_TZ);
