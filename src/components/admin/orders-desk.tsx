@@ -1395,16 +1395,21 @@ function RefundPanel({
           const q = qty[i.id] ?? 0;
           const on = q > 0;
           const name = pick(locale, i.nameEn, i.nameAr);
-          const packShort = i.type === "class_pack" && !!i.packTotal && (i.packLeft ?? 0) < (i.credits ?? 0) * Math.max(q, 1);
+          // Sessions booked on classes still to come come back when the whole pack is refunded (the classes go).
+          const booked = q >= left ? (i.upcoming ?? []).filter((u) => u.status === "booked").length : 0;
+          const packShort =
+            i.type === "class_pack" && !!i.packTotal && (i.packLeft ?? 0) + booked < (i.credits ?? 0) * Math.max(q, 1);
           const hint =
             i.type === "retail"
               ? i.fulfilledAt
                 ? t("orders.refund.handedOver")
                 : t("orders.refund.notHandedOver")
               : i.type === "class_pack" && i.packTotal
-                ? packShort
-                  ? t("orders.refund.sessionsUsed", { left: i.packLeft ?? 0, total: i.packTotal })
-                  : t("orders.refund.sessions", { left: i.packLeft ?? 0, total: i.packTotal })
+                ? booked > 0
+                  ? t("orders.refund.sessionsBooked", { left: i.packLeft ?? 0, total: i.packTotal, booked })
+                  : packShort
+                    ? t("orders.refund.sessionsUsed", { left: i.packLeft ?? 0, total: i.packTotal })
+                    : t("orders.refund.sessions", { left: i.packLeft ?? 0, total: i.packTotal })
                 : null;
           return (
             <li key={i.id} className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition-colors", !on && "bg-mist/50")}>

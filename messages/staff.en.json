@@ -292,7 +292,8 @@
         "processingHint": "Sent to SkipCash, waiting for the result. Check in SkipCash before trying again.",
         "cancelsTitle": "{count, plural, one {This also cancels # upcoming class} other {This also cancels # upcoming classes}}",
         "cancelsHint": "They were paid with this pack. The spots open up for others (the waitlist moves up) and the refund email tells the customer.",
-        "waitlisted": "on the waitlist"
+        "waitlisted": "on the waitlist",
+        "sessionsBooked": "{left} of {total} sessions unused, {booked} booked on upcoming classes (cancelled with this refund)"
       }
     },
     "integrations": {
