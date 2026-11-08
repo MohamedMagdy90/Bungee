@@ -263,6 +263,10 @@
   - [x] G12 Phone schedule header "Sunday 8 Novem…" -> short date on phones
   - [x] G13 Aisle initials "G&" for "Grip & socks" -> initials skip tokens without letters
 - [ ] Polish idea (not a bug): coach overview Next class card stretches to the Today list height (empty area)
+## Batch Nov 8 #3 (user picked: walk the customer side)
+- [~] H Walk shop, cart, checkout, order page, account, ticket (+ sign-in/up) EN/AR/phone as customer.test@bungeefly.local
+      Script .tmp-tests/cust.js -> /opt/shots/cust.js (setup once via real APIs, ids in /opt/shots/cust-state.json;
+      run: cd /opt/shots; set -a; . /etc/bungee-fly/env; set +a; nohup node cust.js k [out,en,ar,ph-en,ph-ar] > cust.log)
 - Killed a skip2.js stuck 37 h on the server (Playwright left running eats RAM on the 2 GB droplet): check pgrep node
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
