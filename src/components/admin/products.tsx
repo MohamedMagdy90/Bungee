@@ -371,11 +371,14 @@ function ProductEditor({
                   <label
                     key={c.id}
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-md border px-3.5 py-2.5 transition-colors",
+                      "relative flex cursor-pointer items-center gap-3 rounded-md border px-3.5 py-2.5 transition-colors",
                       on ? "border-navy bg-navy/[0.04]" : "border-navy/15 hover:border-navy/35",
                     )}
                   >
-                    <input type="checkbox" checked={on} onChange={() => toggleClass(c.id)} className="size-4 accent-[#0B1F33]" />
+                    <input type="checkbox" checked={on} onChange={() => toggleClass(c.id)} className="peer sr-only" />
+                    <span aria-hidden="true" className={cn("grid size-5 shrink-0 place-items-center rounded-[5px] border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-orange peer-focus-visible:ring-offset-2", on ? "border-navy bg-navy text-ice" : "border-navy/30 bg-white")}>
+                      {on && <CheckIcon size={12} />}
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-body font-medium">{name(c.nameEn, c.nameAr)}</span>
                       <span className="block truncate text-meta text-steel">
@@ -630,6 +633,12 @@ function ThresholdField({
  * `editable` = the studios this person may change (null = all); the other studios' cards are view only.
  * Used by Packs & shop and by the front desk Stock screen (which passes its own `heading`).
  */
+const SYSTEM_STOCK_NOTES: Record<string, "opening" | "import" | "openingImport"> = {
+  "Opening stock": "opening",
+  "Spreadsheet import": "import",
+  "Opening stock (spreadsheet import)": "openingImport",
+};
+
 export function StockPanel({
   item,
   studios,
@@ -716,6 +725,11 @@ export function StockPanel({
   const shown = (movements ?? []).filter((m) => !filter || m.branchId === filter);
   const reasonLabel = (m: StockMovementView) =>
     m.reason === "transfer" ? t(m.delta < 0 ? "reasons.transferOut" : "reasons.transferIn") : t(`reasons.${m.reason}`);
+  /** Notes the system writes itself (sample data, spreadsheet import) read in the desk's language; staff notes stay as typed. */
+  const noteText = (note: string) => {
+    const key = SYSTEM_STOCK_NOTES[note];
+    return key ? t(`systemNotes.${key}`) : note;
+  };
 
   return (
     <section className="lift overflow-hidden rounded-xl border border-navy/10 bg-white" aria-labelledby="stock-title">
@@ -936,7 +950,7 @@ export function StockPanel({
                             {t("order", { number: m.orderNumber })}
                           </Link>
                         ) : null,
-                        m.note ? <span key="note">{m.note}</span> : null,
+                        m.note ? <span key="note">{noteText(m.note)}</span> : null,
                         m.actor ? <span key="actor">{t("by", { name: m.actor })}</span> : null,
                       ]
                         .filter(Boolean)

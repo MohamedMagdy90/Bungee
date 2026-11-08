@@ -72,6 +72,10 @@ export function fmtMonthShort(iso: string | Date, locale: string, timeZone = STU
   );
 }
 
+/** Separator between list items: the Arabic comma in Arabic. */
+export function listSep(locale: string) {
+  return locale === "ar" ? "، " : ", ";
+}
 /** Pick the active-language value of a bilingual field, falling back to English. */
 export function pick(locale: string, en: string, ar?: string | null) {
   return locale === "ar" && ar ? ar : en;

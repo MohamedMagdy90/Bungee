@@ -110,6 +110,7 @@ export type Classes = {
   capacity: number;
   attended: number;
   noShow: number;
+  prevClasses: number;
   prevBooked: number;
   prevCapacity: number;
   prevAttended: number;
@@ -136,9 +137,9 @@ export async function classesFor(db: Database, scope: Scope, r: Range, now = new
       sql`select ${day("cs.starts_at")} as day, count(*)::int as classes, sum(cs.booked_count)::int as booked, sum(cs.capacity)::int as capacity
           from class_sessions cs where ${where(r.from, end)} group by 1`,
     ),
-    rows<{ booked: number; capacity: number }>(
+    rows<{ classes: number; booked: number; capacity: number }>(
       db,
-      sql`select coalesce(sum(cs.booked_count), 0)::int as booked, coalesce(sum(cs.capacity), 0)::int as capacity
+      sql`select count(*)::int as classes, coalesce(sum(cs.booked_count), 0)::int as booked, coalesce(sum(cs.capacity), 0)::int as capacity
           from class_sessions cs where ${where(r.prevFrom, r.prevTo)}`,
     ),
     attendance(r.from, end),
@@ -165,6 +166,7 @@ export async function classesFor(db: Database, scope: Scope, r: Range, now = new
     capacity: byDay.reduce((s, d) => s + d.capacity, 0),
     attended: n(att?.attended),
     noShow: n(att?.no_show),
+    prevClasses: n(prev?.classes),
     prevBooked: n(prev?.booked),
     prevCapacity: n(prev?.capacity),
     prevAttended: n(prevAtt?.attended),

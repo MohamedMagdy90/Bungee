@@ -231,6 +231,7 @@ function initials(title: string) {
   return title
     .trim()
     .split(/\s+/)
+    .filter((w) => /[A-Za-z0-9\u00C0-\u024F\u0600-\u06FF]/.test(w))
     .slice(0, 2)
     .map((w) => Array.from(w)[0] ?? "")
     .join("")

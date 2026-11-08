@@ -379,7 +379,8 @@ function Chips({ label, items }: { label: string; items: { key: string; label: s
 function FillCell({ value, locale }: { value: number; locale: string }) {
   return (
     <span className="flex items-center gap-2">
-      <span className="w-12 shrink-0">
+      {/* the bar only from sm up: on phones the percentage alone keeps every column on screen */}
+      <span className="hidden w-12 shrink-0 sm:block">
         <Meter value={value} max={100} tone={value >= 85 ? "orange" : "navy"} />
       </span>
       <span className="tabular">{fmtNum(value, locale)}%</span>
@@ -389,8 +390,8 @@ function FillCell({ value, locale }: { value: number; locale: string }) {
 
 function Table({ head, rows }: { head: string[]; rows: { key: string; cells: React.ReactNode[] }[] }) {
   return (
-    <div className="-mx-1 overflow-x-auto">
-      <table className="w-full min-w-[28rem] text-meta">
+    <div className="relative -mx-1 overflow-x-auto">
+      <table className="w-full text-meta sm:min-w-[28rem]">
         <thead>
           <tr className="text-start text-[0.75rem] text-steel">
             {head.map((h, i) => (
@@ -716,7 +717,7 @@ async function CoachOverview({
                         <span className="block truncate text-[0.75rem] text-steel">{pick(locale, s.branchEn, s.branchAr)}</span>
                       </span>
                       <span className="tabular shrink-0 text-meta text-steel">
-                        {past ? t("coach.cameOf", { came: s.checkedIn, booked: s.booked }) : `${fmtNum(s.booked, locale)}/${fmtNum(s.capacity, locale)}`}
+                        {past ? (s.booked === 0 ? t("coach.noBookings") : t("coach.cameOf", { came: s.checkedIn, booked: s.booked })) : `${fmtNum(s.booked, locale)}/${fmtNum(s.capacity, locale)}`}
                       </span>
                     </Link>
                   </li>
@@ -735,8 +736,8 @@ async function CoachOverview({
         <span className="h-px flex-1 bg-navy/10" aria-hidden="true" />
       </h2>
       <div className="mt-4 grid max-w-[84rem] grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label={t("coach.kpi.classes")} value={fmtNum(stats.classes, locale)} sub={t(`vs.${period}`)} />
-        <Kpi label={t("coach.kpi.people")} value={fmtNum(stats.attended, locale)} delta={change(stats.attended, stats.prevAttended, locale, t("new"))} sub={t("coach.kpi.peopleSub")} />
+        <Kpi label={t("coach.kpi.classes")} value={fmtNum(stats.classes, locale)} delta={change(stats.classes, stats.prevClasses, locale, t("new"))} sub={t(`vs.${period}`)} />
+        <Kpi label={t("coach.kpi.people")} value={fmtNum(stats.attended, locale)} delta={change(stats.attended, stats.prevAttended, locale, t("new"))} sub={t(`vs.${period}`)} />
         <Kpi
           label={t("kpi.fill")}
           value={`${fmtNum(pct(stats.booked, stats.capacity), locale)}%`}

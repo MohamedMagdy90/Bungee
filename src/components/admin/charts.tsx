@@ -149,7 +149,8 @@ export function Heatmap({
   const at = new Map(cells.map((c) => [`${c.weekday}-${c.hour}`, c]));
   return (
     <div>
-      <div className="overflow-x-auto">
+      {/* relative: the cells' sr-only labels are absolutely positioned; without it they escape the scroll box and widen the page */}
+      <div className="relative overflow-x-auto">
         <table className="w-full min-w-[30rem] table-fixed border-separate border-spacing-[3px] text-[0.6875rem]">
           <thead>
             <tr>
@@ -233,7 +234,7 @@ export function MixBar({ parts, empty }: { parts: { key: string; label: string; 
   if (total === 0) return <p className="rounded-lg bg-navy/[0.03] px-4 py-6 text-center text-meta text-steel">{empty}</p>;
   return (
     <div>
-      <div className="flex h-3 overflow-hidden rounded-pill" role="img" aria-label={parts.map((p) => `${p.label} ${p.display}`).join(", ")}>
+      <div className="flex h-3 overflow-hidden rounded-pill" role="img" aria-label={parts.map((p) => `${p.label} ${p.display}`).join(" · ")}>
         {parts
           .filter((p) => p.value > 0)
           .map((p) => (

@@ -34,7 +34,7 @@ export default async function AdminLayout({
         role={staff.role}
         perms={staff.perms}
         coach={!!staff.coachId}
-        studios={await studioNames(staff.branchIds, locale)}
+        studios={staff.role === "coach" ? null : await studioNames(staff.branchIds, locale)}
       />
       <main className="flex min-w-0 flex-1 flex-col">{children}</main>
     </div>

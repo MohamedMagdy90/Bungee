@@ -680,13 +680,13 @@
         "yourNumbers": "Your classes · {period}",
         "kpi": {
           "classes": "Classes taught",
-          "people": "People coached",
-          "peopleSub": "checked in"
+          "people": "People checked in"
         },
         "regulars": "Your regulars",
         "regularsHint": "Who came to your classes most.",
         "noRegulars": "Regulars appear once people check in to your classes.",
-        "visits": "{count, plural, one {# visit} other {# visits}}"
+        "visits": "{count, plural, one {# visit} other {# visits}}",
+        "noBookings": "No bookings"
       }
     },
     "products": {
@@ -863,7 +863,12 @@
         "after": "{count} left",
         "warnAtValue": "Warn at {count}",
         "viewOnly": "View only",
-        "noStudio": "You aren't assigned to a studio, so you can look but not change stock. Ask an owner or administrator to add you to one in Team & access."
+        "noStudio": "You aren't assigned to a studio, so you can look but not change stock. Ask an owner or administrator to add you to one in Team & access.",
+        "systemNotes": {
+          "opening": "Opening stock",
+          "import": "Spreadsheet import",
+          "openingImport": "Opening stock (spreadsheet import)"
+        }
       },
       "list": {
         "allAisles": "All aisles",

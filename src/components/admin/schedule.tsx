@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowIcon, CalendarIcon, CheckIcon, ChevronEndIcon, InfoIcon, PhoneIcon, PinIcon, UsersIcon } from "@/components/brand/icons";
 import { STUDIO_TZ } from "@/lib/constants";
-import { fmtDayNum, fmtLongDate, fmtNum, fmtShortDate, fmtTime, fmtWeekdayShort, pick } from "@/lib/format";
+import { fmtDayNum, fmtLongDate, fmtMonthShort, fmtNum, fmtShortDate, fmtTime, fmtWeekdayShort, pick } from "@/lib/format";
 import { addDaysToKey, zonedDateKey, zonedToUtc } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { CalendarSession, RosterEntry } from "@/server/admin/schedule";
@@ -159,6 +159,10 @@ export function ScheduleBoard({
       ? t("weekOf", { start: fmtShortDate(zonedToUtc(days[0], "12:00", STUDIO_TZ), locale), end: fmtShortDate(zonedToUtc(days[6], "12:00", STUDIO_TZ), locale) })
       : fmtLongDate(zonedToUtc(date, "12:00", STUDIO_TZ), locale);
 
+  /** Phones: "Sun 8 Nov", so the date isn't cut off next to the arrows. */
+  const dayNoon = zonedToUtc(date, "12:00", STUDIO_TZ);
+  const shortLabel = `${fmtWeekdayShort(dayNoon, locale)} ${fmtDayNum(dayNoon, locale)} ${fmtMonthShort(dayNoon, locale)}`;
+
   const dayTotals = days.map((d) => {
     const list = (byDay.get(d) ?? []).filter((s) => s.status !== "cancelled");
     return { key: d, classes: list.length, booked: list.reduce((n, s) => n + s.booked, 0) };
@@ -208,7 +212,14 @@ export function ScheduleBoard({
             </button>
           </div>
           <h2 className="min-w-0 flex-1 truncate text-body-lg font-semibold" aria-live="polite">
-            {label}
+            {view === "week" ? (
+              label
+            ) : (
+              <>
+                <span className="sm:hidden">{shortLabel}</span>
+                <span className="hidden sm:inline">{label}</span>
+              </>
+            )}
             {loadingWeek && <span className="ms-2 text-meta font-normal text-steel">{t("loading")}</span>}
           </h2>
           <div className="flex flex-wrap items-center gap-2">
@@ -297,7 +308,7 @@ export function ScheduleBoard({
         </p>
       )}
 
-      <div className="mt-6 grid max-w-[84rem] gap-6 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start">
+      <div className={cn("mt-6 grid max-w-[84rem] gap-6 xl:items-start", (view === "day" || selected) && "xl:grid-cols-[minmax(0,1fr)_25rem]")}>
         <div className={cn(selected && "hidden xl:block")}>
           {view === "week" && (
             <div className="hidden gap-2 lg:grid lg:grid-cols-7">
@@ -349,7 +360,7 @@ export function ScheduleBoard({
           </div>
         </div>
 
-        <div className={cn(!selected && "hidden xl:block", "xl:sticky xl:top-6")}>
+        <div className={cn(!selected && (view === "week" ? "hidden" : "hidden xl:block"), "xl:sticky xl:top-6")}>
           {selected && roster ? (
             <RosterPanel
               roster={roster}
@@ -678,7 +689,7 @@ function RosterPanel({
                 {e.status === "attended" ? <CheckIcon size={15} /> : initials(e.name)}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-body font-medium">{e.name}</span>
+                <span dir="auto" className="block truncate text-body font-medium rtl:text-right">{e.name}</span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.75rem] text-steel">
                   {e.visitsBefore === 0 && (
                     <span className="rounded-pill bg-orange/[0.14] px-1.5 py-0.5 font-semibold text-orange-ember">{t("firstVisit")}</span>
@@ -722,7 +733,7 @@ function RosterPanel({
                 <span className="tabular grid size-6 place-items-center rounded-pill bg-navy/[0.07] text-[0.6875rem] font-semibold">
                   {fmtNum(e.waitlistPosition ?? i + 1, locale)}
                 </span>
-                <span className="truncate">{e.name}</span>
+                <span dir="auto" className="truncate">{e.name}</span>
                 {e.guardian && <span className="text-steel">· {t("childOf", { name: e.guardian })}</span>}
               </li>
             ))}

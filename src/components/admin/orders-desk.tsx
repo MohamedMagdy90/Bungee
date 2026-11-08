@@ -8,7 +8,7 @@ import { TicketQr } from "@/components/member/account-client";
 import { Notice } from "@/components/member/field";
 import { Button } from "@/components/ui/button";
 import { STUDIO_TZ } from "@/lib/constants";
-import { fmtLongDate, fmtMoney, fmtNum, fmtPhone, fmtShortDate, fmtTime, pick } from "@/lib/format";
+import { fmtLongDate, fmtMoney, fmtNum, fmtPhone, fmtShortDate, fmtTime, listSep, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DeskCatalog } from "@/server/payments/orders";
 import { type DeskCustomer, NewOrder } from "./new-order";
@@ -521,7 +521,7 @@ export function OrdersDesk({
                       <StatusChip status={r.status} method={r.paymentMethod} />
                     </span>
                     <span className="truncate text-meta text-steel">
-                      {r.items.map((i) => pick(locale, i.en, i.ar)).join(", ")}
+                      {r.items.map((i) => pick(locale, i.en, i.ar)).join(listSep(locale))}
                       {branch && ` · ${branch}`}
                       {" · "}
                       <span className="tabular">{when(r.createdAt, locale)}</span>
@@ -1154,7 +1154,7 @@ function OrderDetail({
                     </p>
                     {r.lines.length > 0 && (
                       <p className="mt-0.5 text-meta text-navy/80">
-                        {r.lines.map((l) => `${pick(locale, l.nameEn, l.nameAr)}${l.quantity > 1 ? ` × ${fmtNum(l.quantity, locale)}` : ""}`).join(", ")}
+                        {r.lines.map((l) => `${pick(locale, l.nameEn, l.nameAr)}${l.quantity > 1 ? ` × ${fmtNum(l.quantity, locale)}` : ""}`).join(listSep(locale))}
                       </p>
                     )}
                     {r.reason && <p className="mt-0.5 text-meta text-steel text-pretty">&ldquo;{r.reason}&rdquo;</p>}
@@ -1484,8 +1484,11 @@ function RefundPanel({
       </ul>
 
       {handedBack && (
-        <label className="mt-4 flex cursor-pointer items-start gap-3">
-          <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} className="mt-1 size-4 shrink-0 accent-[#0B1F33]" />
+        <label className="relative mt-4 flex cursor-pointer items-start gap-3">
+          <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} className="peer sr-only" />
+          <span aria-hidden="true" className={cn("mt-0.5 grid size-5 shrink-0 place-items-center rounded-[5px] border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-orange peer-focus-visible:ring-offset-2", restock ? "border-navy bg-navy text-ice" : "border-navy/30 bg-white")}>
+            {restock && <CheckIcon size={12} />}
+          </span>
           <span>
             <span className="block text-body font-medium">{t("orders.refund.restock")}</span>
             <span className="block text-meta text-steel">{t("orders.refund.restockHint")}</span>

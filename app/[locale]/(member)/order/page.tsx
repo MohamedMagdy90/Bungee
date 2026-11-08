@@ -8,7 +8,7 @@ import { OrderLive, PrintButton } from "@/components/member/order-live";
 import { buttonVariants } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
 import { STUDIO_TZ } from "@/lib/constants";
-import { fmtLongDate, fmtMoney, fmtNum, fmtShortDate, fmtTime, pick } from "@/lib/format";
+import { fmtLongDate, fmtMoney, fmtNum, fmtShortDate, fmtTime, listSep, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ticketQrSvg, ticketUrl } from "@/server/booking/ticket";
 import { getDb } from "@/server/db";
@@ -301,7 +301,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
                           {r.status === "processing" && <span className="text-aqua-lagoon"> · {t("refunds.processing")}</span>}
                         </span>
                         <span className="block text-steel">
-                          {r.lines.map((l) => `${pick(locale, l.nameEn, l.nameAr)}${l.quantity > 1 ? ` × ${fmtNum(l.quantity, locale)}` : ""}`).join(", ")}
+                          {r.lines.map((l) => `${pick(locale, l.nameEn, l.nameAr)}${l.quantity > 1 ? ` × ${fmtNum(l.quantity, locale)}` : ""}`).join(listSep(locale))}
                         </span>
                       </span>
                       <span className="tabular shrink-0 font-medium" dir="ltr">
