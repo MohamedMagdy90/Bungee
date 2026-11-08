@@ -267,19 +267,21 @@
 - [~] H Walk shop, cart, checkout, order page, account, ticket (+ sign-in/up) EN/AR/phone as customer.test@bungeefly.local
       Script .tmp-tests/cust.js -> /opt/shots/cust.js (setup once via real APIs, ids in /opt/shots/cust-state.json;
       run: cd /opt/shots; set -a; . /etc/bungee-fly/env; set +a; nohup node cust.js k [out,en,ar,ph-en,ph-ar] > cust.log)
-      82 shots in .tmp-tests/k (local), montages .tmp-tests/v (mont.py). Findings so far (not fixed yet):
-  - [ ] H1 Account has NO orders list (customer can't find a pay-at-studio / shop order again; emails not sending yet);
-        pending_payment booking card has "Show ticket" but no "Pay / view order" link
-  - [ ] H2 Online order left unpaid: "Confirming your payment... a few seconds" forever, no "pay at the studio instead"
-  - [ ] H3 Invoice "Billed to" email breaks mid-word (desktop 3-column grid too narrow)
-  - [ ] H4 Invoice "Issued" date has no year
-  - [ ] H5 Account profile mobile number unformatted (use fmtPhone)
-  - [ ] H6 Arabic session history: "· BF-code" displaced and "-1" shown as "1-" (bidi; isolate code + amount)
-  - [ ] H7 Arabic date + time joined with Latin ", " (checkout class line, order hold line)
-  - [ ] H8 Phone shop card "In stock" cut to "In st..." beside Add
-  - [ ] H9 Arabic phone sign-in / sign-up / forgot 393px wide (header sign-in pill)
-  - [ ] H10 Invalid ticket page is a dead end (no link back)
-  - [ ] H11 Phone cart: total + Checkout only at the very bottom (sticky bar?)
+      82 shots in .tmp-tests/k (local), montages .tmp-tests/v (mont.py). Review finished Nov 8 22:00 (AR checkouts OK).
+      ALL 11 fixed in 34dbbba via .tmp-tests/patchH.py (idempotent: re-run after a rollback). tsc + eslint clean.
+      Deploying 22:10. Re-shoot only changed screens: node cust.js m <variants> <names> (4th arg = screen filter,
+      new "cart-top" phone shot removes the sold-out item first -> cart ready from then on)
+  - [x] H1 Account "Orders" section (listCustomerOrders: 8 newest, signed link, state chip, Ready to collect, net of
+        refunds) + "Pay or view order" link on pending_payment bookings (bookings.orderId -> orderPath)
+  - [x] H2 Online order pending > 3 min since the last SkipCash try: "Waiting for your payment" + Pay online / Pay at
+        the studio instead / "Already paid? Check again"; polling reloads once after ~4 min (STALE_PENDING_MS)
+  - [x] H3 Invoice grid auto/auto/1fr, email break-words · [x] H4 fmtFullDate (issued + refund dates with year)
+  - [x] H5 fmtPhone on account · [x] H6 separator outside the ltr code span ("-1" was fine: pixel check)
+  - [x] H7 listSep between date and time (checkout class line, order class line, hold line)
+  - [x] H8 shop card: round "+" below sm, sold-out button hidden on phones, footer wraps (button ms-auto)
+  - [x] H9 member header gap-1.5 / px-2 on phones, no profile icon below sm
+  - [x] H10 invalid ticket: My bookings + Back to timetable buttons, copy points to My bookings
+  - [x] H11 phone cart bar (IntersectionObserver on the summary checkout; hidden once it is on screen or passed)
 - Killed a skip2.js stuck 37 h on the server (Playwright left running eats RAM on the 2 GB droplet): check pgrep node
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
