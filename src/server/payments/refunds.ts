@@ -13,7 +13,7 @@ import {
   stockMovements,
   users,
 } from "../db/schema";
-import { cancelBookingsForRefund } from "../booking/engine";
+import { cancelBookingsForRefund, upcomingOnPackage } from "../booking/engine";
 import { getSkipCashConfig } from "../integrations";
 import { queueEmail } from "../notify";
 import { CheckoutProblem, orderPath } from "./orders";
@@ -38,6 +38,8 @@ export type RefundInput = {
   lines: { itemId: string; quantity: number }[];
   method: RefundMethod;
   restock: boolean;
+  /** A pack refunded in full: cancel the upcoming classes it paid for (true) or keep them booked at no charge. */
+  cancelClasses: boolean;
   reason: string;
   actorUserId: string;
 };
@@ -55,7 +57,7 @@ type Reserved = {
 
 export async function refundOrder(db: Database, input: RefundInput) {
   const desk = input.method !== "skipcash";
-  let classesCancelled = 0;
+  let applied = { classesCancelled: 0, classesKept: 0 };
 
   // 1. Under the order lock: check, price the lines, record the refund and reserve the quantities.
   const reserved = await db.transaction(async (txRaw) => {
@@ -130,10 +132,10 @@ export async function refundOrder(db: Database, input: RefundInput) {
     }
     const ctx: Reserved = { refundId: refund.id, order: o, items, lines, amount, payment: pay ?? null };
     // Money handed back at the desk: nothing to wait for, finish now.
-    if (desk) classesCancelled = (await applyRefund(tx, ctx, input)).classesCancelled;
+    if (desk) applied = await applyRefund(tx, ctx, input);
     return ctx;
   });
-  if (desk) return { refundId: reserved.refundId, amount: reserved.amount, method: input.method, classesCancelled };
+  if (desk) return { refundId: reserved.refundId, amount: reserved.amount, method: input.method, ...applied };
 
   // 2. SkipCash, outside the lock. If it says no, the reservation is released and nothing else changes.
   let providerRefundId: string | null = null;
@@ -165,9 +167,9 @@ export async function refundOrder(db: Database, input: RefundInput) {
     const tx = txRaw as unknown as Database;
     const [o] = await tx.select().from(orders).where(eq(orders.id, input.orderId)).for("update");
     await tx.update(refunds).set({ status: "succeeded", providerRefundId }).where(eq(refunds.id, reserved.refundId));
-    classesCancelled = (await applyRefund(tx, { ...reserved, order: o ?? reserved.order }, input)).classesCancelled;
+    applied = await applyRefund(tx, { ...reserved, order: o ?? reserved.order }, input);
   });
-  return { refundId: reserved.refundId, amount: reserved.amount, method: input.method, classesCancelled };
+  return { refundId: reserved.refundId, amount: reserved.amount, method: input.method, ...applied };
 }
 
 /**
@@ -178,6 +180,7 @@ async function applyRefund(tx: Database, ctx: Reserved, input: RefundInput) {
   const { order: o, items, lines, amount } = ctx;
   let creditsRemoved = 0;
   const classes: Awaited<ReturnType<typeof cancelBookingsForRefund>> = [];
+  const kept: Awaited<ReturnType<typeof upcomingOnPackage>> = [];
   for (const l of lines) {
     const row = items.find((i) => i.item.id === l.itemId);
     if (!row) continue;
@@ -204,14 +207,19 @@ async function applyRefund(tx: Database, ctx: Reserved, input: RefundInput) {
       });
     }
     // Class packs: a fully refunded pack first cancels the classes it paid for that haven't started (their
-    // credits come back to it), then the refunded sessions come off (only what's unused) and the pack is closed.
+    // credits come back to it) unless staff keep them booked at no charge; then the refunded sessions come off
+    // (only what's unused) and the pack is closed.
     if (row.type === "class_pack" && it.credits) {
       const lineClosed = it.refundedQuantity + l.quantity >= it.quantity;
       const [ref] = await tx.select({ id: customerPackages.id }).from(customerPackages).where(eq(customerPackages.orderItemId, it.id));
       if (ref && lineClosed) {
-        classes.push(
-          ...(await cancelBookingsForRefund(tx, { customerPackageId: ref.id, actorId: input.actorUserId, note: `Order ${o.number} refunded` })),
-        );
+        if (input.cancelClasses) {
+          classes.push(
+            ...(await cancelBookingsForRefund(tx, { customerPackageId: ref.id, actorId: input.actorUserId, note: `Order ${o.number} refunded` })),
+          );
+        } else {
+          kept.push(...(await upcomingOnPackage(tx, ref.id)));
+        }
       }
       const [pkg] = ref ? await tx.select().from(customerPackages).where(eq(customerPackages.id, ref.id)).for("update") : [];
       if (pkg) {
@@ -259,11 +267,12 @@ async function applyRefund(tx: Database, ctx: Reserved, input: RefundInput) {
         method: input.method,
         credits: creditsRemoved,
         classes,
+        keptClasses: kept,
         lines: lines.map((l) => ({ en: l.nameEn, ar: l.nameAr, quantity: l.quantity, lineTotal: l.amount })),
         orderPath: orderPath(o.id),
       },
       dedupeKey: `order.refunded:${ctx.refundId}`,
     });
   }
-  return { classesCancelled: classes.length };
+  return { classesCancelled: classes.length, classesKept: kept.length };
 }

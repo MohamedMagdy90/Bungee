@@ -196,6 +196,7 @@ function content(template: EmailTemplate, p: Payload, ar: boolean, origin: strin
       const path = str(p.orderPath);
       const credits = num(p.credits);
       const classes = Array.isArray(p.classes) ? (p.classes as Payload[]) : [];
+      const kept = Array.isArray(p.keptClasses) ? (p.keptClasses as Payload[]) : [];
       const money = fmtMoney(num(p.amount), locale);
       const table = invoiceTable({ lines: p.lines, total: num(p.amount) }, ar);
       return {
@@ -215,6 +216,7 @@ function content(template: EmailTemplate, p: Payload, ar: boolean, origin: strin
             ? [ar ? `أُزيلت ${credits} من الحصص غير المستخدمة من رصيدك.` : `${credits} unused ${credits === 1 ? "session was" : "sessions were"} taken off your balance.`]
             : []),
           ...classes.map((c) => (ar ? `أُلغيت حصتك: ${classLine(c, ar)}.` : `Your class has been cancelled: ${classLine(c, ar)}.`)),
+          ...kept.map((c) => (ar ? `تبقى حصتك محجوزة: ${classLine(c, ar)}.` : `Your class stays booked: ${classLine(c, ar)}.`)),
         ],
         table: table ? { ...table, total: [ar ? "المبلغ المسترد" : "Refunded", money] as [string, string] } : undefined,
         action: path ? { label: ar ? "اعرض الطلب" : "View order", url: `${origin}/${locale}${path}` } : undefined,

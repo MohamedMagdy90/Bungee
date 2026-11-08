@@ -507,7 +507,7 @@ export async function cancelBooking(
     }
 
     const late = s.startsAt.getTime() - now.getTime() < policy.cancellationWindowHours * 3_600_000;
-    const refund = !late || !policy.lateCancelForfeitsCredit;
+    let refund = !late || !policy.lateCancelForfeitsCredit;
     const status = late ? ("late_cancelled" as const) : ("cancelled" as const);
 
     await tx
@@ -522,7 +522,10 @@ export async function cancelBooking(
         .where(eq(customerPackages.id, b.customerPackageId))
         .for("update");
       if (pkg) {
-        if (refund) {
+        if (pkg.status === "refunded") {
+          // The pack was refunded and this class kept at no charge: there's nothing to give back.
+          refund = false;
+        } else if (refund) {
           const balance = Math.min(pkg.creditsTotal, pkg.creditsRemaining + b.creditsUsed);
           const reopen = pkg.status === "exhausted" && pkg.expiresAt > now;
           await tx
@@ -648,7 +651,8 @@ export async function cancelSessionByStudio(
           .from(customerPackages)
           .where(eq(customerPackages.id, b.customerPackageId))
           .for("update");
-        if (pkg) {
+        // A refunded pack (class kept at no charge) gets nothing back.
+        if (pkg && pkg.status !== "refunded") {
           const balance = Math.min(pkg.creditsTotal, pkg.creditsRemaining + b.creditsUsed);
           const reopen = pkg.status === "exhausted" && pkg.expiresAt > now;
           await tx
@@ -775,6 +779,29 @@ export async function cancelBookingsForRefund(
     cancelled.push(emailPayload(s));
   }
   return cancelled;
+}
+
+/**
+ * The other choice on a full pack refund: its upcoming classes stay booked at no charge. Lists them (same shape as
+ * the cancelled ones) so the refund email can say so. Nothing changes.
+ */
+export async function upcomingOnPackage(tx: Database, customerPackageId: string, now = new Date()) {
+  const rows = await tx
+    .select({
+      classEn: classTypes.nameEn,
+      classAr: classTypes.nameAr,
+      branchEn: branches.nameEn,
+      branchAr: branches.nameAr,
+      startsAt: classSessions.startsAt,
+      timezone: branches.timezone,
+    })
+    .from(bookings)
+    .innerJoin(classSessions, eq(classSessions.id, bookings.sessionId))
+    .innerJoin(classTypes, eq(classTypes.id, classSessions.classTypeId))
+    .innerJoin(branches, eq(branches.id, classSessions.branchId))
+    .where(and(eq(bookings.customerPackageId, customerPackageId), eq(bookings.status, "booked"), gt(classSessions.startsAt, now)))
+    .orderBy(asc(classSessions.startsAt));
+  return rows.map((r) => ({ ...r, startsAt: r.startsAt.toISOString() }));
 }
 
 /** After staff raise a class's capacity: lets people on the waitlist move up into the new places. */

@@ -88,6 +88,7 @@ const Body = z.discriminatedUnion("action", [
       .max(40),
     method: z.enum(REFUND_METHODS),
     restock: z.boolean(),
+    cancelClasses: z.boolean().default(true),
     reason: z.string().trim().min(3).max(300),
   }),
   z.object({
@@ -148,6 +149,7 @@ export async function POST(request: Request) {
         lines: input.lines,
         method: input.method,
         restock: input.restock,
+        cancelClasses: input.cancelClasses,
         reason: input.reason,
         actorUserId: staff.id,
       });
@@ -155,6 +157,8 @@ export async function POST(request: Request) {
         refundId: refund.refundId,
         amount: refund.amount,
         classesCancelled: refund.classesCancelled,
+        classesKept: refund.classesKept,
+        cancelClasses: input.cancelClasses,
         method: input.method,
         lines: input.lines,
         restock: input.restock,
