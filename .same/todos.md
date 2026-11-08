@@ -238,7 +238,10 @@
       fixing the test's radiogroup selector (target [aria-labelledby=refund-classes-<order>])
 - [~] G Walk Orders, Packs & shop, Schedule, Overview, Team per role EN/AR/phone (/opt/shots/audit6.sh -> i/, 49 shots,
       ALL reviewed; local copies .tmp-tests/i, crops .tmp-tests/v). F refund3.js 17/17 + refund2.js 16/16 after test fixes.
-      Findings to fix (G1..G13):
+      Findings G1..G13 ALL FIXED in d35e030 via .tmp-tests/patchG.py (idempotent: re-run it if a restart rolls
+      files back). tsc + eslint clean. Deployed (release after 12:46). Re-shoot: /opt/shots/audit7.sh -> j/
+      .tmp-tests/ is now gitignored (gc.sh = commit + bundle to droplet: bash .tmp-tests/gc.sh "msg")
+      Restarts Nov 8 16:02, 16:07, ~16:20: each wipes .git + auto-starts dev server -> kill, restore from bundle
   - [ ] G1 Overview phone page 493px wide: Heatmap sr-only labels escape the non-relative overflow-x-auto wrapper
         (charts.tsx) -> `relative` on it (and on the Studios/Coaches table wrapper in app/.../admin/page.tsx)
   - [ ] G2 Studios side by side + Coaches tables on phone: min-w-[28rem] hides Fill/Showed up/Next 7 days/Revenue
