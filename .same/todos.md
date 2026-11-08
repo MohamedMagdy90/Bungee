@@ -224,7 +224,13 @@
       them, refund form shows them beforehand) 77647d0..bed7fc4. Live test /opt/shots/refund2.js 16/16 (book & pay
       drop-in -> class full -> B waitlisted -> refund A -> A cancelled, B promoted, ledger +1/-1/+1/-1, 1 email).
       bed7fc4 (pack hint counts booked upcoming sessions) needs a redeploy
-- [ ] E Walk customers, classes, website, media per role (owner/admin/manager/desk/coach) EN/AR/phone + fix findings
+- [x] E Walk customers, classes, website, media per role (admin/manager/desk/coach) EN/AR/phone (/opt/shots/audit4.sh,
+      33 shots): access + menus correct per role. Fixed (132b044..db44a12): customer "Spent" + order rows net of refunds
+      (orange Part refunded), other studios' orders listed "At West Bay" but not linked (getCustomer branchIds), past
+      un-checked-in classes say "Not checked in", fmtPhone (+974 5555 1234) on customers / order desk / New order,
+      system ledger notes translated at display (useLedgerNote), phone order rows stack amount over status.
+      Re-shoot: /opt/shots/audit5.sh. Not bugs: Arabic "أو" looks double-spaced (font), sample-data customers with
+      bookings but 0 sessions / empty ledger (seed-history writes bookings without packs)
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
 - Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo
