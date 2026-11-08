@@ -240,7 +240,7 @@ export function BookingPanel({
                 <div className="mt-3">
                   <Link
                     href={`/checkout?session=${session.id}${chosen ? `&for=${chosen}` : ""}`}
-                    className={cn(buttonVariants({ size: "lg" }), "w-full")}
+                    className={cn(buttonVariants({ size: "lg" }), "h-auto min-h-[3.25rem] w-full whitespace-normal py-3 text-center")}
                   >
                     {tc("bookAndPay", { price: fmtMoney(ctx.dropIn.amount, locale) })}
                     <ButtonArrow />

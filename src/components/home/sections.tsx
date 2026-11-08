@@ -370,7 +370,10 @@ export async function FirstFlight({ data, locale }: { data: HomeData; locale: st
             ))}
           </ol>
           {introPrice !== null && (
-            <a href="#timetable" className={cn(buttonVariants({ size: "lg" }), "mt-10")}>
+            <a
+              href="#timetable"
+              className={cn(buttonVariants({ size: "lg" }), "mt-10 h-auto min-h-[3.25rem] max-w-full whitespace-normal py-3 text-center")}
+            >
               {t("cta", { price: fmtMoney(introPrice, locale) })}
               <ButtonArrow />
             </a>
