@@ -231,6 +231,13 @@
       system ledger notes translated at display (useLedgerNote), phone order rows stack amount over status.
       Re-shoot: /opt/shots/audit5.sh. Not bugs: Arabic "أو" looks double-spaced (font), sample-data customers with
       bookings but 0 sessions / empty ledger (seed-history writes bookings without packs)
+## Batch Nov 8 #2 (user picked 2)
+- [~] F Staff choose per refund: cancel a fully refunded pack's upcoming classes, or keep them booked at no charge
+      (127df4e server + 118c6cf form; deployed 12:46). cancelBooking / cancelSessionByStudio give nothing back to a
+      refunded pack (refunded:false). Live test /opt/shots/refund3.js: server side 15/15; form checks re-run after
+      fixing the test's radiogroup selector (target [aria-labelledby=refund-classes-<order>])
+- [ ] G Walk Orders, Packs & shop, Schedule, Overview, Team per role EN/AR/phone (/opt/shots/audit6.sh -> i/)
+- Killed a skip2.js stuck 37 h on the server (Playwright left running eats RAM on the 2 GB droplet): check pgrep node
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
 - Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo
