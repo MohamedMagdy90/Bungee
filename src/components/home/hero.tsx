@@ -67,7 +67,7 @@ export async function Hero({ data, locale, now }: { data: HomeData; locale: stri
           </p>
 
           <div className="lift mt-9 flex flex-wrap items-center gap-x-7 gap-y-4" style={delay(440)}>
-            <a href={ANCHORS[hero?.ctaHref ?? ""] ?? hero?.ctaHref ?? "#timetable"} className={buttonVariants({ size: "lg" })}>
+            <a href={ANCHORS[hero?.ctaHref ?? ""] ?? hero?.ctaHref ?? "#timetable"} className={cn(buttonVariants({ size: "lg" }), "h-auto min-h-[3.25rem] max-w-full whitespace-normal py-3 text-center")}>
               {hero?.ctaLabel}
               <ButtonArrow />
             </a>
