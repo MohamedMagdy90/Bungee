@@ -241,6 +241,7 @@
       Findings G1..G13 ALL FIXED in d35e030 via .tmp-tests/patchG.py (idempotent: re-run it if a restart rolls
       files back). tsc + eslint clean. Deployed (release after 12:46). Re-shoot: /opt/shots/audit7.sh -> j/
       .tmp-tests/ is now gitignored (gc.sh = commit + bundle to droplet: bash .tmp-tests/gc.sh "msg")
+      Version 45 + GitHub push (gh signed in again, 42904d3) Nov 8 ~16:55.
       VERIFIED live Nov 8 16:45: audit7.sh re-shoot 12/12 OK (phone overview 390px), refund3.js 17/17, refund hint EN/AR
       Restarts Nov 8 16:02, 16:07, ~16:20: each wipes .git + auto-starts dev server -> kill, restore from bundle
   - [x] G1 Overview phone page 493px wide: Heatmap sr-only labels escape the non-relative overflow-x-auto wrapper
