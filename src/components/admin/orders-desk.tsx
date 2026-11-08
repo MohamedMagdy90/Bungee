@@ -63,7 +63,7 @@ export type DeskOrder = {
     credits?: number | null;
     packLeft?: number | null;
     packTotal?: number | null;
-    /** Classes still to come that this pack paid for: refunding the pack in full cancels them. */
+    /** Classes still to come that this pack paid for: refunding the pack in full cancels them (or keeps them at no charge). */
     upcoming?: { id: string; status: string; startsAt: string; classEn: string; classAr: string; timezone: string }[];
   }[];
   payments: {
@@ -1186,7 +1186,7 @@ function OrderDetail({
                 if ((o.refundedAmount ?? 0) !== refundedAmount) setFlash({ tone: "error", text: message });
                 onUpdate(o);
               }}
-              onDone={(o, refunded, how, classesCancelled) => {
+              onDone={(o, refunded, how, classes) => {
                 onUpdate(o);
                 setRefunding(false);
                 const money = fmtMoney(refunded, locale);
@@ -1194,10 +1194,13 @@ function OrderDetail({
                   how === "skipcash"
                     ? t("orders.done.refundedSkipcash", { amount: money })
                     : t("orders.done.refunded", { amount: money, method: t(`orders.refund.methods.${how}`) });
-                setFlash({
-                  tone: "success",
-                  text: classesCancelled > 0 ? `${text} ${t("orders.done.classesCancelled", { count: classesCancelled })}` : text,
-                });
+                const extra =
+                  classes.cancelled > 0
+                    ? t("orders.done.classesCancelled", { count: classes.cancelled })
+                    : classes.kept > 0
+                      ? t("orders.done.classesKept", { count: classes.kept })
+                      : "";
+                setFlash({ tone: "success", text: extra ? `${text} ${extra}` : text });
               }}
             />
           )}
@@ -1295,7 +1298,7 @@ function RefundPanel({
   paidWith: string | null;
   /** SkipCash connected: only then can money go back to the card it came from. */
   skipcashReady: boolean;
-  onDone: (o: DeskOrder, amount: number, method: RefundMethod, classesCancelled: number) => void;
+  onDone: (o: DeskOrder, amount: number, method: RefundMethod, classes: { cancelled: number; kept: number }) => void;
   /** The order changed under us (another refund, a failed SkipCash attempt): show the fresh one. */
   onFresh: (o: DeskOrder, message: string) => void;
   onClose: () => void;
@@ -1315,6 +1318,7 @@ function RefundPanel({
     methods.includes(paidWith as RefundMethod) ? (paidWith as RefundMethod) : methods[0],
   );
   const [restock, setRestock] = useState(true);
+  const [cancelClasses, setCancelClasses] = useState(true);
   const [reason, setReason] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -1329,8 +1333,8 @@ function RefundPanel({
   let amount = chosen.reduce((n, i) => n + lineAmount(i, qty[i.id] ?? 0), 0);
   if (closes || amount > remaining) amount = remaining;
   const handedBack = chosen.some((i) => i.type === "retail" && i.fulfilledAt);
-  // Packs refunded in full take their upcoming classes with them: say which before anyone confirms.
-  const cancels = chosen
+  // Packs refunded in full: their upcoming classes are cancelled too, or kept at no charge. Staff choose, seeing which.
+  const upcoming = chosen
     .filter((i) => i.type === "class_pack" && (qty[i.id] ?? 0) >= i.quantity - (i.refundedQuantity ?? 0))
     .flatMap((i) => i.upcoming ?? []);
   const valid = chosen.length > 0 && amount > 0 && reason.trim().length >= 3;
@@ -1340,14 +1344,18 @@ function RefundPanel({
   async function submit() {
     setBusy(true);
     setError(null);
-    const res = await call<{ order: DeskOrder; refund: { amount: number; classesCancelled?: number } }>("/api/admin/orders", {
-      action: "refund",
-      id: order.id,
-      lines: chosen.map((i) => ({ itemId: i.id, quantity: qty[i.id] })),
-      method,
-      restock,
-      reason: reason.trim(),
-    });
+    const res = await call<{ order: DeskOrder; refund: { amount: number; classesCancelled?: number; classesKept?: number } }>(
+      "/api/admin/orders",
+      {
+        action: "refund",
+        id: order.id,
+        lines: chosen.map((i) => ({ itemId: i.id, quantity: qty[i.id] })),
+        method,
+        restock,
+        cancelClasses,
+        reason: reason.trim(),
+      },
+    );
     setBusy(false);
     setConfirm(false);
     if (!res.ok) {
@@ -1359,7 +1367,10 @@ function RefundPanel({
       }
       return;
     }
-    onDone(res.data.order, res.data.refund.amount, method, res.data.refund.classesCancelled ?? 0);
+    onDone(res.data.order, res.data.refund.amount, method, {
+      cancelled: res.data.refund.classesCancelled ?? 0,
+      kept: res.data.refund.classesKept ?? 0,
+    });
   }
 
   return (
@@ -1396,7 +1407,7 @@ function RefundPanel({
           const on = q > 0;
           const name = pick(locale, i.nameEn, i.nameAr);
           // Sessions booked on classes still to come come back when the whole pack is refunded (the classes go).
-          const booked = q >= left ? (i.upcoming ?? []).filter((u) => u.status === "booked").length : 0;
+          const booked = q >= left && cancelClasses ? (i.upcoming ?? []).filter((u) => u.status === "booked").length : 0;
           const packShort =
             i.type === "class_pack" && !!i.packTotal && (i.packLeft ?? 0) + booked < (i.credits ?? 0) * Math.max(q, 1);
           const hint =
@@ -1481,18 +1492,54 @@ function RefundPanel({
           </span>
         </label>
       )}
-      {cancels.length > 0 && (
-        <div className="mt-4 rounded-lg border border-orange/30 bg-white p-4" role="note">
-          <p className="text-body font-medium">{t("orders.refund.cancelsTitle", { count: cancels.length })}</p>
+      {upcoming.length > 0 && (
+        <div className="mt-4 rounded-lg border border-orange/30 bg-white p-4">
+          <p id={`refund-classes-${order.id}`} className="text-body font-medium">
+            {t("orders.refund.classesTitle", { count: upcoming.length })}
+          </p>
           <ul className="mt-1.5 space-y-0.5 text-meta">
-            {cancels.map((c) => (
+            {upcoming.map((c) => (
               <li key={c.id} className="tabular">
                 {pick(locale, c.classEn, c.classAr)} · {fmtShortDate(c.startsAt, locale, c.timezone)}, {fmtTime(c.startsAt, locale, c.timezone)}
                 {c.status === "waitlisted" && <span className="text-steel"> · {t("orders.refund.waitlisted")}</span>}
               </li>
             ))}
           </ul>
-          <p className="mt-1.5 text-meta text-steel text-pretty">{t("orders.refund.cancelsHint")}</p>
+          <div role="radiogroup" aria-labelledby={`refund-classes-${order.id}`} className="mt-3 grid gap-2 sm:grid-cols-2">
+            {[
+              { on: true, label: t("orders.refund.classesCancel", { count: upcoming.length }), hint: t("orders.refund.classesCancelHint") },
+              { on: false, label: t("orders.refund.classesKeep", { count: upcoming.length }), hint: t("orders.refund.classesKeepHint") },
+            ].map((o) => {
+              const picked = cancelClasses === o.on;
+              return (
+                <button
+                  key={String(o.on)}
+                  type="button"
+                  role="radio"
+                  aria-checked={picked}
+                  onClick={() => setCancelClasses(o.on)}
+                  className={cn(
+                    "flex items-start gap-3 rounded-lg border p-3 text-start transition-colors",
+                    picked ? "border-navy bg-navy/[0.04]" : "border-navy/15 hover:border-navy/35",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 grid size-[1.125rem] shrink-0 place-items-center rounded-pill border-2 transition-colors",
+                      picked ? "border-navy" : "border-navy/30",
+                    )}
+                    aria-hidden="true"
+                  >
+                    {picked && <span className="size-2 rounded-pill bg-navy" />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-meta font-semibold">{o.label}</span>
+                    <span className="mt-0.5 block text-meta text-steel text-pretty">{o.hint}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

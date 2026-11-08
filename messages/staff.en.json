@@ -159,7 +159,8 @@
         "handedOver": "Marked as handed over.",
         "refunded": "Refunded {amount} ({method}). The customer gets an email.",
         "refundedSkipcash": "SkipCash accepted the refund of {amount}. It reaches their card in 5 to 10 working days.",
-        "classesCancelled": "{count, plural, one {# class cancelled, the spot is free again.} other {# classes cancelled, the spots are free again.}}"
+        "classesCancelled": "{count, plural, one {# class cancelled, the spot is free again.} other {# classes cancelled, the spots are free again.}}",
+        "classesKept": "{count, plural, one {# upcoming class stays booked.} other {# upcoming classes stay booked.}}"
       },
       "errors": {
         "phone_required": "This customer has no mobile number on file, and SkipCash needs one. Record the payment at the desk instead.",
@@ -290,10 +291,13 @@
         },
         "failedSaid": "SkipCash said: {message}",
         "processingHint": "Sent to SkipCash, waiting for the result. Check in SkipCash before trying again.",
-        "cancelsTitle": "{count, plural, one {This also cancels # upcoming class} other {This also cancels # upcoming classes}}",
-        "cancelsHint": "They were paid with this pack. The spots open up for others (the waitlist moves up) and the refund email tells the customer.",
         "waitlisted": "on the waitlist",
-        "sessionsBooked": "{left} of {total} sessions unused, {booked} booked on upcoming classes (cancelled with this refund)"
+        "sessionsBooked": "{left} of {total} sessions unused, {booked} booked on upcoming classes (cancelled with this refund)",
+        "classesTitle": "{count, plural, one {# upcoming class was paid with this pack} other {# upcoming classes were paid with this pack}}",
+        "classesCancel": "{count, plural, one {Cancel it} other {Cancel them}}",
+        "classesCancelHint": "Spots open up for others (the waitlist moves up). The refund email tells the customer.",
+        "classesKeep": "{count, plural, one {Keep it booked} other {Keep them booked}}",
+        "classesKeepHint": "No charge, for example as a goodwill gesture. The refund email says so."
       }
     },
     "integrations": {

@@ -26,7 +26,7 @@ import { refundPayment } from "./skipcash";
  *
  * Effects, all in one transaction with the refund: shop items go back on the shelf (always if never handed over,
  * otherwise when "put back in stock" is ticked), pack sessions are taken off the customer's balance (a pack
- * refunded in full also cancels the classes it paid for that haven't started), the order
+ * refunded in full also cancels the classes it paid for that haven't started, unless staff keep them), the order
  * becomes partially_refunded / refunded, and the customer gets a refund email (EN/AR).
  */
 
