@@ -517,7 +517,13 @@
         "showLess": "Show fewer",
         "notCheckedIn": "Not checked in",
         "orderRefunded": "{amount} refunded",
-        "orderAt": "At {studio}"
+        "orderAt": "At {studio}",
+        "ledgerNote": {
+          "order": "Order #{number}",
+          "refund": "Order #{number} refunded",
+          "refunded": "Class cancelled: order #{number} refunded",
+          "late": "Cancelled inside the {hours}-hour window, session kept"
+        }
       },
       "walkIn": {
         "title": "Register a walk-in",

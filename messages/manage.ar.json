@@ -517,7 +517,13 @@
         "showLess": "عرض أقل",
         "notCheckedIn": "لم يُسجَّل الحضور",
         "orderRefunded": "استُرد {amount}",
-        "orderAt": "في {studio}"
+        "orderAt": "في {studio}",
+        "ledgerNote": {
+          "order": "الطلب رقم {number}",
+          "refund": "استرداد الطلب رقم {number}",
+          "refunded": "أُلغيت الحصة: استُرد الطلب رقم {number}",
+          "late": "أُلغي الحجز خلال آخر {hours} ساعة، فلم تُرجَع الحصة"
+        }
       },
       "walkIn": {
         "title": "تسجيل عميل حاضر",

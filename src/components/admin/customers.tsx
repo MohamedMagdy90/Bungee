@@ -677,10 +677,30 @@ function OrderList({ orders }: { orders: CustomerProfile["orders"] }) {
   );
 }
 
+/**
+ * The system writes its own ledger notes in English ("Order 100149", "Order 100149 refund", ...). Show those in the
+ * desk's language; notes staff typed themselves (adjustments) stay as written.
+ */
+function useLedgerNote() {
+  const t = useTranslations("manage.customers.profile.ledgerNote");
+  return (note: string) => {
+    let m = /^Order (\d+)$/.exec(note);
+    if (m) return t("order", { number: m[1] });
+    m = /^Order (\d+) refund$/.exec(note);
+    if (m) return t("refund", { number: m[1] });
+    m = /^Order (\d+) refunded$/.exec(note);
+    if (m) return t("refunded", { number: m[1] });
+    m = /^Cancelled inside the (\d+)h window; credit kept\.$/.exec(note);
+    if (m) return t("late", { hours: Number(m[1]) });
+    return note;
+  };
+}
+
 function Ledger({ items }: { items: CustomerProfile["ledger"] }) {
   const t = useTranslations("manage.customers");
   const tr = useTranslations("account.ledger.reasons");
   const locale = useLocale();
+  const noteText = useLedgerNote();
   if (items.length === 0) return <p className="text-meta text-steel">{t("profile.noLedger")}</p>;
   return (
     <ul className="max-h-[22rem] divide-y divide-navy/[0.07] overflow-y-auto rounded-lg border border-navy/10">
@@ -697,7 +717,7 @@ function Ledger({ items }: { items: CustomerProfile["ledger"] }) {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-meta font-medium">{tr(l.reason)}</span>
-            {l.note && <span className="block text-meta text-steel">{l.note}</span>}
+            {l.note && <span className="block text-meta text-steel">{noteText(l.note)}</span>}
           </span>
           <span className="tabular shrink-0 text-end text-meta text-steel">
             {fmtShortDate(l.createdAt, locale)}
