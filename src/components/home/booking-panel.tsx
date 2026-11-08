@@ -76,12 +76,13 @@ export function BookingPanel({
     const next = encodeURIComponent(`/?book=${session.id}#timetable`);
     return (
       <Footer note={t("signInNote")}>
-        <div className="flex gap-2">
-          <Link href={`/sign-in?next=${next}`} className={cn(buttonVariants({ size: "lg" }), "flex-1")}>
+        {/* wraps on narrow sheets: sign in on its own line, create an account full width below */}
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/sign-in?next=${next}`} className={cn(buttonVariants({ size: "lg" }), "flex-[1_1_12rem]")}>
             {t("signInToBook")}
             <ButtonArrow />
           </Link>
-          <Link href="/sign-up" className={buttonVariants({ variant: "ghost", size: "lg" })}>
+          <Link href="/sign-up" className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "flex-[1_1_auto]")}>
             {t("createAccount")}
           </Link>
         </div>
@@ -369,11 +370,11 @@ export function BookingDone({
 
       <p className="mt-4 px-6 text-center text-meta text-steel md:px-8">{t("confirmed.emailed")}</p>
 
-      <div className="pb-safe mt-auto flex gap-2 border-t border-navy/10 px-6 pb-4 pt-4 md:px-8">
-        <Link href="/account" className={cn(buttonVariants({ variant: "navy", size: "lg" }), "flex-1")}>
+      <div className="pb-safe mt-auto flex flex-wrap gap-2 border-t border-navy/10 px-6 pb-4 pt-4 md:px-8">
+        <Link href="/account" className={cn(buttonVariants({ variant: "navy", size: "lg" }), "flex-[1_1_9rem]")}>
           {t("confirmed.account")}
         </Link>
-        <Button variant="ghost" size="lg" onClick={onClose} className="flex-1">
+        <Button variant="ghost" size="lg" onClick={onClose} className="flex-[1_1_9rem]">
           {t("confirmed.done")}
         </Button>
       </div>
