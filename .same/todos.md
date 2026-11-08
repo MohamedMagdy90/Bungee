@@ -267,6 +267,19 @@
 - [~] H Walk shop, cart, checkout, order page, account, ticket (+ sign-in/up) EN/AR/phone as customer.test@bungeefly.local
       Script .tmp-tests/cust.js -> /opt/shots/cust.js (setup once via real APIs, ids in /opt/shots/cust-state.json;
       run: cd /opt/shots; set -a; . /etc/bungee-fly/env; set +a; nohup node cust.js k [out,en,ar,ph-en,ph-ar] > cust.log)
+      82 shots in .tmp-tests/k (local), montages .tmp-tests/v (mont.py). Findings so far (not fixed yet):
+  - [ ] H1 Account has NO orders list (customer can't find a pay-at-studio / shop order again; emails not sending yet);
+        pending_payment booking card has "Show ticket" but no "Pay / view order" link
+  - [ ] H2 Online order left unpaid: "Confirming your payment... a few seconds" forever, no "pay at the studio instead"
+  - [ ] H3 Invoice "Billed to" email breaks mid-word (desktop 3-column grid too narrow)
+  - [ ] H4 Invoice "Issued" date has no year
+  - [ ] H5 Account profile mobile number unformatted (use fmtPhone)
+  - [ ] H6 Arabic session history: "· BF-code" displaced and "-1" shown as "1-" (bidi; isolate code + amount)
+  - [ ] H7 Arabic date + time joined with Latin ", " (checkout class line, order hold line)
+  - [ ] H8 Phone shop card "In stock" cut to "In st..." beside Add
+  - [ ] H9 Arabic phone sign-in / sign-up / forgot 393px wide (header sign-in pill)
+  - [ ] H10 Invalid ticket page is a dead end (no link back)
+  - [ ] H11 Phone cart: total + Checkout only at the very bottom (sticky bar?)
 - Killed a skip2.js stuck 37 h on the server (Playwright left running eats RAM on the 2 GB droplet): check pgrep node
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
