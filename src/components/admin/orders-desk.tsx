@@ -63,6 +63,8 @@ export type DeskOrder = {
     credits?: number | null;
     packLeft?: number | null;
     packTotal?: number | null;
+    /** Classes still to come that this pack paid for: refunding the pack in full cancels them. */
+    upcoming?: { id: string; status: string; startsAt: string; classEn: string; classAr: string; timezone: string }[];
   }[];
   payments: {
     id: string;
@@ -1184,16 +1186,17 @@ function OrderDetail({
                 if ((o.refundedAmount ?? 0) !== refundedAmount) setFlash({ tone: "error", text: message });
                 onUpdate(o);
               }}
-              onDone={(o, refunded, how) => {
+              onDone={(o, refunded, how, classesCancelled) => {
                 onUpdate(o);
                 setRefunding(false);
                 const money = fmtMoney(refunded, locale);
+                const text =
+                  how === "skipcash"
+                    ? t("orders.done.refundedSkipcash", { amount: money })
+                    : t("orders.done.refunded", { amount: money, method: t(`orders.refund.methods.${how}`) });
                 setFlash({
                   tone: "success",
-                  text:
-                    how === "skipcash"
-                      ? t("orders.done.refundedSkipcash", { amount: money })
-                      : t("orders.done.refunded", { amount: money, method: t(`orders.refund.methods.${how}`) }),
+                  text: classesCancelled > 0 ? `${text} ${t("orders.done.classesCancelled", { count: classesCancelled })}` : text,
                 });
               }}
             />
@@ -1292,7 +1295,7 @@ function RefundPanel({
   paidWith: string | null;
   /** SkipCash connected: only then can money go back to the card it came from. */
   skipcashReady: boolean;
-  onDone: (o: DeskOrder, amount: number, method: RefundMethod) => void;
+  onDone: (o: DeskOrder, amount: number, method: RefundMethod, classesCancelled: number) => void;
   /** The order changed under us (another refund, a failed SkipCash attempt): show the fresh one. */
   onFresh: (o: DeskOrder, message: string) => void;
   onClose: () => void;
@@ -1326,7 +1329,10 @@ function RefundPanel({
   let amount = chosen.reduce((n, i) => n + lineAmount(i, qty[i.id] ?? 0), 0);
   if (closes || amount > remaining) amount = remaining;
   const handedBack = chosen.some((i) => i.type === "retail" && i.fulfilledAt);
-  const hasPack = chosen.some((i) => i.type === "class_pack");
+  // Packs refunded in full take their upcoming classes with them: say which before anyone confirms.
+  const cancels = chosen
+    .filter((i) => i.type === "class_pack" && (qty[i.id] ?? 0) >= i.quantity - (i.refundedQuantity ?? 0))
+    .flatMap((i) => i.upcoming ?? []);
   const valid = chosen.length > 0 && amount > 0 && reason.trim().length >= 3;
   const money = fmtMoney(amount, locale);
   const titleId = `refund-${order.id}`;
@@ -1334,7 +1340,7 @@ function RefundPanel({
   async function submit() {
     setBusy(true);
     setError(null);
-    const res = await call<{ order: DeskOrder; refund: { amount: number } }>("/api/admin/orders", {
+    const res = await call<{ order: DeskOrder; refund: { amount: number; classesCancelled?: number } }>("/api/admin/orders", {
       action: "refund",
       id: order.id,
       lines: chosen.map((i) => ({ itemId: i.id, quantity: qty[i.id] })),
@@ -1353,7 +1359,7 @@ function RefundPanel({
       }
       return;
     }
-    onDone(res.data.order, res.data.refund.amount, method);
+    onDone(res.data.order, res.data.refund.amount, method, res.data.refund.classesCancelled ?? 0);
   }
 
   return (
@@ -1470,7 +1476,20 @@ function RefundPanel({
           </span>
         </label>
       )}
-      {hasPack && order.booking && <p className="mt-3 text-meta text-steel text-pretty">{t("orders.refund.bookingNote")}</p>}
+      {cancels.length > 0 && (
+        <div className="mt-4 rounded-lg border border-orange/30 bg-white p-4" role="note">
+          <p className="text-body font-medium">{t("orders.refund.cancelsTitle", { count: cancels.length })}</p>
+          <ul className="mt-1.5 space-y-0.5 text-meta">
+            {cancels.map((c) => (
+              <li key={c.id} className="tabular">
+                {pick(locale, c.classEn, c.classAr)} · {fmtShortDate(c.startsAt, locale, c.timezone)}, {fmtTime(c.startsAt, locale, c.timezone)}
+                {c.status === "waitlisted" && <span className="text-steel"> · {t("orders.refund.waitlisted")}</span>}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-meta text-steel text-pretty">{t("orders.refund.cancelsHint")}</p>
+        </div>
+      )}
 
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <div className="min-w-0">

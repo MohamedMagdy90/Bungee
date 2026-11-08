@@ -158,7 +158,8 @@
         "skipcashPaid": "SkipCash confirmed the payment.",
         "handedOver": "Marked as handed over.",
         "refunded": "Refunded {amount} ({method}). The customer gets an email.",
-        "refundedSkipcash": "SkipCash accepted the refund of {amount}. It reaches their card in 5 to 10 working days."
+        "refundedSkipcash": "SkipCash accepted the refund of {amount}. It reaches their card in 5 to 10 working days.",
+        "classesCancelled": "{count, plural, one {# class cancelled, the spot is free again.} other {# classes cancelled, the spots are free again.}}"
       },
       "errors": {
         "phone_required": "This customer has no mobile number on file, and SkipCash needs one. Record the payment at the desk instead.",
@@ -261,7 +262,6 @@
         "more": "One more {name}",
         "restock": "Put returned items back in stock",
         "restockHint": "Untick if they came back damaged or can't be sold again.",
-        "bookingNote": "The class booked with this order stays booked. Cancel it from the timetable if needed.",
         "method": "Give the money back",
         "methods": {
           "skipcash": "To their card (SkipCash)",
@@ -289,7 +289,10 @@
           "failed": "Failed"
         },
         "failedSaid": "SkipCash said: {message}",
-        "processingHint": "Sent to SkipCash, waiting for the result. Check in SkipCash before trying again."
+        "processingHint": "Sent to SkipCash, waiting for the result. Check in SkipCash before trying again.",
+        "cancelsTitle": "{count, plural, one {This also cancels # upcoming class} other {This also cancels # upcoming classes}}",
+        "cancelsHint": "They were paid with this pack. The spots open up for others (the waitlist moves up) and the refund email tells the customer.",
+        "waitlisted": "on the waitlist"
       }
     },
     "integrations": {
