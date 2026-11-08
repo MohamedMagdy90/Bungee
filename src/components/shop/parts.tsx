@@ -236,6 +236,8 @@ export function AddToCart({
           className={cn(
             buttonVariants({ variant: "navy", size: "sm" }),
             "h-9 gap-1.5 px-3.5 hover:bg-orange hover:text-navy disabled:bg-navy/15 disabled:text-steel",
+            // Phones: a round "+" so the stock line beside it isn't cut; sold out is already said beside it
+            out ? "max-sm:hidden" : "max-sm:w-9 max-sm:px-0",
           )}
         >
           {out ? (
@@ -243,7 +245,7 @@ export function AddToCart({
           ) : (
             <>
               <PlusIcon size={15} />
-              {t("add")}
+              <span className="max-sm:sr-only">{t("add")}</span>
             </>
           )}
         </button>
@@ -325,14 +327,17 @@ export function ShopItemCard({ item, studio, priority }: { item: Card; studio: s
         </h3>
         <div className="mt-auto pt-3">
           <Price amount={item.price} compareAt={item.compareAt} />
-          <div className="mt-3 flex items-center justify-between gap-2">
+          {/* wraps instead of cutting the stock line: on narrow cards the button drops to its own line, at the end */}
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             <p className="flex min-w-0 items-center gap-1.5 text-meta text-steel">
               <StockDot state={item.state} />
-              <span className="truncate">
+              <span className="whitespace-nowrap">
                 <StockText state={item.state} left={item.left} studio={studio} short />
               </span>
             </p>
-            <AddToCart productId={item.id} name={item.name} state={item.state} left={item.left} variant="compact" />
+            <span className="ms-auto">
+              <AddToCart productId={item.id} name={item.name} state={item.state} left={item.left} variant="compact" />
+            </span>
           </div>
         </div>
       </div>

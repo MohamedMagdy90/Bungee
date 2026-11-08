@@ -8,7 +8,7 @@ import { OrderLive, PrintButton } from "@/components/member/order-live";
 import { buttonVariants } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
 import { STUDIO_TZ } from "@/lib/constants";
-import { fmtLongDate, fmtMoney, fmtNum, fmtShortDate, fmtTime, listSep, pick } from "@/lib/format";
+import { fmtFullDate, fmtLongDate, fmtMoney, fmtNum, fmtShortDate, fmtTime, listSep, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ticketQrSvg, ticketUrl } from "@/server/booking/ticket";
 import { getDb } from "@/server/db";
@@ -25,6 +25,8 @@ type InvoiceLine = { nameEn: string; nameAr: string; unitAmount: number; quantit
 type BillTo = { name?: string; email?: string; phone?: string | null };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** An online payment with no word from SkipCash for this long was most likely left unfinished. */
+const STALE_PENDING_MS = 3 * 60_000;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -78,10 +80,13 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const openPay = view.payments.find((p) => p.provider === "skipcash" && (p.status === "pending" || p.status === "initiated") && p.payUrl);
   const paidWith = view.payments.find((p) => p.status === "succeeded" || p.status === "refunded")?.provider ?? null;
   const credits = view.items.reduce((n, i) => n + (i.credits ?? 0) * i.quantity, 0);
+  // Back button, closed tab, came back later: stop saying "a few seconds" and offer the ways forward.
+  const lastTry = view.payments.find((p) => p.provider === "skipcash")?.createdAt ?? view.createdAt;
+  const stale = state === "pending" && Date.now() - new Date(lastTry).getTime() > STALE_PENDING_MS;
 
   const heldUntil =
     booking?.status === "pending_payment" && booking.holdExpiresAt
-      ? `${fmtShortDate(booking.holdExpiresAt, locale, tz)}, ${fmtTime(booking.holdExpiresAt, locale, tz)}`
+      ? `${fmtShortDate(booking.holdExpiresAt, locale, tz)}${listSep(locale)}${fmtTime(booking.holdExpiresAt, locale, tz)}`
       : null;
 
   const head = {
@@ -93,14 +98,16 @@ export default async function OrderPage({ params, searchParams }: Props) {
     },
     pending: {
       tone: "bg-aqua text-navy",
-      icon: (
+      icon: stale ? (
+        <InfoIcon size={24} />
+      ) : (
         <span className="relative flex size-3">
           <span className="absolute inline-flex size-full animate-ping rounded-pill bg-navy/60 motion-reduce:animate-none" />
           <span className="relative inline-flex size-3 rounded-pill bg-navy" />
         </span>
       ),
-      title: t("pending.title"),
-      body: t("pending.body"),
+      title: stale ? t("pending.staleTitle") : t("pending.title"),
+      body: stale ? t("pending.staleBody") : t("pending.body"),
     },
     failed: { tone: "bg-orange text-navy", icon: <CloseIcon size={24} />, title: t("failed.title"), body: t("failed.body") },
     at_studio: { tone: "bg-navy text-ice", icon: <TicketIcon size={24} />, title: t("atStudio.title"), body: t("atStudio.body") },
@@ -128,7 +135,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const studioName = view.branch ? pick(locale, view.branch.en, view.branch.ar) : "";
   if (toCollect.length) notes.push(t("paid.collect", { studio: studioName }));
   else if (collected) notes.push(t("paid.collected"));
-  if (state === "failed" && heldUntil) notes.push(t("failed.held", { time: heldUntil }));
+  if ((state === "failed" || stale) && heldUntil) notes.push(t("failed.held", { time: heldUntil }));
   if (state === "at_studio" && booking?.status === "pending_payment") notes.push(t("atStudio.held"));
 
   const deskQr =
@@ -164,6 +171,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
                 sig={sig}
                 locale={locale}
                 state={state}
+                stale={stale}
                 payUrl={openPay?.payUrl ?? null}
                 canOnline={options.online && skipcash.ready}
                 canStudio={options.atStudio}
@@ -213,7 +221,9 @@ export default async function OrderPage({ params, searchParams }: Props) {
                 <div>
                   <dt className="text-steel">{t("class")}</dt>
                   <dd className="tabular font-medium">
-                    {pick(locale, booking.classEn, booking.classAr)} · {fmtLongDate(booking.startsAt, locale, tz)}, {fmtTime(booking.startsAt, locale, tz)}
+                    {pick(locale, booking.classEn, booking.classAr)} · {fmtLongDate(booking.startsAt, locale, tz)}
+                    {listSep(locale)}
+                    {fmtTime(booking.startsAt, locale, tz)}
                   </dd>
                 </div>
               )}
@@ -233,7 +243,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
               </div>
               <PrintButton label={t("invoice.print")} />
             </div>
-            <dl className="mt-6 grid gap-4 text-meta sm:grid-cols-3">
+            <dl className="mt-6 grid gap-4 text-meta sm:grid-cols-[auto_auto_minmax(0,1fr)] sm:gap-x-10">
               <div>
                 <dt className="text-steel">{t("invoice.order")}</dt>
                 <dd className="tabular font-medium" dir="ltr">
@@ -242,13 +252,13 @@ export default async function OrderPage({ params, searchParams }: Props) {
               </div>
               <div>
                 <dt className="text-steel">{t("invoice.date")}</dt>
-                <dd className="tabular font-medium">{fmtLongDate(inv.issuedAt, locale)}</dd>
+                <dd className="tabular font-medium">{fmtFullDate(inv.issuedAt, locale)}</dd>
               </div>
               <div className="min-w-0">
                 <dt className="text-steel">{t("invoice.billTo")}</dt>
                 <dd className="font-medium">
                   {(inv.billTo as BillTo).name}
-                  <span className="block break-all font-normal text-steel">{(inv.billTo as BillTo).email}</span>
+                  <span className="block break-words font-normal text-steel">{(inv.billTo as BillTo).email}</span>
                 </dd>
               </div>
             </dl>
@@ -297,7 +307,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
                     <li key={r.id} className="flex items-start justify-between gap-4">
                       <span className="min-w-0">
                         <span className="tabular block font-medium">
-                          {fmtLongDate(r.createdAt, locale)} · {t(`refunds.to.${r.method}` as "refunds.to.other")}
+                          {fmtFullDate(r.createdAt, locale)} · {t(`refunds.to.${r.method}` as "refunds.to.other")}
                           {r.status === "processing" && <span className="text-aqua-lagoon"> · {t("refunds.processing")}</span>}
                         </span>
                         <span className="block text-steel">

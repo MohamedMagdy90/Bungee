@@ -157,6 +157,7 @@ export async function getAccountOverview(db: Database, userId: string, now = new
     status: bookings.status,
     position: bookings.waitlistPosition,
     holdExpiresAt: bookings.holdExpiresAt,
+    orderId: bookings.orderId,
     startsAt: classSessions.startsAt,
     endsAt: classSessions.endsAt,
     classEn: classTypes.nameEn,

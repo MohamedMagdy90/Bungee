@@ -23,6 +23,8 @@ export type UpcomingItem = {
   timezone: string;
   childFirst: string | null;
   ticket: { url: string; qrSvg: string } | null;
+  /** Held for payment: the signed order page (pay online / at the studio). */
+  payHref: string | null;
 };
 
 const CORD = { type: "spring", stiffness: 420, damping: 34 } as const;
@@ -163,6 +165,14 @@ function BookingCard({
           <p className="text-meta text-steel">
             {item.branchName} · {item.childFirst ? t("for", { name: item.childFirst }) : t("you")}
           </p>
+          {item.payHref && (
+            <Link
+              href={item.payHref}
+              className="mt-1.5 inline-flex text-meta font-semibold text-orange-ember underline decoration-orange/50 underline-offset-4 hover:decoration-orange-ember"
+            >
+              {t("payOrder")}
+            </Link>
+          )}
         </div>
       </div>
 

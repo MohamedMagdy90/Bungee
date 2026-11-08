@@ -92,7 +92,11 @@
       "title": "Confirming your payment…",
       "body": "This usually takes a few seconds. Keep this page open.",
       "check": "Check again",
-      "open": "Return to SkipCash"
+      "open": "Return to SkipCash",
+      "staleTitle": "Waiting for your payment.",
+      "staleBody": "We haven't received a payment for this order yet. Pay online now, or pay at the studio instead.",
+      "payOnline": "Pay online",
+      "paidAlready": "Already paid? Check again"
     },
     "failed": {
       "title": "Payment didn't go through.",

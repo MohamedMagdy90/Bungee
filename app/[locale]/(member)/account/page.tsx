@@ -15,13 +15,14 @@ import { Notice } from "@/components/member/field";
 import { buttonVariants } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
 import { STUDIO_TZ } from "@/lib/constants";
-import { fmtNum, fmtShortDate, fmtTime, pick } from "@/lib/format";
+import { fmtMoney, fmtNum, fmtPhone, fmtShortDate, fmtTime, listSep, pick } from "@/lib/format";
 import { zonedDateKey } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { ageOn } from "@/server/booking/engine";
 import { getAccountOverview } from "@/server/booking/queries";
 import { ticketQrSvg, ticketUrl } from "@/server/booking/ticket";
 import { getDb } from "@/server/db";
+import { listCustomerOrders, orderPath } from "@/server/payments/orders";
 import { isPreviewMode, publicOrigin } from "@/server/runtime";
 import { getCurrentUser } from "@/server/session";
 
@@ -60,6 +61,32 @@ function Section({
   );
 }
 
+/** Order states on the account page: orange = something to do, aqua = done, grey = closed. */
+const CHIP_TONE: Record<string, string> = {
+  at_studio: "bg-orange/15 text-orange-ember",
+  pending: "bg-orange/15 text-orange-ember",
+  failed: "bg-orange/15 text-orange-ember",
+  paid: "bg-aqua/15 text-aqua-lagoon",
+  partly: "bg-navy/[0.07] text-navy",
+  refunded: "bg-navy/[0.07] text-steel",
+  cancelled: "bg-navy/[0.07] text-steel",
+  collect: "bg-navy text-ice",
+};
+
+function OrderChip({ tone, label }: { tone: string; label: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex h-6 items-center gap-1.5 rounded-pill px-2.5 text-[0.75rem] font-semibold",
+        CHIP_TONE[tone] ?? CHIP_TONE.cancelled,
+      )}
+    >
+      <span className="size-1.5 rounded-pill bg-current" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
 export default async function AccountPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const { welcome, error } = await searchParams;
@@ -77,7 +104,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
   ]);
   const db = await getDb();
   const now = new Date();
-  const data = await getAccountOverview(db, user.id, now);
+  const [data, orderRows] = await Promise.all([getAccountOverview(db, user.id, now), listCustomerOrders(db, user.id)]);
   const origin = publicOrigin(await headers());
   const todayKey = zonedDateKey(now, STUDIO_TZ);
 
@@ -97,6 +124,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
         timezone: b.timezone || STUDIO_TZ,
         childFirst: b.childFirst,
         ticket: url ? { url, qrSvg: await ticketQrSvg(url) } : null,
+        payHref: b.status === "pending_payment" && b.orderId ? orderPath(b.orderId) : null,
       };
     }),
   );
@@ -153,6 +181,59 @@ export default async function AccountPage({ params, searchParams }: Props) {
               lateForfeits={data.policy.lateCancelForfeitsCredit}
             />
             <p className="mt-4 text-meta text-steel">{t("policy", { hours: data.policy.cancellationWindowHours })}</p>
+          </Section>
+
+          <Section
+            id="orders"
+            title={t("sections.orders")}
+            aside={<span className="tabular text-meta text-steel">{fmtNum(orderRows.length, locale)}</span>}
+          >
+            {orderRows.length === 0 ? (
+              <p className="text-body text-steel">{t("orders.empty")}</p>
+            ) : (
+              <ul className="divide-y divide-navy/10 overflow-hidden rounded-lg border border-navy/10 bg-white">
+                {orderRows.map((o) => {
+                  const net = Math.max(0, o.total - o.refundedAmount);
+                  const names = o.items.map((i) => `${pick(locale, i.en, i.ar)}${i.quantity > 1 ? ` × ${fmtNum(i.quantity, locale)}` : ""}`);
+                  const summary =
+                    names.slice(0, 2).join(listSep(locale)) + (names.length > 2 ? ` ${t("orders.more", { count: names.length - 2 })}` : "");
+                  const chip = o.state === "paid" && o.refundedAmount > 0 ? "partly" : o.state;
+                  const studio = o.branchEn ? pick(locale, o.branchEn, o.branchAr) : null;
+                  return (
+                    <li key={o.id}>
+                      <Link
+                        href={o.path}
+                        className={cn(
+                          "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 transition-colors hover:bg-navy/[0.03]",
+                          o.state === "cancelled" && "opacity-60",
+                        )}
+                      >
+                        <span className="min-w-0">
+                          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="tabular font-semibold" dir="ltr">
+                              #{o.number}
+                            </span>
+                            <OrderChip tone={chip} label={t(`orders.state.${chip}`)} />
+                            {o.toCollect && <OrderChip tone="collect" label={t("orders.state.collect")} />}
+                          </span>
+                          <span className="mt-1 block truncate text-meta">{summary}</span>
+                          <span className="tabular block text-meta text-steel">
+                            {fmtShortDate(o.createdAt, locale)}
+                            {studio && ` · ${studio}`}
+                          </span>
+                        </span>
+                        <span className="text-end">
+                          <span className="tabular block font-semibold">{fmtMoney(net, locale)}</span>
+                          {o.refundedAmount > 0 && (
+                            <span className="tabular block text-meta text-steel line-through">{fmtMoney(o.total, locale)}</span>
+                          )}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </Section>
 
           <Section title={t("sections.past")}>
@@ -244,11 +325,14 @@ export default async function AccountPage({ params, searchParams }: Props) {
                       <p className="truncate text-body font-medium">{tl(l.reason)}</p>
                       <p className="truncate text-meta text-steel">
                         {pick(locale, l.packEn, l.packAr)}
+                        {/* separator outside the isolated code, so Arabic reads "pack · code" in order */}
                         {l.bookingCode && (
-                          <span dir="ltr" className="tabular">
-                            {" "}
-                            · {l.bookingCode}
-                          </span>
+                          <>
+                            {" · "}
+                            <span dir="ltr" className="tabular">
+                              {l.bookingCode}
+                            </span>
+                          </>
                         )}
                       </p>
                     </div>
@@ -283,7 +367,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
               <div className="flex justify-between gap-4 px-4 py-3">
                 <dt className="text-meta text-steel">{t("profile.phone")}</dt>
                 <dd className="text-meta font-medium" dir="ltr">
-                  {user.phone || t("profile.none")}
+                  {fmtPhone(user.phone) || t("profile.none")}
                 </dd>
               </div>
             </dl>

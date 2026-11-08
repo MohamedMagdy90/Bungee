@@ -97,7 +97,8 @@
       "history": "Session history",
       "children": "Kids",
       "past": "Past classes",
-      "profile": "Profile"
+      "profile": "Profile",
+      "orders": "Orders"
     },
     "upcomingEmpty": "No classes booked yet.",
     "findClass": "Find a class",
@@ -179,7 +180,22 @@
       "phone": "Mobile",
       "verified": "Verified",
       "none": "Not added"
-    }
+    },
+    "orders": {
+      "empty": "Your orders will show here after your first purchase.",
+      "more": "+{count} more",
+      "state": {
+        "at_studio": "Pay at the studio",
+        "pending": "Awaiting payment",
+        "failed": "Payment failed",
+        "paid": "Paid",
+        "partly": "Part refunded",
+        "refunded": "Refunded",
+        "cancelled": "Cancelled",
+        "collect": "Ready to collect"
+      }
+    },
+    "payOrder": "Pay or view order"
   },
   "booking": {
     "signInToBook": "Sign in to book",
@@ -248,14 +264,15 @@
   },
   "ticket": {
     "kicker": "Reservation",
-    "invalid": "This ticket link isn't valid.",
+    "invalid": "This ticket link isn't valid. Your tickets are in My bookings.",
     "class": "Class",
     "when": "When",
     "studio": "Studio",
     "guest": "Guest",
     "reference": "Reference",
     "show": "Show this at the front desk.",
-    "account": "My bookings"
+    "account": "My bookings",
+    "timetable": "Back to timetable"
   },
   "mailbox": {
     "title": "Preview mailbox",

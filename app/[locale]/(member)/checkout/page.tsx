@@ -7,7 +7,7 @@ import { Notice } from "@/components/member/field";
 import { buttonVariants } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
 import { BRANCH_COOKIE, STUDIO_TZ } from "@/lib/constants";
-import { fmtLongDate, fmtMoney, fmtNum, fmtTime, pick } from "@/lib/format";
+import { fmtLongDate, fmtMoney, fmtNum, fmtTime, listSep, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getDb } from "@/server/db";
 import { getPaymentOptions, getSkipCashConfig } from "@/server/integrations";
@@ -104,7 +104,7 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
     rows.push({
       icon: <CalendarIcon size={16} />,
       label: t("class"),
-      value: `${pick(locale, quote.session.classEn, quote.session.classAr)} · ${fmtLongDate(quote.session.startsAt, locale, tz)}, ${fmtTime(quote.session.startsAt, locale, tz)}`,
+      value: `${pick(locale, quote.session.classEn, quote.session.classAr)} · ${fmtLongDate(quote.session.startsAt, locale, tz)}${listSep(locale)}${fmtTime(quote.session.startsAt, locale, tz)}`,
     });
     rows.push({ icon: <ProfileIcon size={16} />, label: t("forWho"), value: quote.who ?? t("you") });
   }

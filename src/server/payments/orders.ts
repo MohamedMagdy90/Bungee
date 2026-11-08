@@ -1130,6 +1130,56 @@ export async function listOrders(
 }
 export type OrderListRow = Awaited<ReturnType<typeof listOrders>>[number];
 
+/** Account page: the customer's own recent orders, newest first, with a signed link and what's still to collect. */
+export async function listCustomerOrders(db: Database, userId: string, limit = 8) {
+  const rows = await db
+    .select({
+      id: orders.id,
+      number: orders.number,
+      status: orders.status,
+      paymentMethod: orders.paymentMethod,
+      total: orders.total,
+      refundedAmount: orders.refundedAmount,
+      createdAt: orders.createdAt,
+      branchEn: branches.nameEn,
+      branchAr: branches.nameAr,
+    })
+    .from(orders)
+    .leftJoin(branches, eq(branches.id, orders.branchId))
+    .where(eq(orders.userId, userId))
+    .orderBy(desc(orders.createdAt))
+    .limit(limit);
+  const ids = rows.map((r) => r.id);
+  const items = ids.length
+    ? await db
+        .select({
+          orderId: orderItems.orderId,
+          nameEn: orderItems.nameEn,
+          nameAr: orderItems.nameAr,
+          quantity: orderItems.quantity,
+          refundedQuantity: orderItems.refundedQuantity,
+          fulfilledAt: orderItems.fulfilledAt,
+          type: products.type,
+        })
+        .from(orderItems)
+        .leftJoin(products, eq(products.id, orderItems.productId))
+        .where(inArray(orderItems.orderId, ids))
+        .orderBy(asc(orderItems.nameEn))
+    : [];
+  return rows.map((r) => {
+    const mine = items.filter((i) => i.orderId === r.id);
+    return {
+      ...r,
+      path: orderPath(r.id),
+      state: customerState(r),
+      items: mine.map((i) => ({ en: i.nameEn, ar: i.nameAr, quantity: i.quantity })),
+      toCollect:
+        (SETTLED as readonly string[]).includes(r.status) &&
+        mine.some((i) => i.type === "retail" && !i.fulfilledAt && i.quantity > i.refundedQuantity),
+    };
+  });
+}
+
 /* ── Front desk catalogue ──────────────────────────────────────────────── */
 
 /** Sold over the counter: packs, services and shop items. Extensions need a pack picker, so they stay online-only. */

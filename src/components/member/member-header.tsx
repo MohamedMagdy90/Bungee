@@ -20,7 +20,7 @@ export function MemberHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-hairline-dark bg-navy pt-[env(safe-area-inset-top)] text-ice">
-      <div className="frame flex h-16 items-center gap-3 md:h-[4.5rem]">
+      <div className="frame flex h-16 items-center gap-1.5 sm:gap-3 md:h-[4.5rem]">
         <Link href="/" className="me-auto shrink-0" aria-label={t("home")}>
           <Logo variant="horizontal" className="w-[8.25rem] md:w-[9.5rem]" />
         </Link>
@@ -35,16 +35,16 @@ export function MemberHeader() {
           href={pathname}
           locale={other}
           lang={other}
-          className="inline-flex h-9 items-center rounded-pill px-3 text-meta font-medium text-ice/75 transition-colors hover:text-ice"
+          className="inline-flex h-9 items-center rounded-pill px-2 text-meta font-medium text-ice/75 transition-colors hover:text-ice sm:px-3"
         >
           {tn("otherLanguage")}
         </Link>
         {!isPending && !onAccount && (
           <Link
             href={data?.user ? "/account" : "/sign-in"}
-            className={cn(buttonVariants({ variant: "ghostDark", size: "sm" }), "gap-2")}
+            className={cn(buttonVariants({ variant: "ghostDark", size: "sm" }), "gap-2 max-sm:px-3")}
           >
-            <ProfileIcon size={16} />
+            <ProfileIcon size={16} className="max-sm:hidden" />
             {data?.user ? t("account") : t("signIn")}
           </Link>
         )}

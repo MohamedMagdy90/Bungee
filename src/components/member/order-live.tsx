@@ -17,6 +17,7 @@ export function OrderLive({
   sig,
   locale,
   state,
+  stale = false,
   payUrl,
   canOnline,
   canStudio,
@@ -25,6 +26,8 @@ export function OrderLive({
   sig: string;
   locale: string;
   state: State;
+  /** Pending for a while with no word from SkipCash: offer paying again or at the studio. */
+  stale?: boolean;
   payUrl: string | null;
   canOnline: boolean;
   canStudio: boolean;
@@ -45,11 +48,15 @@ export function OrderLive({
 
   // While confirming: check every 3s for the first minute, then every 10s for a few more minutes.
   useEffect(() => {
-    if (state !== "pending") return;
+    if (state !== "pending" || stale) return;
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
       polls.current += 1;
-      if (polls.current > 40) return;
+      // Still nothing after ~4 minutes: reload once so the page offers paying again or at the studio.
+      if (polls.current > 40) {
+        router.refresh();
+        return;
+      }
       timer = setTimeout(
         async () => {
           await check().catch(() => undefined);
@@ -60,7 +67,7 @@ export function OrderLive({
     };
     tick();
     return () => clearTimeout(timer);
-  }, [state, check]);
+  }, [state, stale, check, router]);
 
   async function act(action: "retry" | "at_studio" | "cancel") {
     setBusy(action);
@@ -98,7 +105,33 @@ export function OrderLive({
     <div className="space-y-3 print:hidden">
       {error && <Notice tone="error">{error}</Notice>}
 
-      {state === "pending" && (
+      {state === "pending" && stale && (
+        <div className="space-y-3">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {canOnline && (
+              <Button size="lg" onClick={() => act("retry")} disabled={!!busy} aria-busy={busy === "retry"}>
+                {t("pending.payOnline")}
+                <ButtonArrow />
+              </Button>
+            )}
+            {canStudio && (
+              <Button size="lg" variant="ghost" onClick={() => act("at_studio")} disabled={!!busy} aria-busy={busy === "at_studio"}>
+                {t("failed.studio")}
+              </Button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => check()}
+            disabled={!!busy}
+            className="block text-meta font-medium text-navy underline underline-offset-4"
+          >
+            {t("pending.paidAlready")}
+          </button>
+        </div>
+      )}
+
+      {state === "pending" && !stale && (
         <div className="flex flex-wrap gap-2">
           <Button variant="navy" onClick={() => check()} disabled={!!busy}>
             {t("pending.check")}

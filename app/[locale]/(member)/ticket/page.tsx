@@ -42,8 +42,16 @@ export default async function TicketPage({ params, searchParams }: Props) {
   if (!ticket) {
     return (
       <div className="frame flex flex-1 items-center justify-center py-16">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md space-y-4">
           <Notice tone="error">{t("invalid")}</Notice>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/account" className={buttonVariants({ variant: "navy" })}>
+              {t("account")}
+            </Link>
+            <Link href="/#timetable" className={buttonVariants({ variant: "ghost" })}>
+              {t("timetable")}
+            </Link>
+          </div>
         </div>
       </div>
     );

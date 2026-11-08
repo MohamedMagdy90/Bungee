@@ -65,6 +65,14 @@ export function fmtShortDate(iso: string | Date, locale: string, timeZone = STUD
   ).format(typeof iso === "string" ? new Date(iso) : iso);
 }
 
+/** "8 November 2026" / "8 نوفمبر 2026": invoices and other records that need the year. */
+export function fmtFullDate(iso: string | Date, locale: string, timeZone = STUDIO_TZ) {
+  return memo(
+    `fd|${locale}|${timeZone}`,
+    () => new Intl.DateTimeFormat(loc(locale), { day: "numeric", month: "long", year: "numeric", timeZone }),
+  ).format(typeof iso === "string" ? new Date(iso) : iso);
+}
+
 /** "Nov" — the month above a ticket's day number. */
 export function fmtMonthShort(iso: string | Date, locale: string, timeZone = STUDIO_TZ) {
   return memo(`ms|${locale}|${timeZone}`, () => new Intl.DateTimeFormat(loc(locale), { month: "short", timeZone })).format(

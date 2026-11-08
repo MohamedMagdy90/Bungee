@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BagIcon, PinIcon, TrashIcon } from "@/components/brand/icons";
 import { useBranch } from "@/components/site/branch-context";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,6 +20,21 @@ export function CartPage({ initial }: { initial: CartView }) {
   const [cart, setCart] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Phones: a bottom bar with the total + Checkout while the summary card is still below the screen.
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const [barOn, setBarOn] = useState(false);
+  const hasLines = cart.lines.length > 0;
+  useEffect(() => {
+    const el = summaryRef.current;
+    if (!hasLines || !el || typeof IntersectionObserver === "undefined") {
+      setBarOn(false);
+      return;
+    }
+    const io = new IntersectionObserver(([e]) => setBarOn(!e.isIntersecting && e.boundingClientRect.top > 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasLines]);
 
   // Fresh copy on arrival (also merges a visitor cart into the account after signing in).
   useEffect(() => {
@@ -146,7 +161,7 @@ export function CartPage({ initial }: { initial: CartView }) {
               <dd className="tabular text-h3 font-semibold">{fmtMoney(cart.subtotal, locale)}</dd>
             </div>
           </dl>
-          <div className="px-5 pb-5">
+          <div ref={summaryRef} className="px-5 pb-5">
             {cart.ready ? (
               <Link href="/checkout?cart=1" className={cn(buttonVariants({ size: "lg" }), "w-full")}>
                 {t("checkout")}
@@ -160,6 +175,35 @@ export function CartPage({ initial }: { initial: CartView }) {
           </div>
         </div>
       </aside>
+
+      {/* Phones: total + Checkout in thumb reach while scrolling a long cart (hidden once the summary card shows) */}
+      <AnimatePresence>
+        {barOn && (
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 420, damping: 38 }}
+            className="fixed inset-x-0 bottom-0 z-40 border-t border-navy/10 bg-white/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-16px_40px_-24px_rgb(11_31_51/0.45)] backdrop-blur lg:hidden"
+          >
+            <div className="mx-auto flex max-w-xl items-center gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-meta text-steel">{t("total")}</p>
+                <p className="tabular text-h3 font-semibold leading-tight">{fmtMoney(cart.subtotal, locale)}</p>
+              </div>
+              {cart.ready ? (
+                <Link href="/checkout?cart=1" className={cn(buttonVariants({ size: "lg" }), "shrink-0 px-8")}>
+                  {t("checkout")}
+                </Link>
+              ) : (
+                <span className={cn(buttonVariants({ size: "lg" }), "pointer-events-none shrink-0 px-8 opacity-40")} aria-disabled="true">
+                  {t("checkout")}
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
