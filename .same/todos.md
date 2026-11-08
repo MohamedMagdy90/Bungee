@@ -236,7 +236,25 @@
       (127df4e server + 118c6cf form; deployed 12:46). cancelBooking / cancelSessionByStudio give nothing back to a
       refunded pack (refunded:false). Live test /opt/shots/refund3.js: server side 15/15; form checks re-run after
       fixing the test's radiogroup selector (target [aria-labelledby=refund-classes-<order>])
-- [ ] G Walk Orders, Packs & shop, Schedule, Overview, Team per role EN/AR/phone (/opt/shots/audit6.sh -> i/)
+- [~] G Walk Orders, Packs & shop, Schedule, Overview, Team per role EN/AR/phone (/opt/shots/audit6.sh -> i/, 49 shots,
+      ALL reviewed; local copies .tmp-tests/i, crops .tmp-tests/v). F refund3.js 17/17 + refund2.js 16/16 after test fixes.
+      Findings to fix (G1..G13):
+  - [ ] G1 Overview phone page 493px wide: Heatmap sr-only labels escape the non-relative overflow-x-auto wrapper
+        (charts.tsx) -> `relative` on it (and on the Studios/Coaches table wrapper in app/.../admin/page.tsx)
+  - [ ] G2 Studios side by side + Coaches tables on phone: min-w-[28rem] hides Fill/Showed up/Next 7 days/Revenue
+  - [ ] G3 Coach KPIs: "Classes taught" has no delta; "People coached" chip + "checked in" reads like "89% checked in"
+  - [ ] G4 Coach Today list: "0/0 came" for a class nobody booked -> "No bookings"
+  - [ ] G5 Coach menu says "No studio assigned" (coaches are scoped by classes) -> hide that line for coaches
+  - [ ] G6 Arabic lists joined with Latin ", " (orders-desk x2, customer order page, chart aria-label) -> listSep()
+  - [ ] G7 Packs "Can be used for" (+1 more) native checkboxes render solid dark when unticked -> custom box
+  - [ ] G8 Stock history system notes ("Opening stock", "Spreadsheet import", "Opening stock (spreadsheet import)")
+        stay English in Arabic -> translate at display
+  - [ ] G9 Refund form "0 of 1 sessions unused" -> "Sessions unused: 0 of 1" (EN/AR, no plural problem)
+  - [ ] G10 Schedule Week view at 1440: empty roster panel (380px) squeezes 7 columns -> names cut; panel only when a
+        class is picked (or below the grid)
+  - [ ] G11 Arabic phone roster: Latin names cut at the START ("…a Haddad") -> dir="auto" on the name
+  - [ ] G12 Phone schedule header "Sunday 8 Novem…" -> short date on phones
+  - [ ] G13 Aisle initials "G&" for "Grip & socks" -> initials skip tokens without letters
 - Killed a skip2.js stuck 37 h on the server (Playwright left running eats RAM on the 2 GB droplet): check pgrep node
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)

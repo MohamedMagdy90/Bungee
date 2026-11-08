@@ -45,3 +45,6 @@ next-env.d.ts
 /dist/
 # deploy access (never commit)
 /.deploy/
+
+# local test scripts + screenshots (never deployed or committed)
+.tmp-tests/
