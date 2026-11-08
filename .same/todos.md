@@ -232,32 +232,34 @@
       Re-shoot: /opt/shots/audit5.sh. Not bugs: Arabic "أو" looks double-spaced (font), sample-data customers with
       bookings but 0 sessions / empty ledger (seed-history writes bookings without packs)
 ## Batch Nov 8 #2 (user picked 2)
-- [~] F Staff choose per refund: cancel a fully refunded pack's upcoming classes, or keep them booked at no charge
+- [x] F Staff choose per refund: cancel a fully refunded pack's upcoming classes, or keep them booked at no charge
       (127df4e server + 118c6cf form; deployed 12:46). cancelBooking / cancelSessionByStudio give nothing back to a
       refunded pack (refunded:false). Live test /opt/shots/refund3.js: server side 15/15; form checks re-run after
       fixing the test's radiogroup selector (target [aria-labelledby=refund-classes-<order>])
-- [~] G Walk Orders, Packs & shop, Schedule, Overview, Team per role EN/AR/phone (/opt/shots/audit6.sh -> i/, 49 shots,
+- [x] G Walk Orders, Packs & shop, Schedule, Overview, Team per role EN/AR/phone (/opt/shots/audit6.sh -> i/, 49 shots,
       ALL reviewed; local copies .tmp-tests/i, crops .tmp-tests/v). F refund3.js 17/17 + refund2.js 16/16 after test fixes.
       Findings G1..G13 ALL FIXED in d35e030 via .tmp-tests/patchG.py (idempotent: re-run it if a restart rolls
       files back). tsc + eslint clean. Deployed (release after 12:46). Re-shoot: /opt/shots/audit7.sh -> j/
       .tmp-tests/ is now gitignored (gc.sh = commit + bundle to droplet: bash .tmp-tests/gc.sh "msg")
+      VERIFIED live Nov 8 16:45: audit7.sh re-shoot 12/12 OK (phone overview 390px), refund3.js 17/17, refund hint EN/AR
       Restarts Nov 8 16:02, 16:07, ~16:20: each wipes .git + auto-starts dev server -> kill, restore from bundle
-  - [ ] G1 Overview phone page 493px wide: Heatmap sr-only labels escape the non-relative overflow-x-auto wrapper
+  - [x] G1 Overview phone page 493px wide: Heatmap sr-only labels escape the non-relative overflow-x-auto wrapper
         (charts.tsx) -> `relative` on it (and on the Studios/Coaches table wrapper in app/.../admin/page.tsx)
-  - [ ] G2 Studios side by side + Coaches tables on phone: min-w-[28rem] hides Fill/Showed up/Next 7 days/Revenue
-  - [ ] G3 Coach KPIs: "Classes taught" has no delta; "People coached" chip + "checked in" reads like "89% checked in"
-  - [ ] G4 Coach Today list: "0/0 came" for a class nobody booked -> "No bookings"
-  - [ ] G5 Coach menu says "No studio assigned" (coaches are scoped by classes) -> hide that line for coaches
-  - [ ] G6 Arabic lists joined with Latin ", " (orders-desk x2, customer order page, chart aria-label) -> listSep()
-  - [ ] G7 Packs "Can be used for" (+1 more) native checkboxes render solid dark when unticked -> custom box
-  - [ ] G8 Stock history system notes ("Opening stock", "Spreadsheet import", "Opening stock (spreadsheet import)")
+  - [x] G2 Studios side by side + Coaches tables on phone: min-w-[28rem] hides Fill/Showed up/Next 7 days/Revenue
+  - [x] G3 Coach KPIs: "Classes taught" has no delta; "People coached" chip + "checked in" reads like "89% checked in"
+  - [x] G4 Coach Today list: "0/0 came" for a class nobody booked -> "No bookings"
+  - [x] G5 Coach menu says "No studio assigned" (coaches are scoped by classes) -> hide that line for coaches
+  - [x] G6 Arabic lists joined with Latin ", " (orders-desk x2, customer order page, chart aria-label) -> listSep()
+  - [x] G7 Packs "Can be used for" (+1 more) native checkboxes render solid dark when unticked -> custom box
+  - [x] G8 Stock history system notes ("Opening stock", "Spreadsheet import", "Opening stock (spreadsheet import)")
         stay English in Arabic -> translate at display
-  - [ ] G9 Refund form "0 of 1 sessions unused" -> "Sessions unused: 0 of 1" (EN/AR, no plural problem)
-  - [ ] G10 Schedule Week view at 1440: empty roster panel (380px) squeezes 7 columns -> names cut; panel only when a
+  - [x] G9 Refund form "0 of 1 sessions unused" -> "Sessions unused: 0 of 1" (EN/AR, no plural problem)
+  - [x] G10 Schedule Week view at 1440: empty roster panel (380px) squeezes 7 columns -> names cut; panel only when a
         class is picked (or below the grid)
-  - [ ] G11 Arabic phone roster: Latin names cut at the START ("…a Haddad") -> dir="auto" on the name
-  - [ ] G12 Phone schedule header "Sunday 8 Novem…" -> short date on phones
-  - [ ] G13 Aisle initials "G&" for "Grip & socks" -> initials skip tokens without letters
+  - [x] G11 Arabic phone roster: Latin names cut at the START ("…a Haddad") -> dir="auto" on the name
+  - [x] G12 Phone schedule header "Sunday 8 Novem…" -> short date on phones
+  - [x] G13 Aisle initials "G&" for "Grip & socks" -> initials skip tokens without letters
+- [ ] Polish idea (not a bug): coach overview Next class card stretches to the Today list height (empty area)
 - Killed a skip2.js stuck 37 h on the server (Playwright left running eats RAM on the 2 GB droplet): check pgrep node
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
