@@ -633,13 +633,14 @@ function OrderList({ orders }: { orders: CustomerProfile["orders"] }) {
           <>
             <span className="min-w-0">
               <span className="tabular block truncate text-body font-medium">{t("profile.order", { number: o.number })}</span>
-              <span className="block truncate text-meta text-steel">
+              <span className="block text-meta text-steel text-pretty sm:truncate">
                 {fmtShortDate(o.createdAt, locale)}
                 {o.refundedAmount > 0 && <> · {t("profile.orderRefunded", { amount: fmtMoney(o.refundedAmount, locale) })}</>}
                 {!o.openable && studio && <> · {t("profile.orderAt", { studio })}</>}
               </span>
             </span>
-            <span className="flex items-center gap-3">
+            {/* Phone: amount above the status, so the order number keeps its room. */}
+            <span className="flex flex-col-reverse items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
               <Tag
                 tone={
                   o.status === "paid"
