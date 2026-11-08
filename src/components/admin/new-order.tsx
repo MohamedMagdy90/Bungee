@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { ArrowIcon, CheckIcon, CloseIcon, MinusIcon, PlusIcon } from "@/components/brand/icons";
 import { Notice } from "@/components/member/field";
 import { Button } from "@/components/ui/button";
-import { fmtMoney, fmtNum, pick } from "@/lib/format";
+import { fmtMoney, fmtNum, fmtPhone, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { CustomerRow } from "@/server/admin/customers";
 import type { DeskCatalog } from "@/server/payments/orders";
@@ -385,7 +385,7 @@ function WalkInTag() {
 
 function PickedCustomer({ customer: c, onChange }: { customer: DeskCustomer; onChange: () => void }) {
   const t = useTranslations("admin.orders.new");
-  const contact = [c.phone, c.email].filter(Boolean).join(" · ");
+  const contact = [fmtPhone(c.phone), c.email].filter(Boolean).join(" · ");
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -510,7 +510,7 @@ function CustomerFinder({ onPick }: { onPick: (c: DeskCustomer) => void }) {
                     {r.isWalkIn && <WalkInTag />}
                   </span>
                   <span className="block truncate text-meta text-steel">
-                    <bdi dir="ltr">{r.phone || r.email}</bdi>
+                    <bdi dir="ltr">{r.phone ? fmtPhone(r.phone) : r.email}</bdi>
                   </span>
                 </span>
                 <span className="tabular shrink-0 text-meta text-steel">{t("credits", { count: r.credits })}</span>

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageIcon, PhoneIcon, PlusIcon } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { fmtMoney, fmtNum, fmtShortDate, fmtTime, pick } from "@/lib/format";
+import { fmtMoney, fmtNum, fmtPhone, fmtShortDate, fmtTime, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { CustomerFilter, CustomerProfile, CustomerRow } from "@/server/admin/customers";
 import {
@@ -201,7 +201,7 @@ export function CustomersDesk({
                 title={r.name}
                 meta={
                   <span dir="ltr" className="inline-block">
-                    {r.phone || r.email || t("row.noEmail")}
+                    {r.phone ? fmtPhone(r.phone) : r.email || t("row.noEmail")}
                   </span>
                 }
                 aside={
@@ -300,7 +300,7 @@ function Profile({
               className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-navy/20 px-3.5 text-meta font-medium hover:border-navy/40"
             >
               <PhoneIcon size={15} />
-              <span dir="ltr">{c.phone}</span>
+              <span dir="ltr">{fmtPhone(c.phone)}</span>
             </a>
           )}
           {c.email && (
@@ -539,7 +539,11 @@ function BookingList({
   }
 
   const label = (b: CustomerProfile["bookings"][number]) =>
-    b.status === "waitlisted" ? ts("waitlisted", { n: b.waitlistPosition ?? 0 }) : ts(b.status);
+    b.status === "waitlisted"
+      ? ts("waitlisted", { n: b.waitlistPosition ?? 0 })
+      : b.status === "booked" && !b.upcoming
+        ? t("profile.notCheckedIn")
+        : ts(b.status);
 
   return (
     <div>
@@ -574,7 +578,7 @@ function BookingList({
             >
             <Tag
               tone={
-                b.status === "booked" || b.status === "attended"
+                (b.status === "booked" && b.upcoming) || b.status === "attended"
                   ? "green"
                   : b.status === "waitlisted"
                     ? "aqua"
@@ -623,26 +627,52 @@ function OrderList({ orders }: { orders: CustomerProfile["orders"] }) {
   if (orders.length === 0) return <p className="text-meta text-steel">{t("profile.noOrders")}</p>;
   return (
     <ul className="divide-y divide-navy/[0.07] rounded-lg border border-navy/10">
-      {orders.map((o) => (
-        <li key={o.id}>
-          <Link
-            href={`/admin/orders?id=${o.id}`}
-            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 transition-colors hover:bg-navy/[0.025]"
-          >
+      {orders.map((o) => {
+        const studio = o.branchEn ? pick(locale, o.branchEn, o.branchAr) : null;
+        const body = (
+          <>
             <span className="min-w-0">
               <span className="tabular block truncate text-body font-medium">{t("profile.order", { number: o.number })}</span>
-              <span className="block truncate text-meta text-steel">{fmtShortDate(o.createdAt, locale)}</span>
+              <span className="block truncate text-meta text-steel">
+                {fmtShortDate(o.createdAt, locale)}
+                {o.refundedAmount > 0 && <> · {t("profile.orderRefunded", { amount: fmtMoney(o.refundedAmount, locale) })}</>}
+                {!o.openable && studio && <> · {t("profile.orderAt", { studio })}</>}
+              </span>
             </span>
             <span className="flex items-center gap-3">
-              <Tag tone={o.status === "paid" ? "green" : o.status === "awaiting_payment" || o.status === "pending" ? "orange" : "plain"}>
+              <Tag
+                tone={
+                  o.status === "paid"
+                    ? "green"
+                    : o.status === "awaiting_payment" || o.status === "pending" || o.status === "partially_refunded"
+                      ? "orange"
+                      : "plain"
+                }
+              >
                 {ts(o.status)}
               </Tag>
-              <span className="tabular whitespace-nowrap text-end text-body font-semibold sm:w-24">{fmtMoney(o.total, locale)}</span>
-              <span className="hidden text-meta font-medium text-orange-ember sm:inline">{t("profile.open")}</span>
+              <span className="tabular whitespace-nowrap text-end text-body font-semibold sm:w-24">
+                {fmtMoney(o.total - o.refundedAmount, locale)}
+              </span>
+              <span className={cn("hidden text-meta font-medium sm:inline sm:w-9", o.openable ? "text-orange-ember" : "invisible")}>
+                {t("profile.open")}
+              </span>
             </span>
-          </Link>
-        </li>
-      ))}
+          </>
+        );
+        const row = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3";
+        return (
+          <li key={o.id}>
+            {o.openable ? (
+              <Link href={`/admin/orders?id=${o.id}`} className={cn(row, "transition-colors hover:bg-navy/[0.025]")}>
+                {body}
+              </Link>
+            ) : (
+              <div className={row}>{body}</div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

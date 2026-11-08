@@ -76,3 +76,16 @@ export function fmtMonthShort(iso: string | Date, locale: string, timeZone = STU
 export function pick(locale: string, en: string, ar?: string | null) {
   return locale === "ar" && ar ? ar : en;
 }
+/**
+ * Phones are stored as typed ("+97455551234", "5555 1234", "00974 5555 1234"). Qatar numbers read
+ * "+974 5555 1234" everywhere on the desk; anything else is shown as typed.
+ */
+export function fmtPhone(phone: string | null | undefined) {
+  if (!phone) return "";
+  const typed = phone.trim();
+  let d = typed.replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.length === 11 && d.startsWith("974")) return `+974 ${d.slice(3, 7)} ${d.slice(7)}`;
+  if (d.length === 8 && !typed.startsWith("+")) return `+974 ${d.slice(0, 4)} ${d.slice(4)}`;
+  return typed;
+}

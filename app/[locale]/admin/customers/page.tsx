@@ -38,7 +38,7 @@ export default async function AdminCustomersPage({ params, searchParams }: Props
       .select({ id: branches.id, nameEn: branches.nameEn, nameAr: branches.nameAr })
       .from(branches)
       .orderBy(asc(branches.sortOrder)),
-    sp.id && sp.id !== "new" ? getCustomer(db, sp.id).catch(() => null) : Promise.resolve(null),
+    sp.id && sp.id !== "new" ? getCustomer(db, sp.id, staff.branchIds).catch(() => null) : Promise.resolve(null),
   ]);
 
   return (

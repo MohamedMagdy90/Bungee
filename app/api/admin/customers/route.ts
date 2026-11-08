@@ -22,11 +22,11 @@ const Filter = z.enum(["all", "walkin", "credits"]).catch("all");
 /** GET ?id= → { customer } · GET ?q=&filter= → { rows } */
 export async function GET(request: Request) {
   try {
-    await requireStaff("customers");
+    const staff = await requireStaff("customers");
     const url = new URL(request.url);
     const db = await getDb();
     const id = url.searchParams.get("id");
-    if (id) return NextResponse.json({ customer: await getCustomer(db, id) }, { headers: noStore });
+    if (id) return NextResponse.json({ customer: await getCustomer(db, id, staff.branchIds) }, { headers: noStore });
     const rows = await searchCustomers(db, {
       q: (url.searchParams.get("q") ?? "").slice(0, 80),
       filter: Filter.parse(url.searchParams.get("filter") ?? "all"),
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       const input = WalkInInput.parse(raw);
       const id = await createWalkIn(db, input, staff.id);
       await audit(db, staff.id, "create", "walk_in_customer", null, null, { id, ...input });
-      return NextResponse.json({ id, customer: await getCustomer(db, id) }, { headers: noStore });
+      return NextResponse.json({ id, customer: await getCustomer(db, id, staff.branchIds) }, { headers: noStore });
     }
 
     const id = typeof raw.id === "string" && raw.id.length > 0 && raw.id.length < 100 ? raw.id : null;
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       extra = { result: await cancelCustomerBooking(db, id, bookingId) };
       await audit(db, staff.id, "cancel", "booking", bookingId, null, { userId: id, by: "desk" });
     }
-    return NextResponse.json({ ...extra, customer: await getCustomer(db, id) }, { headers: noStore });
+    return NextResponse.json({ ...extra, customer: await getCustomer(db, id, staff.branchIds) }, { headers: noStore });
   } catch (error) {
     return errorResponse(error);
   }

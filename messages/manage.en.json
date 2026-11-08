@@ -514,7 +514,10 @@
         "saved": "Details saved.",
         "sell": "New order",
         "showAll": "Show all {count}",
-        "showLess": "Show fewer"
+        "showLess": "Show fewer",
+        "notCheckedIn": "Not checked in",
+        "orderRefunded": "{amount} refunded",
+        "orderAt": "At {studio}"
       },
       "walkIn": {
         "title": "Register a walk-in",

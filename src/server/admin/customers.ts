@@ -109,7 +109,8 @@ export async function searchCustomers(
 
 export type CustomerProfile = Awaited<ReturnType<typeof getCustomer>>;
 
-export async function getCustomer(db: Database, id: string) {
+/** `branchIds`: the studios the viewer works at (null = all). Orders elsewhere are listed but can't be opened. */
+export async function getCustomer(db: Database, id: string, branchIds: string[] | null = null) {
   const now = new Date();
   const [user] = await db
     .select({
@@ -130,7 +131,7 @@ export async function getCustomer(db: Database, id: string) {
     .where(eq(users.id, id));
   if (!user || user.role !== "customer") throw new HttpError(404, "not_found");
 
-  const [kids, packs, bookingRows, orderRows, ledgerRows, totals] = await Promise.all([
+  const [kids, packs, bookingRows, orderRows, ledgerRows, totals, spentRows] = await Promise.all([
     db
       .select({ id: dependents.id, firstName: dependents.firstName, lastName: dependents.lastName, dateOfBirth: dependents.dateOfBirth })
       .from(dependents)
@@ -176,10 +177,15 @@ export async function getCustomer(db: Database, id: string) {
         number: orders.number,
         status: orders.status,
         total: orders.total,
+        refundedAmount: orders.refundedAmount,
         paymentMethod: orders.paymentMethod,
         createdAt: orders.createdAt,
+        branchId: orders.branchId,
+        branchEn: branches.nameEn,
+        branchAr: branches.nameAr,
       })
       .from(orders)
+      .leftJoin(branches, eq(branches.id, orders.branchId))
       .where(eq(orders.userId, id))
       .orderBy(desc(orders.createdAt))
       .limit(20),
@@ -204,12 +210,15 @@ export async function getCustomer(db: Database, id: string) {
       .from(bookings)
       .innerJoin(classSessions, eq(classSessions.id, bookings.sessionId))
       .where(eq(bookings.userId, id)),
+    // What they've really paid: every settled order, minus money given back.
+    db
+      .select({ n: sql<number>`coalesce(sum(${orders.total} - ${orders.refundedAmount}), 0)::int` })
+      .from(orders)
+      .where(and(eq(orders.userId, id), inArray(orders.status, ["paid", "partially_refunded", "refunded"]))),
   ]);
 
   const kidName = new Map(kids.map((k) => [k.id, [k.firstName, k.lastName].filter(Boolean).join(" ")]));
-  const spent = orderRows
-    .filter((o) => o.status === "paid" || o.status === "partially_refunded")
-    .reduce((sum, o) => sum + o.total, 0);
+  const spent = Number(spentRows[0]?.n ?? 0);
   const iso = (d: Date) => d.toISOString();
 
   return {
@@ -229,7 +238,11 @@ export async function getCustomer(db: Database, id: string) {
       child: b.dependentId ? (kidName.get(b.dependentId) ?? null) : null,
       upcoming: b.startsAt > now && (LIVE as readonly string[]).includes(b.status),
     })),
-    orders: orderRows.map((o) => ({ ...o, createdAt: iso(o.createdAt) })),
+    orders: orderRows.map(({ branchId, ...o }) => ({
+      ...o,
+      createdAt: iso(o.createdAt),
+      openable: branchIds === null || !branchId || branchIds.includes(branchId),
+    })),
     ledger: ledgerRows.map((l) => ({ ...l, createdAt: iso(l.createdAt) })),
     stats: {
       credits: packs

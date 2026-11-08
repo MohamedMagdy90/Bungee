@@ -8,7 +8,7 @@ import { TicketQr } from "@/components/member/account-client";
 import { Notice } from "@/components/member/field";
 import { Button } from "@/components/ui/button";
 import { STUDIO_TZ } from "@/lib/constants";
-import { fmtLongDate, fmtMoney, fmtNum, fmtShortDate, fmtTime, pick } from "@/lib/format";
+import { fmtLongDate, fmtMoney, fmtNum, fmtPhone, fmtShortDate, fmtTime, pick } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DeskCatalog } from "@/server/payments/orders";
 import { type DeskCustomer, NewOrder } from "./new-order";
@@ -991,7 +991,7 @@ function OrderDetail({
             )}
             {order.user.phone ? (
               <a href={`tel:${order.user.phone}`} className="tabular mt-0.5 block text-meta text-steel hover:text-navy hover:underline">
-                <bdi>{order.user.phone}</bdi>
+                <bdi dir="ltr">{fmtPhone(order.user.phone)}</bdi>
               </a>
             ) : (
               <p className="mt-0.5 text-meta text-orange-ember">{t("orders.detail.noPhone")}</p>

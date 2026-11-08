@@ -514,7 +514,10 @@
         "saved": "حُفظت البيانات.",
         "sell": "طلب جديد",
         "showAll": "عرض الكل ({count})",
-        "showLess": "عرض أقل"
+        "showLess": "عرض أقل",
+        "notCheckedIn": "لم يُسجَّل الحضور",
+        "orderRefunded": "استُرد {amount}",
+        "orderAt": "في {studio}"
       },
       "walkIn": {
         "title": "تسجيل عميل حاضر",
