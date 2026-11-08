@@ -105,6 +105,8 @@
   check-ins, no-shows, waitlists, pack + shop orders; booked_count recomputed from real rows
 - [x] Deployed + tested live (Nov 6): roles.js 51/53 (2 = test counted "reports" as a menu item) + scope.js 8/8.
   Test accounts admin./manager./desk./coach.test@bungeefly.local (passwords in /root/.role-test-pass on the server);
+  Customer test login customer.test@bungeefly.local (verified, password in /root/.customer-test-pass; Nov 8).
+  All 6 logins checked HTTP 200 Nov 8 17:12 (.tmp-tests/checklogins.sh). NEVER write passwords in this file (repo is public).
   test scripts + Playwright in /opt/shots (shot.js, roles.js, scope.js). Better Auth sign-in limit 3/10 s: space sign-ins 11 s
 - [x] Studio scope: orders (own + studio-less; detail/actions 404 elsewhere; New order own studios), timetable
   (scopeTimetable + studioOf guard), stock actions + low-stock level (own studio), locations (own, no new)
