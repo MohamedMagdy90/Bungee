@@ -282,6 +282,12 @@
   - [x] H9 member header gap-1.5 / px-2 on phones, no profile icon below sm
   - [x] H10 invalid ticket: My bookings + Back to timetable buttons, copy points to My bookings
   - [x] H11 phone cart bar (IntersectionObserver on the summary checkout; hidden once it is on screen or passed)
+  - Deployed 22:23; re-shoot /opt/shots/m (62 shots, 0 fail, every phone page 390 wide incl. Arabic sign-in = H9 OK).
+    Checked live: account Orders + Pay link, +974 mobile, Arabic history line, "Waiting for your payment" screen.
+- [x] I (user screenshot) Class sheet signed out: "Create an account" ran off the sheet -> both button rows flex-wrap
+      (8c024fb). Root cause on phones < 376px: hero offer button 356px nowrap widened the WHOLE page (fixed bars +
+      sheet stretched) -> wraps now (458c22d). Checks: /opt/shots/sheet.js (buttons inside sheet, 7 sizes EN/AR),
+      /opt/shots/wide.js (lists elements wider than 320/375 phones). patchI.py re-applies both.
 - Killed a skip2.js stuck 37 h on the server (Playwright left running eats RAM on the 2 GB droplet): check pgrep node
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
