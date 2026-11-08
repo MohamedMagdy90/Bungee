@@ -217,6 +217,13 @@
     /opt/shots/skiploop.log. [ ] When it passes: check SkipCash honours Amount (partial) vs refunds in full
     (skipprobe2.js prints payment detail before/after), then run skip2.js on a fresh paid order
   - Our failure path verified live: failed attempt recorded with SkipCash's message, quantities released, order unchanged
+  - Nov 8: still "can't be yet refunded" 2 days after payment -> sandbox never allows refunds; ask SkipCash support
+## Batch Nov 8 (user picked 2)
+- Restart again Nov 8 08:23: .git emptied, dev server auto-started -> killed, .git re-cloned from GitHub (all pushed)
+- [ ] D Refunding a pack in full cancels its upcoming classes (engine cancelBookingsForRefund, refund email lists
+      them, refund form shows them beforehand). Deploy + live test (book & pay drop-in -> refund -> booking cancelled,
+      waitlist promoted, spot free)
+- [ ] E Walk customers, classes, website, media per role (owner/admin/manager/desk/coach) EN/AR/phone + fix findings
 - Biome: codebase was never auto-formatted (width) -> DON'T run biome format --write on whole files (huge diffs);
   role="radio"/"checkbox" buttons are the house pattern (biome a11y warnings pre-exist)
 - Restart Nov 6 20:37: .git emptied + gh signed out + no git identity. Restored .git by cloning the public repo

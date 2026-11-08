@@ -699,6 +699,84 @@ export async function cancelSessionByStudio(
   });
 }
 
+/**
+ * A pack is refunded in full: the classes it paid for that haven't started are cancelled too (otherwise they'd be
+ * free). The studio's call, so no late-cancel rule: used credits go back to the pack (the refund then takes them
+ * off with the rest), unpaid holds are released and the waitlist moves up. Runs inside the refund's transaction,
+ * locking class -> booking -> pack like everywhere else. No email here: the refund email lists the classes.
+ */
+export async function cancelBookingsForRefund(
+  tx: Database,
+  input: { customerPackageId: string; actorId: string; note: string; now?: Date },
+) {
+  const now = input.now ?? new Date();
+  const due = await tx
+    .select({ id: bookings.id, sessionId: bookings.sessionId })
+    .from(bookings)
+    .innerJoin(classSessions, eq(classSessions.id, bookings.sessionId))
+    .where(
+      and(
+        eq(bookings.customerPackageId, input.customerPackageId),
+        inArray(bookings.status, [...LIVE]),
+        gt(classSessions.startsAt, now),
+      ),
+    )
+    .orderBy(asc(classSessions.startsAt));
+  const cancelled: ReturnType<typeof emailPayload>[] = [];
+  if (!due.length) return cancelled;
+  const policy = await getBookingPolicy(tx);
+  for (const ref of due) {
+    const s = await lockSession(tx, ref.sessionId);
+    if (!s || s.startsAt <= now) continue;
+    const [b] = await tx.select().from(bookings).where(eq(bookings.id, ref.id)).for("update");
+    if (!b || !LIVE.includes(b.status as (typeof LIVE)[number])) continue;
+    if (b.status === "pending_payment") {
+      await releaseHold(tx, s, b.id, now, input.actorId);
+    } else if (b.status === "waitlisted") {
+      await tx
+        .update(bookings)
+        .set({ status: "cancelled", cancelledAt: now, cancelledBy: input.actorId, waitlistPosition: null })
+        .where(eq(bookings.id, b.id));
+      await tx
+        .update(classSessions)
+        .set({ waitlistCount: sql`greatest(${classSessions.waitlistCount} - 1, 0)` })
+        .where(eq(classSessions.id, s.id));
+    } else {
+      await tx
+        .update(bookings)
+        .set({ status: "cancelled", cancelledAt: now, cancelledBy: input.actorId })
+        .where(eq(bookings.id, b.id));
+      if (b.creditsUsed > 0) {
+        const [pkg] = await tx
+          .select()
+          .from(customerPackages)
+          .where(eq(customerPackages.id, input.customerPackageId))
+          .for("update");
+        if (pkg) {
+          const balance = Math.min(pkg.creditsTotal, pkg.creditsRemaining + b.creditsUsed);
+          await tx.update(customerPackages).set({ creditsRemaining: balance }).where(eq(customerPackages.id, pkg.id));
+          await tx.insert(creditLedger).values({
+            userId: b.userId,
+            customerPackageId: pkg.id,
+            bookingId: b.id,
+            delta: balance - pkg.creditsRemaining,
+            balanceAfter: balance,
+            reason: "cancel_refund",
+            note: input.note,
+          });
+        }
+      }
+      await tx
+        .update(classSessions)
+        .set({ bookedCount: sql`greatest(${classSessions.bookedCount} - 1, 0)` })
+        .where(eq(classSessions.id, s.id));
+      if (policy.waitlistAutoPromote) await promoteWaitlist(tx, { ...s, bookedCount: Math.max(0, s.bookedCount - 1) }, now);
+    }
+    cancelled.push(emailPayload(s));
+  }
+  return cancelled;
+}
+
 /** After staff raise a class's capacity: lets people on the waitlist move up into the new places. */
 export async function promoteAfterCapacityChange(db: Database, sessionId: string, now = new Date()) {
   return db.transaction(async (txRaw) => {

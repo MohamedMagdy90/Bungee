@@ -154,6 +154,7 @@ export async function POST(request: Request) {
       await audit(db, staff.id, "order.refund", "order", input.id, null, {
         refundId: refund.refundId,
         amount: refund.amount,
+        classesCancelled: refund.classesCancelled,
         method: input.method,
         lines: input.lines,
         restock: input.restock,

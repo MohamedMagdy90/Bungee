@@ -1,6 +1,6 @@
 import "server-only";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { confirmHeldBooking, holdForPayment, releaseOrderHolds } from "../booking/engine";
 import type { Database } from "../db";
 import {
@@ -950,6 +950,7 @@ export async function getOrderView(db: Database, orderId: string) {
         // Class packs: sessions still unused on the pack this line bought (what a refund can take back).
         packLeft: customerPackages.creditsRemaining,
         packTotal: customerPackages.creditsTotal,
+        packId: customerPackages.id,
       })
       .from(orderItems)
       .leftJoin(products, eq(products.id, orderItems.productId))
@@ -1008,11 +1009,42 @@ export async function getOrderView(db: Database, orderId: string) {
       .where(eq(refunds.orderId, orderId))
       .orderBy(desc(refunds.createdAt)),
   ]);
+  // Classes still to come that a pack on this order paid for: refunding that pack in full cancels them.
+  const packIds = items.map((i) => i.packId).filter((v): v is string => !!v);
+  const upcoming = packIds.length
+    ? await db
+        .select({
+          id: bookings.id,
+          packId: bookings.customerPackageId,
+          status: bookings.status,
+          startsAt: classSessions.startsAt,
+          classEn: classTypes.nameEn,
+          classAr: classTypes.nameAr,
+          timezone: branches.timezone,
+        })
+        .from(bookings)
+        .innerJoin(classSessions, eq(classSessions.id, bookings.sessionId))
+        .innerJoin(classTypes, eq(classTypes.id, classSessions.classTypeId))
+        .innerJoin(branches, eq(branches.id, classSessions.branchId))
+        .where(
+          and(
+            inArray(bookings.customerPackageId, packIds),
+            inArray(bookings.status, ["booked", "waitlisted", "pending_payment"]),
+            gt(classSessions.startsAt, new Date()),
+          ),
+        )
+        .orderBy(asc(classSessions.startsAt))
+    : [];
   return {
     ...o.order,
     user: { ...o.user, email: realEmail(o.user.email) },
     branch: o.branchEn ? { en: o.branchEn, ar: o.branchAr ?? o.branchEn } : null,
-    items,
+    items: items.map((i) => ({
+      ...i,
+      upcoming: upcoming
+        .filter((u) => !!i.packId && u.packId === i.packId)
+        .map((u) => ({ id: u.id, status: u.status, startsAt: u.startsAt, classEn: u.classEn, classAr: u.classAr, timezone: u.timezone })),
+    })),
     payments: pays,
     invoice: inv[0] ?? null,
     booking: booking[0] ?? null,
